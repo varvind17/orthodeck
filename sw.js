@@ -1,6 +1,7 @@
 // OrthoDeck service worker. Bump CACHE_VERSION whenever you change app files
 // so installed phones pick up the update on next launch.
-const CACHE_VERSION = 'orthodeck-v5';
+const CACHE_VERSION = 'orthodeck-v6';
+const IMAGE_CACHE = 'orthodeck-images';
 const APP_SHELL = [
   './',
   './index.html',
@@ -24,15 +25,23 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k)))
+      Promise.all(keys.filter((k) => k !== CACHE_VERSION && k !== IMAGE_CACHE).map((k) => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  // Only handle same-origin GETs. API calls (Anthropic) go straight to the network.
-  if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  if (event.request.method !== 'GET') return;
+  // Cross-origin images (card pictures found via web search): cache-first, opaque responses allowed.
+  if (url.origin !== self.location.origin) {
+    if (event.request.destination === 'image') {
+      event.respondWith(
+        caches.open(IMAGE_CACHE).then((c) => c.match(event.request.url).then((hit) => hit || fetch(event.request.url, { mode: 'no-cors' }).then((r) => { c.put(event.request.url, r.clone()); return r; })))
+      );
+    }
+    return;
+  }
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;

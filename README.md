@@ -58,7 +58,20 @@ Chat needs a signal; studying does not. Usage is billed to your key at Anthropic
 - **Browse cards** (search box + domain chips) to find any card; **+** adds your own card.
 - **Export backup** in Settings downloads a JSON file with progress, edits, your cards and chats. **Import backup** restores it on another phone.
 
-## Part 6 — Make cards from a textbook chapter
+## Part 6 — Find an image for a card
+
+Edit any card → **Search the web for an image**. The search box is prefilled from the card's front.
+
+- **Wikimedia Commons** works with no setup. Results are openly licensed and the credit/licence is shown under the image on the card.
+- **Google Images** needs two things you create once (free, ~5 minutes):
+  1. console.cloud.google.com → create a project → **APIs & Services → Library** → enable **Custom Search API** → **Credentials → Create credentials → API key**. Copy the key.
+  2. programmablesearchengine.google.com → **Add** → turn on **Search the entire web** and **Image search** → copy the **Search engine ID** (cx).
+  3. Paste both into OrthoDeck → Settings → Image search.
+  Free tier is 100 searches per day.
+
+Tap a result to see it larger, then **Add to card** and **Save**. Images are stored as links and cached on the phone by the service worker, so they display offline after being added once. If the source site removes the image the card falls back to the thumbnail. Google results are copyrighted — this is for personal study only.
+
+## Part 7 — Make cards from a textbook chapter
 
 1. On your phone, save the chapter PDF somewhere you can reach from the Files app (iCloud Drive, Downloads, or AirDrop it).
 2. In OrthoDeck tap **Make cards from a chapter** (home screen) or Settings → Import.
@@ -68,7 +81,7 @@ Chat needs a signal; studying does not. Usage is billed to your key at Anthropic
 
 Notes: scanned PDFs with no text layer will not work (you need a PDF where you can select text). The importer needs a signal and uses your API key; cost is roughly a few cents per chapter. The queue survives closing the app and is included in backups.
 
-## Part 7 — Updating the app later
+## Part 8 — Updating the app later
 
 If you change any file (e.g. add cards to `cards.js`), also change `CACHE_VERSION` in `sw.js` (e.g. `orthodeck-v2`) before uploading to GitHub, or installed phones will keep the old cached copy. The app shows "Update ready — close and reopen" when it downloads the new version.
 
@@ -78,4 +91,4 @@ When adding cards to `cards.js`, add them at the **end** of a domain block. Card
 
 - The seed deck was written as a study aid, not a clinical reference. Numbers and thresholds drift between sources and years — verify anything you'd act on.
 - iOS can evict a PWA's stored data if the app isn't opened for several weeks and the phone runs low on space. Export a backup now and then.
-- Built: study engine + seed deck (1,891 one-fact cards), per-card editing/images, AI chat, chapter importer with review queue. Not built: subspecialty "advanced" tiers and the curated "What's new" PubMed feed.
+- Built: study engine + seed deck (1,891 one-fact cards), per-card editing/images, AI chat, chapter importer with review queue, web image search (Commons/Google). Not built: subspecialty "advanced" tiers and the curated "What's new" PubMed feed.

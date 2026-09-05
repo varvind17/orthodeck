@@ -13,7 +13,7 @@
   const LEARN_AHEAD = 20 * MIN;     // show learning cards up to 20 min early when nothing else is due
   const DEFAULTS = {
     id: 'main', newPerDay: 40, maxReviews: 200, domains: DOMAINS.map((d) => d.key),
-    apiKey: '', model: 'claude-sonnet-4-6'
+    apiKey: '', model: 'claude-sonnet-4-6', gKey: '', gCx: ''
   };
   const TYPES = { classification: 'Classification', anatomy: 'Anatomy / approach', diagnosis: 'Diagnosis', management: 'Management' };
   const DOMAIN_BY_KEY = Object.fromEntries(DOMAINS.map((d) => [d.key, d]));
@@ -35,6 +35,14 @@
   let previewCard = null;
 
   const $ = (id) => document.getElementById(id);
+  function imgEl(im, cls) {
+    const el = document.createElement('img'); el.alt = '';
+    if (typeof im === 'string') { el.src = im; return el; }
+    el.src = im.url; el.onerror = () => { if (im.thumb && el.src !== im.thumb) el.src = im.thumb; };
+    if (!im.credit) return el;
+    const w = document.createElement('div'); w.className = cls || ''; w.appendChild(el);
+    const c = document.createElement('div'); c.className = 'imgcap'; c.textContent = im.credit; w.appendChild(c); return w;
+  }
   const todayKey = () => new Date().toISOString().slice(0, 10);
 
   // ---------- cards ----------
@@ -183,7 +191,8 @@
     document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === id));
     window.scrollTo(0, 0);
   }
-  function openSheet(id) { $(id).classList.add('active'); }
+  let sheetZ = 20;
+  function openSheet(id) { const el = $(id); el.style.zIndex = ++sheetZ; el.classList.add('active'); el.querySelector('.body') && (el.querySelector('.body').scrollTop = 0); }
   function closeSheet(id) { $(id).classList.remove('active'); }
   let toastT;
   function toast(msg, ms = 2200) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms); }
@@ -241,7 +250,7 @@
     $('c-q').textContent = c.q;
     $('c-a').textContent = c.a;
     const imgs = $('c-imgs'); imgs.innerHTML = '';
-    (c.images || []).forEach((src) => { const im = document.createElement('img'); im.src = src; im.alt = 'Your image'; imgs.appendChild(im); });
+    (c.images || []).forEach((im) => imgs.appendChild(imgEl(im)));
     $('c-edited').textContent = c.edited ? 'Edited by you' : '';
     $('c-reveal').classList.toggle('hidden', !revealed);
     $('c-hint').classList.toggle('hidden', revealed);
@@ -340,7 +349,7 @@
     const c = previewCard, p = prog(id), now = Date.now();
     $('p-meta').innerHTML = `<b style="color:var(--accent)">${DOMAIN_BY_KEY[c.d]?.name || 'Custom'}</b> · ${TYPES[c.t] || ''}${c.user ? ' · yours' : c.edited ? ' · edited by you' : ''}`;
     $('p-q').textContent = c.q; $('p-a').textContent = c.a;
-    const imgs = $('p-imgs'); imgs.innerHTML = ''; (c.images || []).forEach((src) => { const im = document.createElement('img'); im.src = src; im.style.maxWidth = '100%'; im.style.borderRadius = '10px'; imgs.appendChild(im); });
+    const imgs = $('p-imgs'); imgs.innerHTML = ''; (c.images || []).forEach((im) => { const el = imgEl(im); (el.tagName === 'IMG' ? el : el.querySelector('img')).style.cssText = 'max-width:100%;border-radius:10px'; imgs.appendChild(el); });
     $('p-sched').textContent = p.state === 'new' ? 'Not studied yet.' : `${p.reps} reviews · ${p.lapses} lapses · interval ${p.ivl}d · ease ${p.ease.toFixed(2)} · ${p.due <= now ? 'due now' : 'due in ' + fmtIvl(p.due - now)}`;
     openSheet('preview');
   }
@@ -361,7 +370,8 @@
     const t = $('e-thumbs'); t.innerHTML = '';
     editImages.forEach((src, i) => {
       const w = document.createElement('div'); w.className = 't';
-      w.innerHTML = `<img src="${src}" alt=""><button class="x" aria-label="Remove image">×</button>`;
+      const thumb = typeof src === 'string' ? src : (src.thumb || src.url);
+      w.innerHTML = `<img src="${thumb}" alt=""><button class="x" aria-label="Remove image">×</button>`;
       w.querySelector('.x').onclick = () => { editImages.splice(i, 1); renderThumbs(); }; t.appendChild(w);
     });
   }
@@ -406,6 +416,56 @@
     if (previewCard && previewCard.id === id) openPreview(id);
     if ($('browse').classList.contains('active')) renderBrowse();
     renderHome();
+  }
+
+
+  // ---------- image search (Wikimedia Commons / Google Custom Search) ----------
+  let imgSource = 'commons', imgSel = null;
+  function cleanQuery(q) { return q.replace(/[?:"“”]/g, ' ').replace(/\s+/g, ' ').trim().split(' ').slice(0, 8).join(' '); }
+  async function searchCommons(q) {
+    const u = 'https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrlimit=30&gsrsearch=' + encodeURIComponent(q + ' filetype:bitmap') + '&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=800&format=json&origin=*';
+    const r = await fetch(u); const j = await r.json();
+    return Object.values(j.query?.pages || {}).map((p) => { const ii = (p.imageinfo || [])[0] || {}; const m = ii.extmetadata || {};
+      const artist = (m.Artist?.value || '').replace(/<[^>]+>/g, '').trim(); const lic = m.LicenseShortName?.value || '';
+      return { url: ii.thumburl || ii.url, thumb: ii.thumburl, full: ii.url, title: (p.title || '').replace(/^File:/, ''), page: ii.descriptionurl, credit: [artist, lic, 'Wikimedia Commons'].filter(Boolean).join(' · ') };
+    }).filter((x) => x.url && /\.(jpe?g|png|gif|webp)$/i.test(x.full || x.url));
+  }
+  async function searchGoogle(q, start = 1) {
+    if (!settings.gKey || !settings.gCx) throw new Error('Add a Google API key and Search Engine ID in Settings.');
+    const u = `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(settings.gKey)}&cx=${encodeURIComponent(settings.gCx)}&searchType=image&num=10&start=${start}&safe=active&q=${encodeURIComponent(q)}`;
+    const r = await fetch(u); const j = await r.json();
+    if (!r.ok) throw new Error(j.error?.message || ('HTTP ' + r.status));
+    return (j.items || []).map((it) => ({ url: it.link, thumb: it.image?.thumbnailLink, title: it.title, page: it.image?.contextLink, credit: it.displayLink ? 'Source: ' + it.displayLink : '' }));
+  }
+  let gStart = 1, lastQ = '';
+  async function runImageSearch(more) {
+    const q = cleanQuery($('img-q').value); if (!q) return;
+    const box = $('img-results');
+    if (!more) { box.innerHTML = '<p class="note">Searching…</p>'; gStart = 1; }
+    try {
+      const res = imgSource === 'google' ? await searchGoogle(q, gStart) : await searchCommons(q);
+      if (!more) box.innerHTML = '';
+      let grid = box.querySelector('.imggrid'); if (!grid) { grid = document.createElement('div'); grid.className = 'imggrid'; box.appendChild(grid); }
+      res.forEach((im) => { const b = document.createElement('button'); b.innerHTML = `<img src="${im.thumb || im.url}" loading="lazy" alt=""><div class="cap">${esc(im.title || '')}</div>`; b.onclick = () => { imgSel = im; $('imgp-img').src = im.url; $('imgp-meta').textContent = (im.title || '') + (im.credit ? ' — ' + im.credit : ''); openSheet('imgpreview'); }; grid.appendChild(b); });
+      const old = box.querySelector('.morebtn'); old && old.remove();
+      if (!res.length && !more) box.innerHTML = '<p class="note">No images found. Try fewer or different words.</p>';
+      if (imgSource === 'google' && res.length === 10) { gStart += 10; const mb = document.createElement('button'); mb.className = 'secondary morebtn'; mb.style.cssText = 'display:block;width:100%;margin-top:12px;text-align:center'; mb.textContent = 'More results'; mb.onclick = () => runImageSearch(true); box.appendChild(mb); }
+      lastQ = q;
+    } catch (e) { box.innerHTML = `<p class="note warn">${esc(e.message)}</p>`; }
+  }
+  function openImageSearch() {
+    if (!editCard) return;
+    $('img-q').value = cleanQuery($('e-q').value || editCard.card.q || '');
+    $('img-results').innerHTML = '<p class="note">Tap Search, or change the words first. Radiographs and anatomy diagrams work best with specific terms (e.g. "Salter Harris classification").</p>';
+    openSheet('imgsearch');
+  }
+  async function addSelectedImage() {
+    if (!imgSel) return;
+    const rec = { url: imgSel.url, thumb: imgSel.thumb || '', credit: imgSel.credit || '', page: imgSel.page || '', title: imgSel.title || '' };
+    editImages.push(rec); renderThumbs();
+    // pre-cache for offline use (opaque response) — best effort
+    try { const c = await caches.open('orthodeck-images'); for (const u of [rec.url, rec.thumb].filter(Boolean)) { const r = await fetch(u, { mode: 'no-cors' }); await c.put(u, r); } } catch (e) {}
+    closeSheet('imgpreview'); closeSheet('imgsearch'); toast('Image added — tap Save to keep it');
   }
 
   // ---------- chat ----------
@@ -576,7 +636,7 @@ Rules — GRANULAR cards:
 
   // ---------- settings ----------
   function renderSettings() {
-    $('s-new').value = settings.newPerDay; $('s-max').value = settings.maxReviews; $('s-key').value = settings.apiKey; $('s-model').value = settings.model;
+    $('s-new').value = settings.newPerDay; $('s-max').value = settings.maxReviews; $('s-key').value = settings.apiKey; $('s-model').value = settings.model; $('s-gkey').value = settings.gKey || ''; $('s-gcx').value = settings.gCx || '';
     const d = $('s-domains'); d.innerHTML = '';
     DOMAINS.forEach((dm) => {
       const l = document.createElement('label'); l.className = 'toggle';
@@ -589,7 +649,7 @@ Rules — GRANULAR cards:
     $('about-text').textContent = `OrthoDeck ${APP_VERSION}. Seed deck weighted to the AAOS OITE content blueprint: ` + DOMAINS.map((x) => `${x.name} ${x.weight}%`).join(', ') + '. Scheduling is an SM-2 variant with 1 min / 10 min learning steps, ease 2.5 starting, lapses drop ease by 0.2. Built-in card text is a starting point written for study, not a clinical reference.';
   }
   async function exportBackup() {
-    const data = { app: 'orthodeck', version: APP_VERSION, exported: new Date().toISOString(), progress: Object.values(progress), overrides: Object.values(overrides), usercards: Object.values(userCards), chats: await DB.getAll('chats'), stats: Object.values(stats), queue: Object.values(queue), settings: { ...settings, apiKey: '' } };
+    const data = { app: 'orthodeck', version: APP_VERSION, exported: new Date().toISOString(), progress: Object.values(progress), overrides: Object.values(overrides), usercards: Object.values(userCards), chats: await DB.getAll('chats'), stats: Object.values(stats), queue: Object.values(queue), settings: { ...settings, apiKey: '', gKey: '' } };
     const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `orthodeck-backup-${todayKey()}.json`; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
@@ -598,7 +658,7 @@ Rules — GRANULAR cards:
     try {
       const data = JSON.parse(await file.text()); if (data.app !== 'orthodeck') throw new Error('Not an OrthoDeck backup');
       await DB.putMany('progress', data.progress || []); await DB.putMany('overrides', data.overrides || []); await DB.putMany('usercards', data.usercards || []); await DB.putMany('chats', data.chats || []); await DB.putMany('stats', data.stats || []); await DB.putMany('queue', data.queue || []);
-      if (data.settings) { settings = { ...settings, ...data.settings, apiKey: settings.apiKey }; await saveSettings(); }
+      if (data.settings) { settings = { ...settings, ...data.settings, apiKey: settings.apiKey, gKey: settings.gKey }; await saveSettings(); }
       progress = {}; overrides = {}; userCards = {}; stats = {}; queue = {}; await load(); renderSettings(); renderHome(); toast('Backup restored');
     } catch (e) { toast('Import failed: ' + e.message, 4000); }
   }
@@ -628,6 +688,13 @@ Rules — GRANULAR cards:
     $('btn-p-study').onclick = () => { if (!previewCard) return; closeSheet('preview'); session = { queue: [previewCard], done: 0, total: 1, undo: [], domain: null, again: 0 }; $('study-title').textContent = 'Single card'; $('done').classList.add('hidden'); $('cardwrap').classList.remove('hidden'); document.querySelector('#study .toolrow').classList.remove('hidden'); show('study'); nextCard(); };
     $('btn-p-reset').onclick = async () => { if (!previewCard || !confirm('Reset progress on this card?')) return; delete progress[previewCard.id]; await DB.del('progress', previewCard.id); openPreview(previewCard.id); renderBrowse(); };
     $('btn-edit-cancel').onclick = () => closeSheet('edit');
+    $('btn-img-search').onclick = openImageSearch;
+    $('btn-img-back').onclick = () => closeSheet('imgsearch');
+    $('btn-img-go').onclick = () => runImageSearch(false);
+    $('img-q').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); runImageSearch(false); } });
+    document.querySelectorAll('#img-sources .chip').forEach((b) => (b.onclick = () => { imgSource = b.dataset.src; document.querySelectorAll('#img-sources .chip').forEach((x) => x.classList.toggle('on', x === b)); if ($('img-q').value) runImageSearch(false); }));
+    $('btn-imgp-back').onclick = () => closeSheet('imgpreview');
+    $('btn-imgp-add').onclick = addSelectedImage;
     $('btn-edit-save').onclick = saveEdit;
     $('btn-edit-revert').onclick = () => confirm('Discard your edits and images for this card?') && revertEdit();
     $('btn-edit-delete').onclick = () => confirm('Delete this card permanently?') && deleteUserCard();
@@ -637,9 +704,9 @@ Rules — GRANULAR cards:
     $('btn-chat-send').onclick = () => sendChat();
     $('chat-text').addEventListener('input', (e) => { e.target.style.height = 'auto'; e.target.style.height = Math.min(120, e.target.scrollHeight) + 'px'; });
     document.querySelectorAll('#chat-chips .chip').forEach((b) => (b.onclick = () => sendChat(b.dataset.p)));
-    ['s-new', 's-max', 's-key', 's-model'].forEach((id) => ($(id).onchange = () => {
+    ['s-new', 's-max', 's-key', 's-model', 's-gkey', 's-gcx'].forEach((id) => ($(id).onchange = () => {
       settings.newPerDay = Math.max(0, +$('s-new').value || 0); settings.maxReviews = Math.max(5, +$('s-max').value || 100);
-      settings.apiKey = $('s-key').value.trim(); settings.model = $('s-model').value.trim() || DEFAULTS.model; saveSettings();
+      settings.apiKey = $('s-key').value.trim(); settings.model = $('s-model').value.trim() || DEFAULTS.model; settings.gKey = $('s-gkey').value.trim(); settings.gCx = $('s-gcx').value.trim(); saveSettings();
     }));
 
     // import
@@ -667,7 +734,7 @@ Rules — GRANULAR cards:
   }
 
   // ---------- boot ----------
-  const APP_VERSION = 'v2.0';
+  const APP_VERSION = 'v2.1';
   window.addEventListener('load', async () => {
     try { await load(); } catch (e) { toast('Storage unavailable: ' + e.message, 5000); }
     wire(); renderHome();
