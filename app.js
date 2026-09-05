@@ -12,7 +12,7 @@
   const GRADUATE_IVL = 1, EASY_IVL = 4, MIN_EASE = 1.3;
   const LEARN_AHEAD = 20 * MIN;     // show learning cards up to 20 min early when nothing else is due
   const DEFAULTS = {
-    id: 'main', newPerDay: 20, maxReviews: 100, domains: DOMAINS.map((d) => d.key),
+    id: 'main', newPerDay: 40, maxReviews: 200, domains: DOMAINS.map((d) => d.key),
     apiKey: '', model: 'claude-sonnet-4-6'
   };
   const TYPES = { classification: 'Classification', anatomy: 'Anatomy / approach', diagnosis: 'Diagnosis', management: 'Management' };
@@ -467,15 +467,16 @@ Each element: {"d": domain key, "t": card type, "q": front, "a": back}.
 Domain keys: ${DOMAINS.map((x) => x.key + ' = ' + x.name).join(', ')}.${domainKey === 'auto' ? ' Choose the best domain per card.' : ' Use "' + domainKey + '" for every card.'}
 Card types: classification, anatomy, diagnosis, management.
 
-Rules:
-- Write in your own words. Do not copy sentences or tables from the source; reorganize facts into recall-friendly Q/A. Facts, numbers, eponyms and classifications are fine.
-- One card per testable concept: a classification system, a nerve/vessel at risk, a threshold number, a management decision, a distinguishing feature. ${density === 'dense' ? 'Prefer many short cards (one fact each).' : density === 'light' ? 'Only the highest-yield concepts; skip minor detail.' : 'Group closely related facts into one card so the back reads as a compact summary.'}
-- Fronts are specific questions or prompts ("Garden classification stages", "Which root does an L4-5 far-lateral disc hit?"), not chapter headings.
-- Backs are concise, use line breaks (\\n) between items, and stay under ~120 words.
-- Skip prose about history, author acknowledgements, references, figure captions, and page furniture.
-- If the text contains no board-relevant content, return [].`;
+Rules — GRANULAR cards:
+- ONE fact per card. Never bundle. A classification system becomes one card per grade/type (e.g., "Garden III" → "Complete, partially displaced"). A list of risk factors becomes one card per risk factor or one short list card only if the items are always tested together.
+- Back = a phrase, not a paragraph: target 3–12 words, hard maximum 20. No explanations, no "because", no second sentence.
+- Front = a specific prompt that has exactly one answer: "Nerve at risk in the Kocher approach", "TAD threshold for cut-out", "Levine-Edwards IIA treatment".
+- Use every number, threshold, eponym, percentage, nerve, and treatment decision in the text — these are the testable facts. Aim high: ${density === 'light' ? 'only clearly high-yield facts (still one fact per card)' : density === 'normal' ? 'roughly 20–40 cards per 1,000 words of dense text' : 'roughly 40–70 cards per 1,000 words of dense text — extract everything testable'}.
+- Write in your own words; do not copy sentences or tables. Facts, numbers and names are fine.
+- Skip history/acknowledgements, references, figure captions, and page furniture.
+- If the text has no board-relevant content, return [].`;
 
-  function chunkText(text, words = 4500) {
+  function chunkText(text, words = 3000) {
     const w = text.split(/\s+/).filter(Boolean); const out = [];
     for (let i = 0; i < w.length; i += words) out.push(w.slice(i, i + words).join(' '));
     return out;
@@ -666,7 +667,7 @@ Rules:
   }
 
   // ---------- boot ----------
-  const APP_VERSION = 'v1.2';
+  const APP_VERSION = 'v2.0';
   window.addEventListener('load', async () => {
     try { await load(); } catch (e) { toast('Storage unavailable: ' + e.message, 5000); }
     wire(); renderHome();

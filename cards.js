@@ -1,10 +1,6 @@
-// OrthoDeck seed deck. Text-only by design. Card IDs are derived from position
-// within each domain block, so ADD new cards at the END of a block — never insert
-// in the middle — or existing progress will attach to the wrong card.
-//
-// Domain weights = AAOS OITE content blueprint (2024 technical report). Note the
-// blueprint is anatomic: "Hip & knee" includes hip/femur/knee fractures and
-// arthroplasty; "Trauma" is polytrauma, pelvis/acetabulum and non-H&K fractures.
+// OrthoDeck seed deck v2 — granular: one fact per card.
+// Card IDs derive from position within each domain block: ADD at the END of a block, never insert.
+// Domain weights = AAOS OITE blueprint (2024). Type codes: c classification, a anatomy/approach, d diagnosis, m management.
 
 const DOMAINS = [
   { key: 'hk',     name: 'Hip & knee',        weight: 19 },
@@ -21,1255 +17,1955 @@ const DOMAINS = [
 
 const SEED_CARDS = [];
 const _counts = {};
+const _T = { c: 'classification', a: 'anatomy', d: 'diagnosis', m: 'management' };
 function _add(d, list) {
   list.forEach((c) => {
     _counts[d] = (_counts[d] || 0) + 1;
-    SEED_CARDS.push({ id: d + '_' + String(_counts[d]).padStart(3, '0'), d, t: c[0], q: c[1].trim(), a: c[2].trim() });
+    SEED_CARDS.push({ id: d + '_' + String(_counts[d]).padStart(3, '0'), d, t: _T[c[0]] || c[0], q: c[1].trim(), a: c[2].trim() });
   });
 }
 
 // ======================= BASIC SCIENCE =======================
 _add('bs', [
-['management', `Primary vs secondary bone healing — what construct produces each?`, `Primary (direct) healing: absolute stability — lag screws, compression plating. Osteonal “cutting cones” cross the fracture; no callus.
-Secondary (indirect) healing: relative stability — IM nail, bridge plate, cast, ex-fix. Endochondral callus forms.
-Stages of secondary healing: hematoma/inflammation → soft (cartilaginous) callus → hard (woven bone) callus → remodeling.`],
-['diagnosis', `Perren’s strain theory: what interfragmentary strain gives bone, callus, or fibrous tissue?`, `<2% strain → direct (primary) bone formation.
-2–10% → cartilage/callus (secondary healing).
->10% → fibrous tissue / nonunion.
-Practical point: a large gap tolerates more motion than a small one (same motion = lower strain across a wider gap).`],
-['anatomy', `Collagen types: I, II, III, X — where does each live?`, `Type I: bone, tendon, ligament, skin, annulus fibrosus, meniscus.
-Type II: hyaline articular cartilage, nucleus pulposus.
-Type III: healing tissue, blood vessels, skin (Dupuytren cords are III-rich).
-Type X: hypertrophic zone of the physis and calcifying cartilage (fracture callus).`],
-['anatomy', `Growth plate zones and the disorder that hits each one`, `Reserve (resting): Gaucher, mucopolysaccharidoses, diastrophic dysplasia.
-Proliferative: achondroplasia (FGFR3 gain-of-function), gigantism.
-Hypertrophic (maturation → degeneration → provisional calcification): SCFE and Salter-Harris fractures (through zone of provisional calcification / hypertrophic zone); rickets and enchondromas (provisional calcification); SED, Kniest.
-Metaphysis: osteomyelitis (sluggish sinusoidal flow), scurvy, renal osteodystrophy.`],
-['diagnosis', `RANKL / RANK / OPG — who makes what, and which drug targets it?`, `Osteoblasts and stromal cells express RANKL → binds RANK on osteoclast precursors → osteoclast differentiation and activation.
-OPG (osteoprotegerin) is a decoy receptor from osteoblasts that binds RANKL and blocks it.
-Denosumab = monoclonal antibody against RANKL (used in osteoporosis, giant cell tumor, bone mets).
-PTH, vitamin D, IL-1, IL-6, TNF-α, PGE2 increase RANKL; estrogen and calcitonin oppose resorption.`],
-['diagnosis', `Osteoclast: lineage, key enzymes, and how bisphosphonates work`, `Hematopoietic monocyte/macrophage lineage; multinucleated; ruffled border seals a Howship lacuna; acidifies with carbonic anhydrase II and H+-ATPase; digests matrix with cathepsin K and TRAP.
-Nitrogen-containing bisphosphonates (alendronate, zoledronate) inhibit farnesyl pyrophosphate synthase in the mevalonate pathway → osteoclast apoptosis.
-Adverse: atypical femur fracture (lateral cortical thickening, transverse, medial spike, prodromal thigh pain), osteonecrosis of jaw, esophagitis.`],
-['diagnosis', `Osteoblast markers and master transcription factor`, `From mesenchymal stem cells. Master switch: RUNX2 (Cbfa1); Osterix downstream. Wnt/β-catenin promotes osteoblastogenesis; sclerostin (from osteocytes, SOST) inhibits Wnt → romosozumab is anti-sclerostin.
-Markers: alkaline phosphatase, osteocalcin, type I collagen. Osteocytes (buried osteoblasts) sense mechanical load via canaliculi.`],
-['diagnosis', `DXA T-score thresholds and teriparatide rules`, `WHO: T-score ≤ −2.5 = osteoporosis; −1 to −2.5 = osteopenia (compare to young adult mean). Z-score compares to age-matched. Fragility fracture of hip or spine = osteoporosis regardless of T-score.
-Teriparatide (PTH 1-34) is anabolic (intermittent PTH builds bone; continuous PTH resorbs). Limit 2 years; avoid in Paget disease, open physes, prior skeletal radiation, bone malignancy (osteosarcoma in rat studies).
-Bisphosphonate holiday considered after ~5 years to limit atypical fractures.`],
-['diagnosis', `Osteomalacia / rickets labs vs X-linked hypophosphatemic rickets`, `Nutritional vitamin D deficiency: low/normal Ca, low phosphate, high ALP, high PTH (secondary), low 25-OH vitamin D. Looser zones (pseudofractures) in adults; widened, cupped, frayed physes in kids.
-X-linked hypophosphatemic rickets: PHEX mutation → high FGF23 → renal phosphate wasting. Low phosphate, NORMAL calcium and PTH, low-normal 1,25-D. Treat with phosphate + calcitriol, or burosumab (anti-FGF23). Most common heritable rickets.
-Vitamin D-dependent rickets type I: 1α-hydroxylase defect; type II: receptor defect (alopecia).`],
-['diagnosis', `Paget disease of bone: mechanism, labs, complications`, `Excess, disorganized osteoclast resorption then chaotic osteoblast formation (mosaic/woven bone). Paramyxovirus association proposed; SQSTM1 mutations familial.
-Labs: markedly elevated ALP, normal calcium (hypercalcemia only if immobilized).
-Complications: deformity (bowing), fracture, high-output cardiac failure, hearing loss, secondary osteosarcoma (<1%, poor prognosis), arthritis.
-Treat symptomatic disease with bisphosphonates (zoledronate); pre-op bisphosphonates reduce bleeding at arthroplasty.`],
-['diagnosis', `Renal osteodystrophy: pathophysiology and radiographic signs`, `CKD → phosphate retention + low 1,25-vitamin D → hypocalcemia → secondary hyperparathyroidism (high PTH, high phosphate, low Ca). Also aluminum toxicity (dialysis) and adynamic bone.
-X-rays: rugger-jersey spine, subperiosteal resorption (radial side of middle phalanges), brown tumors, salt-and-pepper skull, SCFE in kids, soft-tissue calcification.
-Treat: phosphate binders, calcitriol, cinacalcet; parathyroidectomy if refractory.`],
-['anatomy', `Articular cartilage composition and zonal structure`, `65–80% water; type II collagen; aggrecan (chondroitin/keratan sulfate) on hyaluronan backbone; chondrocytes <5% of volume. Avascular, aneural, alymphatic — nourished by synovial fluid diffusion (loading pump).
-Superficial (tangential) zone: collagen parallel to surface, highest collagen & water, lowest proteoglycan, resists shear.
-Middle: oblique collagen. Deep: perpendicular collagen, highest proteoglycan, resists compression.
-Tidemark separates deep zone from calcified cartilage anchored to subchondral bone.
-Lubrication mainly boundary (lubricin) and fluid-film.`],
-['diagnosis', `Ligament vs tendon healing — why does the MCL heal but the ACL doesn’t?`, `MCL is extra-articular: hematoma organizes, fibroblasts lay type III then type I collagen, good vascularity → heals nonoperatively even grade III.
-ACL is intra-articular: synovial fluid dilutes the clot, poor blood supply (middle geniculate only), torn ends retract → no healing.
-Tendon-to-bone healing recreates a fibrocartilage transition poorly (scar); the native enthesis has 4 zones: tendon → fibrocartilage → mineralized fibrocartilage → bone.`],
-['classification', `Seddon / Sunderland nerve injury classification`, `Neurapraxia (Sunderland 1): focal demyelination/conduction block, axon intact, full recovery weeks–months, no Wallerian degeneration.
-Axonotmesis (Sunderland 2–4): axon disrupted, Wallerian degeneration distal to injury; endoneurium intact (2) → recovery ~1 mm/day (1 inch/month); perineurium (3) or epineurium-only intact (4) → poorer recovery.
-Neurotmesis (Sunderland 5): complete transection, no recovery without repair.
-EMG: fibrillations/denervation appear ~2–3 weeks after injury, so wait 3–4 weeks for a meaningful study.`],
-['diagnosis', `Muscle fiber types and contraction types`, `Type I: slow-twitch, oxidative, red (myoglobin, mitochondria), fatigue-resistant, endurance (postural muscles).
-Type IIA: fast, oxidative-glycolytic, intermediate.
-Type IIB (IIx): fast, glycolytic, white, fatigues quickly, power.
-Eccentric contraction generates the most force per unit and causes the most delayed-onset soreness; isometric = no length change; isokinetic = constant velocity.
-Motor unit recruitment: small (type I) first (Henneman size principle).`],
-['diagnosis', `Stiffness (Young’s modulus) ranking of orthopaedic materials`, `Ceramic (alumina) > cobalt-chrome > stainless steel > titanium alloy > cortical bone > PMMA cement > polyethylene > cancellous bone > tendon/ligament > cartilage.
-Titanium’s modulus is closest to bone → less stress shielding than CoCr/steel, but titanium is notch-sensitive (avoid scratches, poor wear as a bearing).
-Stress = force/area; strain = ΔL/L; modulus = stress/strain (slope of elastic region). Yield point = onset of plastic deformation; ultimate strength; toughness = area under curve.`],
-['diagnosis', `Types of corrosion at implants and the classic examples`, `Galvanic: two dissimilar metals in electrolyte (stainless steel + cobalt-chrome worst; titanium + CoCr acceptable).
-Fretting/crevice (mechanically assisted): micromotion at modular junctions — trunnionosis at head-neck taper (CoCr head on titanium stem), plate–screw interfaces.
-Titanium and CoCr resist corrosion via passive oxide layers; scratching breaks the layer.`],
-['diagnosis', `Polyethylene wear: particle size, biology, and what highly cross-linked PE trades away`, `Wear debris 0.1–1 µm (submicron) is most biologically active → phagocytosed by macrophages → TNF-α, IL-1, IL-6, PGE2, RANKL → osteoclast activation → osteolysis and aseptic loosening.
-Highly cross-linked UHMWPE (gamma/e-beam irradiation then remelting/annealing) cuts wear ~50–90% but reduces toughness/fatigue strength (liner rim fracture risk); vitamin E-doped PE quenches free radicals without remelting.
-Larger femoral heads: less linear wear but more volumetric wear; better stability/jump distance.
-Linear wear >0.1 mm/yr predicts osteolysis. Gamma sterilization in air → oxidation (avoid).`],
-['diagnosis', `Statistics for boards: sensitivity, specificity, PPV/NPV, errors, NNT, levels of evidence`, `Sensitivity = TP/(TP+FN) — rules OUT when negative (SnOUT). Specificity = TN/(TN+FP) — rules IN when positive (SpIN).
-PPV = TP/(TP+FP), NPV = TN/(TN+FN): depend on prevalence (PPV rises with prevalence).
-Type I error (α): false positive — rejecting a true null; p<0.05. Type II (β): false negative — missing a real difference; power = 1−β (usually 0.8); underpowered studies risk type II.
-NNT = 1/absolute risk reduction.
-Levels: I RCT / meta-analysis of RCTs; II prospective cohort, lesser-quality RCT; III case-control, retrospective cohort; IV case series; V expert opinion.`],
-['management', `Perioperative antibiotic prophylaxis: agent, timing, redosing`, `Cefazolin 2 g IV (3 g if >120 kg) within 60 minutes before incision; vancomycin or clindamycin for true β-lactam allergy (vancomycin infused within 120 min). Add vancomycin for known MRSA colonization.
-Redose cefazolin every 4 hours of surgery or with >1500 mL blood loss. Stop within 24 hours.
-Decolonization (nasal mupirocin + chlorhexidine) for S. aureus carriers reduces SSI.
-Skin prep: chlorhexidine-alcohol superior to povidone-iodine.`],
-['diagnosis', `Fat embolism syndrome: timing, criteria, prevention`, `Occurs 24–72 h after long-bone (femur) or pelvic fracture, or reamed nailing. Gurd major criteria: petechial rash (axilla, conjunctiva, chest), hypoxemia (PaO2 <60), CNS depression/confusion, pulmonary edema. Minor: tachycardia, fever, retinal emboli, fat in urine/sputum, thrombocytopenia, falling hematocrit.
-Prevention: early fracture stabilization (within 24 h). Treatment supportive: oxygen, ventilation. Steroids not standard.`],
-['diagnosis', `Malignant hyperthermia: gene, triggers, earliest signs, treatment`, `Autosomal dominant RYR1 (ryanodine receptor) mutation → uncontrolled sarcoplasmic calcium release. Triggers: volatile anesthetics, succinylcholine.
-Earliest sign: rising end-tidal CO2 despite ventilation; also masseter rigidity, tachycardia, then hyperthermia, acidosis, hyperkalemia, rhabdomyolysis.
-Treat: stop triggers, dantrolene 2.5 mg/kg IV, cool, treat hyperkalemia. Association: central core disease, King-Denborough; DMD patients get a similar rhabdomyolysis reaction.`],
-['management', `Heterotopic ossification prophylaxis and Brooker classification`, `Prophylaxis (high-risk hip/acetabular surgery, elbow trauma with head injury): indomethacin 75 mg/day for ~6 weeks, or single-fraction radiation 700 cGy within 24–72 h post-op (radiation may impair fracture healing / cause nonunion with acetabular fractures if field includes fracture).
-Brooker: I islands of bone in soft tissue; II bone spurs with ≥1 cm gap; III spurs with <1 cm gap; IV ankylosis.
-Excise once mature (6–18 months; normal ALP, cold bone scan) if motion limited.`],
-['management', `Bone graft properties: osteogenic / osteoinductive / osteoconductive`, `Osteogenic (live cells): autograft, bone marrow aspirate.
-Osteoinductive (growth factors recruit MSCs): autograft, demineralized bone matrix (DBM), BMPs.
-Osteoconductive (scaffold): autograft, allograft, DBM, calcium phosphate/sulfate, hydroxyapatite.
-rhBMP-2 FDA-approved: anterior lumbar interbody fusion (with cage) and open tibial shaft fractures. rhBMP-7 (OP-1) humanitarian device for recalcitrant long-bone nonunion. Avoid rhBMP-2 in cervical spine (airway edema) and near tumors.
-Allograft: fresh-frozen keeps BMPs (more immunogenic); freeze-dried loses mechanical strength; structural allograft risks fracture ~19% at 2–3 years.`],
-['diagnosis', `Gout vs CPPD (pseudogout) crystals`, `Gout: monosodium urate — needle-shaped, NEGATIVELY birefringent (yellow when parallel to compensator). 1st MTP (podagra), tophi. Treat acute with NSAIDs/colchicine/steroids; allopurinol for prevention (not during acute flare unless already on it).
-CPPD: calcium pyrophosphate — rhomboid, weakly POSITIVELY birefringent. Chondrocalcinosis of knee menisci and TFCC; associated with hyperparathyroidism, hemochromatosis, hypomagnesemia. Mimics septic arthritis — aspirate and culture.`],
-['classification', `Ficat / ARCO staging of femoral head osteonecrosis`, `Ficat 0: normal imaging (contralateral asymptomatic hip). I: normal radiograph, positive MRI (double-line sign on T2 is pathognomonic). II: sclerosis/cysts, head spherical. III: crescent sign (subchondral fracture) ± flattening — post-collapse. IV: acetabular involvement, secondary OA.
-Risk factors: corticosteroids (most common), alcohol, sickle cell, SLE, HIV, Gaucher, dysbarism, transplant, radiation. 50–80% bilateral → MRI both hips.
-Precollapse (I–II, small lesion) → core decompression ± graft. Post-collapse → THA (young: consider vascularized fibula).`],
-['anatomy', `Compartment syndrome: physiology, the pressure threshold, and the pediatric “3 As”`, `Rising intracompartmental pressure reduces arteriovenous gradient → venous collapse → ischemia; irreversible muscle injury by ~6–8 h. Pain out of proportion and pain with passive stretch are earliest; pulses are LATE (never wait for pulselessness).
-Measure when exam unreliable: ΔP = diastolic BP − compartment pressure; ΔP ≤ 30 mmHg → fasciotomy (absolute >30 mmHg alone is less reliable).
-Children: increasing Analgesic requirement, Anxiety, Agitation.
-Most common: tibial shaft fracture; also forearm (supracondylar in kids), IV infiltration, burns, reperfusion.`],
-['anatomy', `Nerve action potential, EMG timing, and what preserved SNAPs mean in a plexus injury`, `Wallerian degeneration takes ~7–10 days, so nerve conduction across a lesion may look normal in the first week.
-EMG: fibrillation potentials / positive sharp waves appear 2–4 weeks after axonal injury; polyphasic units mark reinnervation.
-Brachial plexus: preserved sensory nerve action potentials (SNAPs) in an anesthetic limb = PREganglionic (root avulsion) because the dorsal root ganglion cell body is intact — a poor prognostic sign. Other preganglionic clues: Horner syndrome, winged scapula, elevated hemidiaphragm, pseudomeningocele on myelogram.`],
-['diagnosis', `Sickle cell disease: orthopaedic manifestations`, `Osteonecrosis (femoral/humeral head; bilateral common), dactylitis (hand-foot syndrome in toddlers), osteomyelitis — Salmonella classically, but S. aureus still most common overall; diaphyseal, hard to distinguish from vaso-occlusive crisis (MRI, blood cultures, aspiration).
-Peri-op: keep warm, hydrated, oxygenated; transfuse to Hb ~10 g/dL; avoid tourniquet controversy (generally acceptable with precautions); THA has high complication rate (infection, loosening, sclerotic canals).`],
-['diagnosis', `Osteogenesis imperfecta: gene, Sillence types, surgical points`, `COL1A1/COL1A2 (type I collagen) — quantitative defect (type I OI, mild) or qualitative (severe types). Autosomal dominant mostly.
-Sillence: I mild, blue sclerae, hearing loss; II lethal perinatal; III severe progressive deforming, dentinogenesis imperfecta; IV moderate, normal sclerae.
-Treatment: bisphosphonates (pamidronate) reduce fracture rate; telescoping IM rods (Fassier-Duval) for deformity; avoid plates (stress risers). Basilar invagination, scoliosis (bracing ineffective), ligamentous laxity. Rule out non-accidental trauma.`],
-['diagnosis', `Achondroplasia: gene, clinical and spine problems`, `FGFR3 gain-of-function (autosomal dominant; 80% new mutations, paternal age) → inhibits proliferative zone chondrocytes. Rhizomelic dwarfism, frontal bossing, midface hypoplasia, trident hands, normal intelligence.
-Infants: foramen magnum stenosis → central apnea/sudden death (sleep study, MRI). Thoracolumbar kyphosis usually resolves with walking (brace if persistent >30°; fuse if progressive with anterior wedging).
-Adults: lumbar stenosis from short pedicles and DECREASING interpedicular distance L1→L5 (normally increases) → laminectomy ± fusion. Genu varum from fibular overgrowth. Vosoritide (CNP analog) increases growth velocity.`],
-['diagnosis', `Marfan vs Ehlers-Danlos vs homocystinuria — orthopaedic differentiators`, `Marfan: FBN1 (fibrillin-1), AD; arachnodactyly, pectus, scoliosis (brace less effective; high pseudarthrosis/dural ectasia), protrusio acetabuli, upward lens dislocation, aortic root dilation (echo before surgery), superior lens.
-Ehlers-Danlos: collagen defects (type V collagen in classic; COL3A1 vascular type); skin hyperextensibility, joint hypermobility, recurrent dislocations, poor wound healing; avoid surgery for instability where possible (rehab).
-Homocystinuria: cystathionine β-synthase; Marfanoid but with intellectual disability, thrombosis, DOWNWARD lens dislocation, osteoporosis.`],
-['management', `Tourniquet and anesthesia pearls for the OITE`, `Tourniquet: inflate ~100 mmHg above systolic (arm ~250, leg ~300); wide cuff needs less pressure; limit ~2 h (deflate 10–20 min then reinflate); nerve injury more common in upper extremity (radial nerve); risks — post-tourniquet syndrome, skin injury under alcohol prep.
-Regional blocks: interscalene → phrenic palsy (avoid in severe COPD), supraclavicular → pneumothorax; femoral/adductor canal for TKA (adductor canal spares quads).
-Local anesthetic toxicity (LAST): perioral numbness, seizures, arrhythmia → lipid emulsion 20%.
-Peri-op steroid cover for chronic steroid use; hold ACE inhibitors day of surgery.`]
+['m','Primary (direct) bone healing requires what kind of stability?','Absolute stability — lag screw or compression plate; no callus.'],
+['m','Secondary bone healing requires what kind of stability?','Relative stability — IM nail, bridge plate, cast; heals with callus.'],
+['d','Stages of secondary bone healing, in order','Hematoma/inflammation → soft callus → hard callus → remodeling.'],
+['d','Perren strain theory: strain for direct bone formation','< 2%.'],
+['d','Perren strain theory: strain that produces cartilage/callus','2–10%.'],
+['d','Perren strain theory: strain that produces fibrous tissue / nonunion','> 10%.'],
+['a','Type I collagen is found in…','Bone, tendon, ligament, skin, annulus fibrosus, meniscus.'],
+['a','Type II collagen is found in…','Hyaline articular cartilage and nucleus pulposus.'],
+['a','Type III collagen is found in…','Healing tissue, blood vessels, skin (Dupuytren cords).'],
+['a','Type X collagen is found in…','Hypertrophic zone of the physis; calcifying cartilage.'],
+['a','Physeal zone affected in achondroplasia','Proliferative zone.'],
+['a','Physeal zone affected by Gaucher disease and mucopolysaccharidoses','Reserve (resting) zone.'],
+['a','Physeal zone through which SCFE occurs','Hypertrophic zone.'],
+['a','Physeal zone through which Salter-Harris fractures propagate','Hypertrophic zone (zone of provisional calcification).'],
+['a','Physeal zone affected by rickets','Zone of provisional calcification (hypertrophic) — widened physis.'],
+['a','Why osteomyelitis localizes to the metaphysis','Sluggish flow in metaphyseal sinusoidal loops.'],
+['d','Cell that expresses RANKL','Osteoblasts and stromal cells.'],
+['d','Effect of RANKL binding RANK','Osteoclast differentiation and activation.'],
+['d','Role of osteoprotegerin (OPG)','Decoy receptor that binds RANKL, blocking osteoclastogenesis.'],
+['m','Denosumab mechanism','Monoclonal antibody against RANKL.'],
+['d','Osteoclast lineage','Hematopoietic monocyte/macrophage lineage.'],
+['d','Enzymes of osteoclast resorption','Carbonic anhydrase II, H+-ATPase, cathepsin K, TRAP.'],
+['m','Nitrogen-containing bisphosphonate mechanism','Inhibit farnesyl pyrophosphate synthase (mevalonate pathway) → osteoclast apoptosis.'],
+['d','Radiographic features of an atypical (bisphosphonate) femur fracture','Lateral cortical thickening, transverse pattern, medial spike; prodromal thigh pain.'],
+['d','Master transcription factor for osteoblast differentiation','RUNX2 (Cbfa1); Osterix downstream.'],
+['d','Osteoblast markers','Alkaline phosphatase, osteocalcin, type I collagen.'],
+['d','Sclerostin: source and action','From osteocytes (SOST gene); inhibits Wnt → less bone formation.'],
+['m','Romosozumab mechanism','Anti-sclerostin antibody (anabolic).'],
+['d','WHO T-score for osteoporosis','≤ −2.5.'],
+['d','WHO T-score range for osteopenia','−1 to −2.5.'],
+['d','T-score vs Z-score','T compares to young adult mean; Z to age-matched.'],
+['m','Teriparatide: mechanism and duration limit','PTH 1-34, anabolic with intermittent dosing; max 2 years.'],
+['m','Teriparatide contraindications','Paget disease, open physes, prior skeletal radiation, bone malignancy.'],
+['d','Labs in nutritional vitamin D deficiency (osteomalacia/rickets)','Low/normal Ca, low phosphate, high ALP, high PTH, low 25-OH D.'],
+['d','Radiographic sign of osteomalacia in adults','Looser zones (pseudofractures).'],
+['d','Gene in X-linked hypophosphatemic rickets','PHEX → high FGF23 → renal phosphate wasting.'],
+['d','Labs in X-linked hypophosphatemic rickets','Low phosphate; NORMAL calcium and PTH.'],
+['m','Treatment of X-linked hypophosphatemic rickets','Phosphate + calcitriol, or burosumab (anti-FGF23).'],
+['d','Most common heritable form of rickets','X-linked hypophosphatemic rickets.'],
+['d','Vitamin D–dependent rickets type I vs II','I: 1α-hydroxylase defect. II: receptor defect (alopecia).'],
+['d','Paget disease: labs','Markedly elevated ALP; normal calcium.'],
+['d','Paget disease: primary cellular defect','Excess, disorganized osteoclast resorption (mosaic woven bone).'],
+['d','Paget disease: rate of secondary osteosarcoma','< 1%; poor prognosis.'],
+['m','Paget disease: treatment and preop tip','Bisphosphonates (zoledronate); give before arthroplasty to reduce bleeding.'],
+['d','Renal osteodystrophy: labs','High phosphate, low calcium, high PTH (secondary hyperparathyroidism).'],
+['d','Renal osteodystrophy: spine radiograph sign','Rugger-jersey spine.'],
+['d','Site of subperiosteal resorption in hyperparathyroidism','Radial side of the middle phalanges.'],
+['a','Water content of articular cartilage','65–80%.'],
+['a','Main proteoglycan of articular cartilage','Aggrecan (chondroitin/keratan sulfate) on hyaluronan.'],
+['a','How articular cartilage is nourished','Diffusion from synovial fluid (avascular, aneural).'],
+['a','Superficial zone of cartilage: collagen orientation and role','Parallel to surface; resists shear; highest collagen and water.'],
+['a','Deep zone of cartilage: collagen orientation and composition','Perpendicular; highest proteoglycan; resists compression.'],
+['a','The tidemark separates…','Deep zone from calcified cartilage.'],
+['a','Main lubrication mechanisms of cartilage','Boundary (lubricin) and fluid-film.'],
+['d','Why the MCL heals but the ACL does not','MCL extra-articular (good blood supply); ACL bathed in synovial fluid, ends retract.'],
+['a','Four zones of a tendon enthesis','Tendon → fibrocartilage → mineralized fibrocartilage → bone.'],
+['c','Seddon: neurapraxia','Focal demyelination/conduction block; axon intact; full recovery.'],
+['c','Seddon: axonotmesis','Axon disrupted, endoneurium intact; Wallerian degeneration; regrows ~1 mm/day.'],
+['c','Seddon: neurotmesis','Complete transection; no recovery without repair.'],
+['d','Nerve regeneration rate','~1 mm/day (1 inch/month).'],
+['d','When EMG fibrillations appear after axonal injury','2–4 weeks.'],
+['d','Preserved SNAPs in an anesthetic limb after brachial plexus injury means…','Preganglionic (root avulsion) — DRG cell body intact; poor prognosis.'],
+['d','Preganglionic brachial plexus injury clues','Horner syndrome, winged scapula, elevated hemidiaphragm, pseudomeningocele.'],
+['d','Type I muscle fibers','Slow-twitch, oxidative, red, fatigue-resistant, endurance.'],
+['d','Type IIB muscle fibers','Fast-twitch, glycolytic, white, fatigue quickly, power.'],
+['d','Contraction type generating the most force and most soreness','Eccentric.'],
+['d','Henneman size principle','Small (type I) motor units recruited first.'],
+['d','Stiffness ranking of implant materials (highest → lowest)','Ceramic > CoCr > stainless steel > titanium > cortical bone > PMMA > polyethylene > cancellous bone.'],
+['d','Why titanium causes less stress shielding than CoCr','Modulus closer to bone.'],
+['d','Titanium alloy drawback','Notch sensitivity; poor wear as a bearing.'],
+['d','Young modulus definition','Stress ÷ strain — slope of the elastic region.'],
+['d','Galvanic corrosion example','Stainless steel + cobalt-chrome in electrolyte.'],
+['d','Fretting/crevice corrosion example','Trunnionosis at modular head–neck taper (CoCr head on Ti stem).'],
+['d','Most biologically active polyethylene wear particle size','0.1–1 µm (submicron).'],
+['d','Cytokines driving particle-induced osteolysis','TNF-α, IL-1, IL-6, PGE2, RANKL.'],
+['d','Highly cross-linked polyethylene: gain and trade-off','Much less wear; reduced toughness/fatigue strength.'],
+['d','Role of vitamin E in polyethylene','Quenches free radicals without remelting.'],
+['d','Larger femoral heads change wear how?','Less linear wear, more volumetric wear.'],
+['d','Linear polyethylene wear rate predicting osteolysis','> 0.1 mm/year.'],
+['d','Sensitivity formula','TP ÷ (TP + FN); rules out when negative (SnOUT).'],
+['d','Specificity formula','TN ÷ (TN + FP); rules in when positive (SpIN).'],
+['d','Which values depend on prevalence?','PPV and NPV (PPV rises with prevalence).'],
+['d','Type I error','False positive — rejecting a true null (α).'],
+['d','Type II error','False negative — missing a real difference (β).'],
+['d','Power','1 − β; usually 0.8.'],
+['d','Number needed to treat','1 ÷ absolute risk reduction.'],
+['d','Level I evidence','RCT or meta-analysis of RCTs.'],
+['d','Level III evidence','Case-control or retrospective cohort.'],
+['d','Level IV evidence','Case series.'],
+['m','Cefazolin prophylaxis: dose and timing','2 g IV (3 g if > 120 kg) within 60 min of incision.'],
+['m','Cefazolin redosing','Every 4 h of surgery or blood loss > 1500 mL.'],
+['m','Vancomycin prophylaxis timing','Infuse within 120 min before incision.'],
+['m','Superior skin prep agent','Chlorhexidine-alcohol (over povidone-iodine).'],
+['d','Fat embolism timing','24–72 h after long-bone/pelvic fracture.'],
+['d','Fat embolism major criteria (Gurd)','Petechial rash, hypoxemia, CNS depression, pulmonary edema.'],
+['m','Fat embolism prevention','Early fracture stabilization (< 24 h).'],
+['d','Malignant hyperthermia gene','RYR1 (ryanodine receptor), autosomal dominant.'],
+['d','Malignant hyperthermia triggers','Volatile anesthetics, succinylcholine.'],
+['d','Earliest sign of malignant hyperthermia','Rising end-tidal CO2.'],
+['m','Malignant hyperthermia treatment','Dantrolene 2.5 mg/kg IV; stop triggers; cool.'],
+['m','Heterotopic ossification prophylaxis options','Indomethacin 75 mg/day × 6 weeks, or 700 cGy single-dose XRT within 24–72 h.'],
+['c','Brooker class I','Islands of bone in soft tissue.'],
+['c','Brooker class II','Spurs with ≥ 1 cm gap.'],
+['c','Brooker class III','Spurs with < 1 cm gap.'],
+['c','Brooker class IV','Ankylosis.'],
+['m','When to excise heterotopic ossification','Mature: 6–18 months, normal ALP, cold bone scan.'],
+['m','Graft with all three properties (osteogenic, inductive, conductive)','Autograft.'],
+['m','Demineralized bone matrix properties','Osteoinductive + osteoconductive (no cells).'],
+['m','FDA-approved uses of rhBMP-2','Anterior lumbar interbody fusion with cage; open tibial shaft fracture.'],
+['m','rhBMP-7 (OP-1) indication','Humanitarian: recalcitrant long-bone nonunion.'],
+['m','Why avoid rhBMP-2 in the cervical spine','Airway edema/swelling.'],
+['d','Gout crystals','Monosodium urate; needle-shaped; negatively birefringent.'],
+['d','CPPD (pseudogout) crystals','Calcium pyrophosphate; rhomboid; weakly positively birefringent.'],
+['d','Sites of chondrocalcinosis in CPPD','Knee menisci and TFCC.'],
+['c','Ficat stage I osteonecrosis','Normal radiograph, positive MRI (double-line sign).'],
+['c','Ficat stage II osteonecrosis','Sclerosis/cysts; head still spherical.'],
+['c','Ficat stage III osteonecrosis','Crescent sign / subchondral collapse.'],
+['c','Ficat stage IV osteonecrosis','Acetabular involvement, secondary OA.'],
+['d','Most common cause of femoral head osteonecrosis','Corticosteroids (then alcohol).'],
+['d','Bilateral rate of femoral head osteonecrosis','50–80% → MRI both hips.'],
+['d','Compartment syndrome: ΔP threshold for fasciotomy','Diastolic BP − compartment pressure ≤ 30 mmHg.'],
+['d','Earliest clinical signs of compartment syndrome','Pain out of proportion; pain with passive stretch.'],
+['d','Pediatric compartment syndrome 3 As','Increasing Analgesic need, Anxiety, Agitation.'],
+['d','Most common cause of compartment syndrome','Tibial shaft fracture.'],
+['d','Classic organism in sickle cell osteomyelitis','Salmonella (S. aureus still most common overall).'],
+['d','Osteogenesis imperfecta gene','COL1A1/COL1A2 (type I collagen).'],
+['c','Sillence type I OI','Mild; blue sclerae; hearing loss.'],
+['c','Sillence type II OI','Lethal perinatal.'],
+['c','Sillence type III OI','Severe progressive deforming; dentinogenesis imperfecta.'],
+['m','OI deformity surgery implant','Telescoping IM rods (Fassier-Duval); avoid plates.'],
+['d','Achondroplasia gene','FGFR3 gain-of-function; autosomal dominant.'],
+['d','Achondroplasia infant emergency','Foramen magnum stenosis → central apnea.'],
+['d','Achondroplasia lumbar spine finding','Interpedicular distance narrows L1→L5 (stenosis).'],
+['d','Cause of genu varum in achondroplasia','Fibular overgrowth.'],
+['d','Marfan gene','FBN1 (fibrillin-1).'],
+['d','Lens dislocation: Marfan vs homocystinuria','Marfan upward; homocystinuria downward.'],
+['d','Vascular Ehlers-Danlos gene','COL3A1.'],
+['m','Tourniquet pressure rule','~100 mmHg above systolic (arm ~250, leg ~300).'],
+['d','Interscalene block complication','Phrenic nerve palsy (avoid in severe COPD).'],
+['m','Local anesthetic systemic toxicity treatment','20% lipid emulsion.'],
 ]);
 
 // ======================= FOOT & ANKLE =======================
 _add('fa', [
-['classification', `Weber (Danis-Weber) ankle fracture classification`, `Based on the level of the fibula fracture relative to the syndesmosis:
-A: below the syndesmosis (transverse avulsion; supination-adduction mechanism) — syndesmosis intact.
-B: at the level of the syndesmosis (spiral/oblique; supination-external rotation) — syndesmosis may or may not be injured.
-C: above the syndesmosis (pronation-external rotation, Maisonneuve) — syndesmosis disrupted.
-Weber level alone does not determine stability; assess medial side (deltoid) and syndesmosis.`],
-['classification', `Lauge-Hansen supination-external rotation (SER) stages`, `SER is the most common ankle fracture pattern (~75%). Foot supinated, talus externally rotates:
-I: anterior inferior tibiofibular ligament (AITFL) tear.
-II: short oblique / spiral fibula fracture running anteroinferior → posterosuperior (Weber B).
-III: posterior inferior tibiofibular ligament tear or posterior malleolus fracture.
-IV: medial malleolus fracture or deep deltoid rupture.
-SER IV with deltoid rupture (bimalleolar equivalent) is unstable → ORIF; SER II with intact deltoid (medial clear space <4–5 mm on gravity/manual stress) → cast/boot.`],
-['classification', `Supination-adduction ankle fracture — the pattern that changes your fixation`, `Stage I: transverse fibula fracture BELOW the joint line (or lateral ligament rupture).
-Stage II: VERTICAL medial malleolus fracture, often with impaction of the anteromedial tibial plafond.
-Fix the medial side with an antiglide/buttress plate (or horizontal screws perpendicular to the vertical fracture line); elevate and graft plafond impaction. Standard oblique screws alone will fail this shear pattern.`],
-['diagnosis', `Radiographic criteria for syndesmotic injury and the Maisonneuve trap`, `Tibiofibular clear space >6 mm (AP and mortise views, measured 1 cm above plafond) — most reliable.
-Tibiofibular overlap <6 mm on AP or <1 mm on mortise.
-Medial clear space >4 mm (deltoid incompetence).
-Maisonneuve: proximal fibula fracture + medial injury + syndesmosis — always image the full tibia/fibula when the ankle looks medially injured with no fibula fracture.
-Intra-op: external rotation stress / lateral fibular hook (Cotton) test after fibula fixation. Reduce syndesmosis under direct vision (malreduction is common — check CT postop); screws vs suture button similar outcomes; screws need not be removed routinely.`],
-['anatomy', `Deltoid ligament and lateral talar shift — the number every attending quotes`, `Deep deltoid (posterior tibiotalar) is the primary restraint to lateral talar translation and external rotation. Superficial deltoid resists eversion/valgus (tibiocalcaneal, tibionavicular, tibiospring).
-1 mm of lateral talar shift reduces tibiotalar contact area by ~42% (Ramsey & Hamilton) → rationale for anatomic mortise reduction.
-Deltoid repair is not routinely required after fibula ORIF if the mortise reduces; explore if medial clear space stays wide (interposed deltoid/posterior tibial tendon).`],
-['management', `Pilon fracture: classification and staged protocol`, `Rüedi-Allgöwer: I nondisplaced articular, II displaced articular without comminution, III comminuted/impacted articular. AO/OTA 43-C.
-High-energy axial load; soft-tissue injury dictates timing. Staged: spanning external fixator ± fibula ORIF acutely (restores length) → definitive ORIF after swelling subsides and wrinkle sign returns (~7–21 days). Reduce the articular surface (anterolateral/anteromedial or posterolateral approaches; keep skin bridges ≥7 cm), buttress the metaphysis, bone graft voids.
-Complications: wound breakdown/deep infection (the reason for staging), post-traumatic arthritis, nonunion, stiffness.`],
-['classification', `Hawkins classification of talar neck fractures and the Hawkins sign`, `I: nondisplaced — AVN 0–13%.
-II: displaced with subtalar subluxation/dislocation — AVN 20–50%.
-III: displaced with subtalar AND tibiotalar dislocation — AVN 80–100%; urgent reduction (skin at risk, extruded body).
-IV (Canale): III + talonavicular dislocation.
-Hawkins sign: subchondral lucency of the talar dome at 6–8 weeks = intact vascularity (good sign; its absence is not conclusive).
-Blood supply: artery of the tarsal canal (from posterior tibial artery) is the dominant supply to the body; deltoid branches (posterior tibial); artery of the sinus tarsi (peroneal + dorsalis pedis). Dual approach ORIF (anteromedial + anterolateral) for accurate reduction; varus malunion is the common error.`],
-['classification', `Calcaneus fractures: Böhler/Gissane angles, Sanders, and who NOT to operate on`, `Böhler angle normal 20–40° (decreased in fracture); Gissane (crucial) angle 120–145°. Essex-Lopresti: primary fracture line from the axial load of the lateral process of the talus → joint-depression vs tongue-type. Tongue-type with posterior skin tenting → urgent reduction (skin necrosis).
-Sanders (coronal CT at widest posterior facet): I nondisplaced; II two parts (A/B/C by fracture position lateral → medial); III three parts (central depressed fragment); IV four or more/comminuted (consider primary subtalar fusion).
-Relative contraindications to ORIF: smokers, diabetics, peripheral vascular disease, elderly low demand — wound complications ~25% with extensile lateral approach (sinus tarsi approach lowers this). Sural nerve, peroneal tendons at risk laterally.
-Sequelae: subtalar arthritis, peroneal impingement/tendinitis from widened heel, lateral wall blowout.`],
-['diagnosis', `Lisfranc injury: anatomy, radiographic clues, and ligamentous vs bony treatment`, `Lisfranc ligament: medial cuneiform → base of 2nd metatarsal (plantar/interosseous band strongest). 2nd MT base is keystoned between cuneiforms.
-Clues: plantar ecchymosis; fleck sign (avulsion between 1st and 2nd MT bases); diastasis >2 mm between 1st/2nd MT bases; loss of medial border alignment of 2nd MT with middle cuneiform (AP) and 4th MT with cuboid (oblique). Get weight-bearing/stress views or CT when plain films look normal.
-Treatment: anatomic reduction essential. Bony injuries → ORIF (screws/bridge plates, remove ~4–6 months). Purely ligamentous → primary arthrodesis of the medial 1–3 TMT joints has equal or better outcomes than ORIF (Ly & Coetzee). Never fuse the 4th/5th TMT (mobile lateral column) — pin only.`],
-['management', `5th metatarsal base fractures: the three zones`, `Zone 1 (tuberosity avulsion; pull of lateral band of plantar fascia / peroneus brevis): heals reliably → hard-soled shoe/boot, weight-bear as tolerated.
-Zone 2 (Jones fracture; metaphyseal-diaphyseal junction, extends into the 4–5 intermetatarsal articulation): vascular watershed → nonunion 15–30% nonop. NWB cast 6–8 weeks, or intramedullary screw (4.5–5.5 mm solid) in athletes / early return; screw must not straighten the curved bone (lateral wall blowout).
-Zone 3 (proximal diaphyseal stress fracture, chronic, sclerotic): IM screw + bone graft, address cavovarus/vitamin D.`],
-['diagnosis', `Achilles tendon rupture: exam, decision, and rehab evidence`, `Thompson test (no plantarflexion with calf squeeze), palpable gap 2–6 cm above insertion, weak plantarflexion but possible via FHL/FDL/tib post. Risk: fluoroquinolones, steroid injection, weekend warrior 30–50 y.
-Nonoperative with early functional rehabilitation (weight-bearing in equinus boot, protected motion at 2 weeks) has re-rupture rates equivalent to surgery (Willits RCT) with fewer wound complications; surgery gives modestly better strength/return for high-demand athletes. Percutaneous/mini-open: sural nerve at risk laterally.
-Chronic rupture (>4–6 weeks): V-Y advancement (gap 2–5 cm), FHL transfer (larger gaps/older), or turndown flap.`],
-['management', `Hallux valgus: angles and the procedure matched to severity`, `Normal HVA <15°, IMA <9°. Mild (HVA <20, IMA <11–13): distal chevron ± Akin. Moderate (HVA 20–40, IMA 13–16): proximal osteotomy or scarf + distal soft-tissue procedure. Severe (HVA >40, IMA >16–20): proximal osteotomy or Lapidus (1st TMT fusion).
-Increased DMAA (>10°) → biplanar/rotational distal osteotomy (chevron with medial closing wedge). 1st TMT hypermobility/instability → Lapidus. MTP arthritis or neuromuscular/RA → 1st MTP arthrodesis.
-Complications: recurrence (undercorrection, unaddressed IMA/DMAA), hallux varus (over-resection of medial eminence, excessive lateral release, fibular sesamoidectomy), AVN of the head (distal osteotomy + aggressive lateral release), transfer metatarsalgia (shortening/dorsiflexion).`],
-['management', `Hallux rigidus: grading and treatment`, `Degenerative 1st MTP arthritis; dorsal osteophyte limits dorsiflexion; pain at end-range then throughout. Coughlin-Shurnas grades 0–4 (grade 4 = grade 3 findings plus pain at mid-range motion).
-Nonop: stiff-soled/rocker shoes, Morton’s extension orthosis, NSAIDs.
-Grade 1–2 (dorsal impingement pain, >50% cartilage preserved): cheilectomy (remove 25–30% of dorsal head) ± Moberg proximal phalanx dorsal closing-wedge osteotomy.
-Grade 3–4 / mid-range pain: MTP arthrodesis — gold standard. Fuse in 10–15° valgus, 10–15° dorsiflexion relative to the floor (~20–25° relative to the metatarsal shaft), neutral rotation. Silastic/hemi implants and Keller have inferior durability.`],
-['classification', `Adult acquired flatfoot (posterior tibial tendon dysfunction) staging and matched treatment`, `Johnson & Strom / Myerson:
-I: tenosynovitis, no deformity → orthosis, immobilization, NSAIDs; tenosynovectomy if refractory.
-II: flexible flatfoot, cannot single-heel-rise, too-many-toes sign → FDL transfer to navicular + medial displacement calcaneal osteotomy; add lateral column lengthening (Evans) for forefoot abduction (talonavicular uncoverage >40%); Cotton (medial cuneiform opening wedge) for residual forefoot varus; gastroc recession if tight.
-III: rigid flatfoot, subtalar arthritis → triple arthrodesis.
-IV: ankle valgus (deltoid insufficiency) → add deltoid reconstruction or tibiotalocalcaneal fusion.
-Risk: obese woman 40–60, hypertension, diabetes, steroid exposure; spring ligament attenuation.`],
-['diagnosis', `Cavovarus foot: Coleman block test and what unilateral cavus should trigger`, `Coleman block under the lateral forefoot (allowing the plantarflexed 1st ray to drop): hindfoot varus corrects → flexible (forefoot-driven) → treat the forefoot (dorsiflexion 1st MT osteotomy, plantar fascia release, peroneus longus → brevis transfer). Does not correct → rigid → add calcaneal osteotomy (lateral closing wedge / Dwyer) or fusion.
-Most common cause: Charcot-Marie-Tooth (HMSN; PMP22 duplication CMT1A) — usually bilateral; peroneus longus overpowers weak tibialis anterior (plantarflexed 1st ray) and tibialis posterior overpowers weak peroneus brevis (varus); intrinsic weakness → claw toes; recurrent ankle sprains.
-UNILATERAL cavus or a new cavus in a child → MRI of the whole spine (tethered cord, diastematomyelia, tumor) and neurology workup.`],
-['diagnosis', `Diabetic foot: healing thresholds, Wagner grades, and Charcot staging`, `Healing prerequisites: ABI >0.45 (calcified vessels can falsely elevate), toe pressure >40 mmHg, TcPO2 >30 mmHg, albumin >3.0 g/dL, total lymphocyte count >1500. Semmes-Weinstein 5.07 (10 g) monofilament = protective sensation.
-Wagner: 0 at-risk foot, 1 superficial ulcer, 2 deep to tendon/capsule, 3 osteomyelitis/abscess, 4 forefoot gangrene, 5 whole-foot gangrene. Probe-to-bone positive → suspect osteomyelitis; MRI; bone biopsy for culture.
-Charcot neuroarthropathy (Eichenholtz): 0 prodromal (warm, swollen, normal films), I fragmentation, II coalescence, III consolidation. Midfoot (Lisfranc) most common. Stage 0–I → total contact cast (offload until temperature within 2 °C of contralateral); reconstruct (superconstructs, fusion) for unbraceable deformity/ulcer; exostectomy for plantar prominence.`],
-['management', `Plantar fasciitis and Baxter’s nerve`, `Heel pain worst with first steps; tender at medial calcaneal tubercle. 90% resolve within 12 months nonoperatively: plantar fascia-specific stretching (most effective), Achilles stretching, heel cups, night splints, NSAIDs. Steroid injection gives short-term relief but risks fascia rupture and fat-pad atrophy. ESWT for refractory.
-Surgery after ≥6–12 months: release only the medial 1/3–1/2 of the fascia (complete release → lateral column overload/arch collapse) ± gastroc recession.
-Baxter’s nerve = first branch of the lateral plantar nerve, compressed between abductor hallucis fascia and quadratus plantae → chronic medial heel pain with abductor digiti minimi atrophy; releases can be combined.`],
-['diagnosis', `Morton’s neuroma`, `Perineural fibrosis of the common digital nerve, most often 3rd web space (nerve is thickest there — receives branches from both medial and lateral plantar nerves), then 2nd. Compressed under the deep transverse intermetatarsal ligament. Burning forefoot pain, toe numbness, worse in narrow shoes; Mulder click on squeezing the forefoot.
-Nonop: wide shoes, metatarsal pad, injection. Surgery: excision via dorsal approach (avoid plantar scar) with release of the intermetatarsal ligament; resect 2–3 cm proximal to let the stump retract. Recurrence/stump neuroma if cut too distal.`],
-['diagnosis', `Peroneal tendon subluxation and tears`, `Subluxation: forcible dorsiflexion with reflex peroneal contraction tears the superior peroneal retinaculum (SPR) from the fibula (Eckert-Davis grades). Snapping/pain behind lateral malleolus; tendons subluxate with resisted eversion in dorsiflexion. Chronic → SPR repair with fibular groove deepening ± retromalleolar bone block.
-Peroneus brevis tears: longitudinal split within the groove; associated with low-lying muscle belly, peroneus quartus, convex/flat groove, lateral ankle instability. <50% tendon → debride/tubularize; >50% → tenodesis to longus. Peroneus longus: painful os peroneum syndrome (fracture/diastasis of the os at the cuboid tunnel).`],
-['diagnosis', `Lateral ankle sprain and chronic instability`, `ATFL torn first (weakest; taut in plantarflexion) then CFL. Anterior drawer tests ATFL; talar tilt tests CFL. Ottawa rules guide radiographs. Treat with functional rehab (peroneal strengthening, proprioception); >90% recover.
-Chronic instability after ≥3–6 months rehab: Broström (anatomic ATFL/CFL repair) with Gould modification (inferior extensor retinaculum advancement). Non-anatomic tenodeses (Chrisman-Snook, Evans) sacrifice peroneus brevis and stiffen the subtalar joint — reserved for salvage/large patients.
-Always look for cavovarus (correct with calcaneal osteotomy), peroneal tears, osteochondral lesion of the talus, and syndesmotic (high) sprain (squeeze/external rotation tests, longer recovery).`],
-['diagnosis', `Turf toe and sesamoid problems`, `Turf toe: hyperextension injury of the 1st MTP plantar plate/sesamoid complex. Grades I stretch, II partial, III complete (loss of push-off; proximal migration or diastasis of sesamoids on stress views; MRI). Grade I–II → taping/stiff plate; grade III with sesamoid retraction or instability → repair.
-Sesamoiditis / stress fracture: tibial (medial) sesamoid more often; distinguish bipartite (smooth margins, 10–30%, often bilateral) from fracture; treat with offloading (dancer’s pad), NWB for stress fracture; excision only for refractory cases (removing both → cock-up deformity; tibial removal → hallux valgus, fibular → varus).`],
-['management', `Ankle arthritis: fusion position and when arthroplasty is (and isn’t) reasonable`, `Tibiotalar arthrodesis position: neutral dorsiflexion (0°), 5° hindfoot valgus, 5–10° external rotation (match contralateral), talus translated slightly posterior. Malposition in equinus or varus is poorly tolerated. Fusion rate ~90%; long-term adjacent subtalar/midfoot arthritis is common.
-Total ankle arthroplasty: better preserves adjacent joints and gait; best for older, lower-demand, well-aligned (deformity <10–15°), good bone stock, no neuropathy. Contraindications: active infection, Charcot, talar AVN, severe deformity/instability, poor soft tissue/vascularity, young high-demand laborer (relative).
-Tibiotalocalcaneal (TTC) nail for combined ankle + subtalar disease, Charcot, AVN.`],
-['diagnosis', `Rheumatoid forefoot`, `Synovitis attenuates the plantar plate and collateral ligaments → MTP dorsal subluxation/dislocation, hammer/claw toes, hallux valgus, fat pad migrates distally (“walking on bones”), plantar callosities, bursae, rheumatoid nodules.
-Classic reconstruction (Hoffman/Clayton): 1st MTP arthrodesis + lesser metatarsal head resection arthroplasty (preserve length cascade 2>3>4>5). Joint-preserving (Weil shortening osteotomies) increasingly used with modern DMARDs.
-Peri-op: continue methotrexate; hold TNF inhibitors for one dosing interval around surgery; check cervical spine (atlantoaxial instability) before intubation.`],
-['anatomy', `Tarsal tunnel syndrome`, `Tibial nerve compressed under the flexor retinaculum (laciniate ligament) behind the medial malleolus. Contents from anterior to posterior: Tibialis posterior, flexor Digitorum longus, posterior tibial Artery, tibial Nerve, flexor Hallucis longus (“Tom, Dick ANd Harry”). Nerve divides into medial and lateral plantar nerves (± calcaneal branch) usually within the tunnel.
-Symptoms: burning plantar pain/paresthesia, worse with activity and at night, Tinel over tunnel. Causes: space-occupying lesion (ganglion, lipoma, varicosities, accessory muscle), hindfoot valgus, trauma. EMG/NCS often equivocal; MRI to find a mass.
-Surgery (release retinaculum and both plantar tunnels) is most predictable when a discrete lesion is present.`],
-['diagnosis', `Osteochondroses of the foot: Freiberg, Köhler, Sever, Iselin`, `Freiberg infraction: AVN of the 2nd (rarely 3rd) metatarsal head, adolescent girls; flattening, sclerosis, loose bodies. Nonop → NWB/offload; surgery: debridement, dorsal closing-wedge osteotomy to rotate intact plantar cartilage dorsally.
-Köhler disease: tarsal navicular AVN in boys 4–7; sclerotic, narrowed navicular; self-limited — short-leg cast for pain.
-Sever (calcaneal apophysitis): heel pain 8–12 y with sport; heel cups, stretching; radiographs normal/unnecessary.
-Iselin: 5th metatarsal base apophysitis (apophysis is longitudinal — distinguish from a transverse fracture).`],
-['diagnosis', `Accessory navicular, os trigonum, and other symptomatic accessory ossicles`, `Accessory navicular: type I sesamoid within the tibialis posterior tendon (rarely symptomatic); type II attached by synchondrosis (most symptomatic — painful medial prominence in adolescents, flatfoot association); type III fused (cornuate navicular). Treat: shoe modification, cast; then excision with tibialis posterior advancement (modified Kidner).
-Os trigonum: posterior ankle impingement in dancers/soccer (forced plantarflexion), FHL tenosynovitis (posteromedial pain, triggering of hallux); treat with rest/injection, then excision (posterolateral open or posterior arthroscopy — sural nerve laterally, neurovascular bundle medially).`],
-['diagnosis', `Hammer, claw, and mallet toes — definitions and surgical logic`, `Hammer toe: PIP flexion (MTP neutral/extended) — most common, 2nd toe from long metatarsal/hallux valgus.
-Claw toe: MTP hyperextension + PIP (and DIP) flexion — often neurologic (CMT, diabetes) and multiple.
-Mallet toe: DIP flexion (long toe pressing against shoe).
-Flexible deformity: flexor-to-extensor transfer (Girdlestone-Taylor, FDL to extensor hood) ± MTP capsulotomy. Rigid: PIP resection arthroplasty or arthrodesis; add Weil osteotomy or plantar plate repair for MTP subluxation. Crossover 2nd toe = plantar plate tear (drawer test).`],
-['anatomy', `Compartments of the foot`, `Nine compartments: medial (abductor hallucis, FHB), lateral (abductor digiti minimi, flexor digiti minimi), superficial central (FDB, lumbricals), deep/calcaneal (quadratus plantae — communicates with the deep posterior compartment of the leg), adductor (adductor hallucis), and four interosseous.
-Crush injuries and calcaneus fractures raise pressures (calcaneal compartment first). Release: two dorsal incisions over 2nd and 4th metatarsals (interossei, adductor) + medial incision (medial, superficial, calcaneal, lateral). Missed compartment syndrome → claw toes, cavus, contractures.`],
-['diagnosis', `Osteochondral lesions of the talus`, `Medial lesions: posteromedial, deeper, cup-shaped, often atraumatic/idiopathic. Lateral lesions: anterolateral, shallow, wafer-shaped, traumatic (inversion), more likely to displace.
-Berndt-Harty: I subchondral compression, II partial detachment, III complete detachment not displaced, IV displaced. MRI/CT for staging.
-Treatment: stable/child → immobilization. Symptomatic <1.5 cm² (≈ <10–15 mm): arthroscopic debridement + microfracture (good results ~80%). Large/cystic/failed: osteochondral autograft (OATS) via malleolar osteotomy, allograft, or juvenile cartilage/ACI. Retrograde drilling for intact-cartilage cystic lesions.`]
+['c','Weber A fibula fracture','Below the syndesmosis (supination-adduction).'],
+['c','Weber B fibula fracture','At the level of the syndesmosis (SER).'],
+['c','Weber C fibula fracture','Above the syndesmosis (PER / Maisonneuve).'],
+['d','Most common ankle fracture mechanism','Supination-external rotation (~75%).'],
+['c','SER stage I','AITFL tear.'],
+['c','SER stage II','Short oblique/spiral fibula fracture (anteroinferior → posterosuperior).'],
+['c','SER stage III','PITFL tear or posterior malleolus fracture.'],
+['c','SER stage IV','Medial malleolus fracture or deep deltoid rupture.'],
+['m','SER II with intact deltoid: treatment','Nonoperative (boot/cast) — stable.'],
+['d','Medial clear space indicating deltoid incompetence','> 4–5 mm on stress view.'],
+['c','Supination-adduction stage II fracture pattern','Vertical medial malleolus fracture ± medial plafond impaction.'],
+['m','Fixation for a vertical medial malleolus fracture','Antiglide/buttress plate (or screws perpendicular to the fracture).'],
+['d','Tibiofibular clear space suggesting syndesmotic injury','> 6 mm (AP and mortise).'],
+['d','Tibiofibular overlap suggesting syndesmotic injury','< 6 mm AP or < 1 mm mortise.'],
+['d','Maisonneuve fracture','Proximal fibula fracture + medial injury + syndesmosis disruption.'],
+['a','Primary restraint to lateral talar translation','Deep deltoid ligament.'],
+['d','Effect of 1 mm lateral talar shift','Tibiotalar contact area falls ~42% (Ramsey & Hamilton).'],
+['c','Rüedi-Allgöwer pilon type III','Comminuted/impacted articular surface.'],
+['m','Pilon fracture staging','Ex-fix ± fibula ORIF acutely → definitive ORIF when wrinkle sign returns (7–21 d).'],
+['m','Minimum skin bridge between pilon incisions','≥ 7 cm.'],
+['c','Hawkins I talar neck fracture','Nondisplaced; AVN 0–13%.'],
+['c','Hawkins II talar neck fracture','Subtalar subluxation/dislocation; AVN 20–50%.'],
+['c','Hawkins III talar neck fracture','Subtalar + tibiotalar dislocation; AVN 80–100%.'],
+['c','Hawkins IV (Canale) talar neck fracture','III + talonavicular dislocation.'],
+['d','Hawkins sign','Subchondral lucency of the dome at 6–8 weeks = vascularity intact.'],
+['a','Dominant blood supply to the talar body','Artery of the tarsal canal (posterior tibial artery).'],
+['d','Most common talar neck malunion','Varus.'],
+['d','Normal Böhler angle','20–40° (decreased with fracture).'],
+['d','Normal Gissane (crucial) angle','120–145°.'],
+['c','Sanders classification is based on…','Coronal CT at the widest posterior facet: number of articular fragments.'],
+['c','Sanders type IV calcaneus fracture','≥ 4 fragments — consider primary subtalar fusion.'],
+['m','Tongue-type calcaneus fracture urgency','Reduce urgently — posterior skin necrosis.'],
+['d','Relative contraindications to calcaneal ORIF','Smokers, diabetics, PVD, elderly low demand.'],
+['d','Wound complication rate, extensile lateral calcaneal approach','~25%.'],
+['a','Structures at risk in the extensile lateral calcaneal approach','Sural nerve, peroneal tendons.'],
+['a','Lisfranc ligament runs from…','Medial cuneiform to the base of the 2nd metatarsal.'],
+['d','Strongest band of the Lisfranc ligament','Plantar/interosseous band.'],
+['d','Fleck sign','Avulsion between 1st and 2nd metatarsal bases — Lisfranc injury.'],
+['d','Lisfranc radiographic alignment checks','Medial 2nd MT with middle cuneiform (AP); medial 4th MT with cuboid (oblique).'],
+['m','Purely ligamentous Lisfranc injury: preferred treatment','Primary arthrodesis of medial 1–3 TMT joints (equal or better than ORIF).'],
+['m','Lateral (4th/5th) TMT joints in Lisfranc surgery','Never fuse — pin only.'],
+['c','5th metatarsal zone 1 fracture','Tuberosity avulsion → hard-soled shoe, WBAT.'],
+['c','5th metatarsal zone 2 fracture','Jones fracture (metadiaphyseal watershed); nonunion 15–30% nonop.'],
+['m','Jones fracture in an athlete','Intramedullary screw.'],
+['c','5th metatarsal zone 3 fracture','Proximal diaphyseal stress fracture → IM screw + graft.'],
+['d','Thompson test','Calf squeeze without plantarflexion = Achilles rupture.'],
+['d','Achilles rupture risk factors','Fluoroquinolones, steroid injection, "weekend warrior" 30–50 y.'],
+['m','Nonoperative Achilles rupture: key requirement','Early functional rehabilitation — equivalent re-rupture to surgery.'],
+['a','Nerve at risk in percutaneous Achilles repair','Sural nerve (lateral).'],
+['m','Chronic Achilles rupture gap 2–5 cm','V-Y advancement.'],
+['m','Chronic Achilles rupture large gap / older patient','FHL transfer.'],
+['d','Normal hallux valgus angle','< 15°.'],
+['d','Normal intermetatarsal angle','< 9°.'],
+['m','Mild hallux valgus (HVA < 20, IMA < 13)','Distal chevron ± Akin.'],
+['m','Moderate hallux valgus (HVA 20–40, IMA 13–16)','Proximal osteotomy or scarf + distal soft-tissue procedure.'],
+['m','Severe hallux valgus (HVA > 40, IMA > 16)','Proximal osteotomy or Lapidus.'],
+['m','Increased DMAA (> 10°) in hallux valgus','Biplanar distal chevron.'],
+['m','Hypermobile 1st TMT joint with hallux valgus','Lapidus (1st TMT fusion).'],
+['m','Hallux valgus with MTP arthritis or RA','1st MTP arthrodesis.'],
+['d','Causes of iatrogenic hallux varus','Over-resection of the medial eminence, excessive lateral release, fibular sesamoidectomy.'],
+['d','Cause of AVN after distal chevron','Aggressive lateral release with the distal osteotomy.'],
+['m','Hallux rigidus grade 1–2 treatment','Cheilectomy (remove 25–30% of dorsal head) ± Moberg osteotomy.'],
+['m','Hallux rigidus grade 3–4 treatment','1st MTP arthrodesis.'],
+['m','1st MTP fusion position','10–15° valgus, 10–15° dorsiflexion to the floor, neutral rotation.'],
+['d','Coughlin-Shurnas grade 4 hallux rigidus','Grade 3 findings plus mid-range pain.'],
+['c','PTTD stage I','Tenosynovitis, no deformity → orthosis/immobilization.'],
+['c','PTTD stage II','Flexible flatfoot, cannot single-heel-rise, too-many-toes sign.'],
+['m','PTTD stage II surgery','FDL transfer + medial displacement calcaneal osteotomy.'],
+['m','Forefoot abduction (TN uncoverage > 40%) in PTTD','Add lateral column lengthening (Evans).'],
+['m','Residual forefoot varus in PTTD','Cotton (medial cuneiform opening wedge) osteotomy.'],
+['c','PTTD stage III','Rigid flatfoot with subtalar arthritis → triple arthrodesis.'],
+['c','PTTD stage IV','Ankle valgus / deltoid insufficiency.'],
+['d','Coleman block test: hindfoot corrects','Flexible, forefoot-driven cavovarus → treat the forefoot.'],
+['d','Coleman block test: hindfoot does not correct','Rigid → add calcaneal osteotomy (Dwyer) or fusion.'],
+['d','Most common cause of bilateral cavovarus foot','Charcot-Marie-Tooth (CMT1A, PMP22 duplication).'],
+['d','Muscle imbalance in CMT cavovarus','Peroneus longus overpowers tibialis anterior; tibialis posterior overpowers peroneus brevis.'],
+['d','Unilateral cavus foot in a child → next step','MRI of the whole spine (tethered cord, tumor).'],
+['m','Flexible cavovarus forefoot procedures','Dorsiflexion 1st MT osteotomy, plantar fascia release, peroneus longus → brevis transfer.'],
+['d','Diabetic foot healing thresholds: ABI and toe pressure','ABI > 0.45; toe pressure > 40 mmHg.'],
+['d','Diabetic foot healing thresholds: TcPO2, albumin, lymphocytes','TcPO2 > 30 mmHg; albumin > 3.0; TLC > 1500.'],
+['d','Semmes-Weinstein monofilament for protective sensation','5.07 (10 g).'],
+['c','Wagner grade 3 ulcer','Osteomyelitis or abscess.'],
+['c','Wagner grade 4 vs 5','4 forefoot gangrene; 5 whole-foot gangrene.'],
+['c','Eichenholtz stage 0','Prodromal: warm, swollen, normal films.'],
+['c','Eichenholtz stage I','Fragmentation.'],
+['c','Eichenholtz stage II','Coalescence.'],
+['c','Eichenholtz stage III','Consolidation.'],
+['m','Charcot stage 0–I treatment','Total contact cast until temperature within 2 °C of the other foot.'],
+['d','Most common Charcot location','Midfoot (Lisfranc).'],
+['m','Most effective nonoperative plantar fasciitis treatment','Plantar fascia-specific stretching.'],
+['d','Risks of steroid injection for plantar fasciitis','Fascia rupture, fat-pad atrophy.'],
+['m','Plantar fascia release: how much','Medial 1/3–1/2 only (complete release → lateral column overload).'],
+['a','Baxter nerve','First branch of the lateral plantar nerve (abductor digiti minimi).'],
+['d','Most common web space for Morton neuroma','3rd (then 2nd).'],
+['a','Structure compressing a Morton neuroma','Deep transverse intermetatarsal ligament.'],
+['d','Mulder click','Morton neuroma with forefoot squeeze.'],
+['m','Morton neuroma excision approach and stump','Dorsal approach; resect 2–3 cm proximal so the stump retracts.'],
+['d','Peroneal subluxation pathology','Superior peroneal retinaculum torn from the fibula.'],
+['m','Chronic peroneal subluxation surgery','SPR repair + fibular groove deepening.'],
+['d','Peroneus brevis tear associations','Low-lying muscle belly, peroneus quartus, flat groove, ankle instability.'],
+['m','Peroneus brevis tear > 50% of tendon','Tenodesis to peroneus longus.'],
+['d','Painful os peroneum syndrome location','Peroneus longus at the cuboid tunnel.'],
+['a','First ligament torn in a lateral ankle sprain','ATFL (then CFL).'],
+['d','Anterior drawer vs talar tilt','Anterior drawer tests ATFL; talar tilt tests CFL.'],
+['m','Chronic lateral ankle instability surgery','Broström-Gould (ATFL/CFL repair + inferior extensor retinaculum).'],
+['d','Drawback of non-anatomic tenodeses (Chrisman-Snook, Evans)','Sacrifice peroneus brevis; stiffen the subtalar joint.'],
+['d','Turf toe mechanism','Hyperextension injury of the 1st MTP plantar plate.'],
+['m','Grade III turf toe with sesamoid retraction','Surgical repair.'],
+['d','Bipartite vs fractured sesamoid','Bipartite: smooth margins, often bilateral (10–30%).'],
+['d','Consequence of excising both hallux sesamoids','Cock-up (claw) hallux.'],
+['m','Ankle fusion position','Neutral dorsiflexion, 5° hindfoot valgus, 5–10° ER, talus slightly posterior.'],
+['d','Ankle arthroplasty contraindications','Active infection, Charcot, talar AVN, severe deformity/instability, poor soft tissue.'],
+['m','Combined ankle + subtalar arthritis / Charcot / AVN','Tibiotalocalcaneal (TTC) nail fusion.'],
+['m','Classic rheumatoid forefoot reconstruction','1st MTP fusion + lesser MT head resection (Hoffman/Clayton).'],
+['m','Preop check before intubating an RA patient','Cervical flexion-extension films (atlantoaxial instability).'],
+['a','Tarsal tunnel contents, anterior → posterior','Tibialis posterior, FDL, posterior tibial artery, tibial nerve, FHL.'],
+['a','Roof of the tarsal tunnel','Flexor retinaculum (laciniate ligament).'],
+['m','Tarsal tunnel: most predictable surgical result when…','A discrete space-occupying lesion is present.'],
+['d','Freiberg infraction','AVN of the 2nd metatarsal head, adolescent girls.'],
+['m','Freiberg surgery','Debridement + dorsal closing-wedge osteotomy.'],
+['d','Köhler disease','Navicular AVN in boys 4–7; self-limited.'],
+['d','Sever disease','Calcaneal apophysitis, age 8–12.'],
+['d','Iselin disease and how to tell it from a fracture','5th MT base apophysitis; apophysis is longitudinal (fracture is transverse).'],
+['c','Accessory navicular type II','Synchondrosis — the symptomatic type.'],
+['m','Symptomatic accessory navicular surgery','Excision with tibialis posterior advancement (modified Kidner).'],
+['d','Os trigonum syndrome','Posterior ankle impingement in plantarflexion (dancers); FHL tenosynovitis.'],
+['d','Hammer toe','PIP flexion.'],
+['d','Claw toe','MTP hyperextension + PIP (± DIP) flexion; often neurologic.'],
+['d','Mallet toe','DIP flexion.'],
+['m','Flexible hammer toe surgery','Flexor-to-extensor transfer (Girdlestone-Taylor).'],
+['m','Rigid hammer toe surgery','PIP resection arthroplasty or arthrodesis.'],
+['d','Crossover 2nd toe cause','Plantar plate tear (positive drawer).'],
+['a','Number of foot compartments','Nine.'],
+['a','Foot compartment communicating with the deep posterior leg','Calcaneal compartment (quadratus plantae).'],
+['m','Foot fasciotomy incisions','Two dorsal (over 2nd and 4th MT) + one medial.'],
+['d','Medial vs lateral talar OCD','Medial: posteromedial, deep, atraumatic. Lateral: anterolateral, shallow, traumatic.'],
+['c','Berndt-Harty stage IV talar OCD','Displaced fragment.'],
+['m','Symptomatic talar OCD < 1.5 cm²','Arthroscopic debridement + microfracture.'],
+['m','Large/cystic talar OCD','OATS via malleolar osteotomy, allograft, or juvenile cartilage.'],
 ]);
+
 // ======================= HAND & WRIST =======================
 _add('hand', [
-['anatomy', `Scaphoid fracture: blood supply, treatment by location, and the collapse patterns`, `Retrograde blood supply from the dorsal carpal branch of the radial artery enters distally → proximal pole AVN and nonunion risk. Waist 65%, proximal pole 25%.
-Nondisplaced waist: cast 8–12 weeks (thumb spica not proven necessary); percutaneous screw shortens time to union/return. Displaced >1 mm, proximal pole, humpback (intrascaphoid angle >35°), DISI → ORIF. Proximal pole AVN (MRI/CT) → vascularized graft (1,2-ICSRA pedicle, medial femoral condyle).
-Nonunion → humpback deformity → DISI → SNAC wrist: I radial styloid arthritis, II scaphocapitate, III periscaphoid/capitolunate. SNAC II–III: scaphoidectomy + four-corner fusion, or proximal row carpectomy (needs intact lunate fossa and capitate head).`],
-['classification', `Kienböck disease: Lichtman stages and treatment`, `AVN of the lunate; associated with ulnar-negative variance, repetitive loading.
-I: normal x-ray, MRI positive → immobilization.
-II: sclerosis without collapse.
-IIIA: lunate collapse, normal carpal alignment. IIIB: collapse + fixed scaphoid flexion (ring sign) / carpal height loss.
-IV: pan-carpal arthritis.
-II–IIIA + ulnar negative → radial shortening osteotomy (joint leveling); ulnar neutral/positive → capitate shortening or core decompression/vascularized graft. IIIB → STT or scaphocapitate fusion, or PRC. IV → PRC (if capitate OK) or wrist fusion.`],
-['diagnosis', `Scapholunate ligament injury: signs, angles, and SLAC staging`, `Dorsal portion of the SL ligament is the strongest (primary stabilizer). Watson (scaphoid shift) test; clenched-fist view.
-Radiographs: SL gap >3 mm (Terry Thomas), cortical ring sign (flexed scaphoid), SL angle >70° (normal 30–60°) → DISI (lunate extends), capitolunate angle >15°.
-Acute (<6 weeks): repair ± capsulodesis. Chronic reconstruction: three-ligament tenodesis (FCR), RASL. SLAC wrist: I radial styloid, II scaphoid fossa, III capitolunate; treat SLAC II/III with scaphoidectomy + four-corner fusion or PRC (PRC contraindicated if capitate head or lunate fossa is arthritic).`],
-['diagnosis', `VISI vs DISI: which ligament and which way does the lunate go?`, `DISI: scapholunate ligament failure; scaphoid flexes, lunate EXTENDS (dorsal tilt); SL angle >70°; more common.
-VISI: lunotriquetral ligament failure; lunate FLEXES volarly with the scaphoid; SL angle <30°; LT ballottement/shear test; ulnar-sided wrist pain; may be normal variant in lax wrists.
-Lateral radiograph: capitolunate angle >15–20° is abnormal in either.`],
-['classification', `Perilunate injuries: Mayfield stages, greater vs lesser arc, management`, `Mayfield progressive perilunar instability: I scapholunate disruption; II capitolunate (perilunate dislocation, capitate dorsal); III lunotriquetral; IV lunate dislocated volarly into the carpal tunnel (“spilled teacup”).
-Lesser arc: purely ligamentous. Greater arc: through bone — trans-scaphoid perilunate most common (also trans-radial styloid, trans-capitate, trans-triquetral).
-Treatment: emergent closed reduction (traction, finger traps; median nerve compression common) then open reduction, SL/LT repair with K-wires or screws, scaphoid ORIF for greater arc. Dorsal ± volar approach. Missed injuries → PRC or fusion.`],
-['management', `Distal radius fracture: acceptable alignment and surgical indications`, `Normal: radial inclination ~22°, radial height ~11 mm, volar tilt ~11°.
-Acceptable (AAOS appropriate-use): radial shortening <3 mm, dorsal tilt <10° (some accept up to neutral), articular step-off <2 mm. Loss of these after reduction, or unstable patterns (dorsal comminution, age >60 with ulnar variance change) → surgery.
-Volar locking plate via FCR approach — most common. Dorsal spanning/bridge plate for polytrauma or severe comminution. Ex-fix/pins as alternatives.
-Complications: EPL rupture (nondisplaced fractures — Lister’s tubercle attrition; treat EIP-to-EPL transfer), FPL/flexor rupture from volar plate placed distal to the watershed line (Soong grade), carpal tunnel syndrome (release if progressive), CRPS (vitamin C 500 mg/day may reduce), DRUJ instability from associated ulnar styloid base/TFCC injury.`],
-['anatomy', `The six dorsal extensor compartments`, `1: APL, EPB — de Quervain tenosynovitis (Finkelstein; EPB often in a separate subcompartment → release both).
-2: ECRL, ECRB — intersection syndrome where 1 crosses 2, ~4 cm proximal to the wrist.
-3: EPL — around Lister’s tubercle (ruptures after distal radius fracture).
-4: EDC, EIP (EIP is ulnar and deep to EDC of index; PIN terminal branch lies in the floor).
-5: EDM — Vaughan-Jackson syndrome (rupture from caput ulnae in RA, EDM first then ring/small EDC).
-6: ECU — subsheath instability/snapping.`],
-['classification', `Flexor tendon zones, key pulleys, and repair principles`, `Zone I: distal to FDS insertion (jersey finger). Zone II: A1 pulley to FDS insertion (“no man’s land” — both tendons in the sheath). Zone III: palm (carpal tunnel distal edge to A1). Zone IV: carpal tunnel. Zone V: forearm.
-Annular pulleys A1–A5 (A2 over proximal phalanx and A4 over middle phalanx are biomechanically most important; preserve at least one); cruciate C1–C3 allow flexion. Venting A2 partially or A4 fully is acceptable to allow gliding after repair.
-Repair strength ∝ number of core strands (4–6 strands allow early active motion); epitendinous suture adds ~20% strength and smoothness; locking cores; gap >3 mm = failure/rupture risk. Rupture risk peaks at 7–10 days (gap in tendon weakest at days 5–21). Early motion protocols reduce adhesions.`],
-['classification', `Jersey finger: Leddy-Packer classification and timing`, `FDP avulsion from the distal phalanx, usually ring finger (forced extension of a flexed DIP — grabbing a jersey).
-Type I: tendon retracts into the palm, both vincula ruptured, no blood supply → repair within 7–10 days.
-Type II: retracts to PIP level, held by long vinculum → repair within a few weeks.
-Type III: large bony fragment caught at A4 pulley → ORIF; can be delayed.
-Type IV: bony avulsion plus tendon avulsed from the fragment (needs both fixation and tendon repair).
-Chronic: DIP arthrodesis, or two-stage reconstruction (rarely worthwhile); never advance the FDP >1 cm (quadriga effect — loss of flexion in adjacent fingers).`],
-['management', `Trigger finger and pediatric trigger thumb`, `Stenosing tenosynovitis at the A1 pulley (nodule on FDS/FDP). Corticosteroid injection is first-line (~60–70% success; less effective in diabetics and multiple digits). Release A1 only (open or percutaneous); never release A2 → bowstringing. Ring > thumb > long fingers. Diabetics: injection raises glucose transiently.
-Pediatric trigger thumb: not congenital — presents around 1–3 years with fixed IP flexion and a Notta nodule (FPL). ~30% resolve spontaneously by 1–2 years of age; release A1 after age 1 if persistent. Pediatric trigger FINGERS are different (anomalous FDS decussation) and often need more than A1 release.`],
-['anatomy', `Carpal tunnel: contents, nerve variations, electrodiagnostic cut-offs`, `Ten structures: 4 FDS, 4 FDP, FPL, median nerve (FCR and palmaris are outside). Roof = transverse carpal ligament.
-Recurrent motor branch: extraligamentous (most common, ~50%), subligamentous (~30%), transligamentous (~20%) — reason to release along the ring-finger axis and stay ulnar. Palmar cutaneous branch arises ~5 cm proximal to the wrist crease between FCR and palmaris, superficial to the ligament — spared in CTS; injured by radial incisions.
-NCS: distal motor latency >4.5 ms, sensory latency >3.5 ms. Thenar atrophy/abductor pollicis brevis weakness = advanced. Night splints, steroid injection (response predicts surgical success). Open and endoscopic release have equivalent long-term results; pillar pain and incomplete release are the common problems.`],
-['anatomy', `Cubital tunnel syndrome: compression sites, signs, and surgical choice`, `Sites proximal → distal: arcade of Struthers, medial intermuscular septum, medial epicondyle (subluxing nerve), Osborne ligament (cubital tunnel retinaculum) — most common, FCU aponeurosis (deep flexor-pronator fascia).
-Signs: numb small/ulnar ring finger AND dorsal ulnar hand (dorsal cutaneous branch spared in Guyon’s canal), Froment (FPL substitutes for weak adductor pollicis), Wartenberg (abducted small finger — EDM unopposed), clawing worse with LOW lesions (ulnar paradox: high lesion also paralyzes FDP to ring/small so claw is less), Jeanne sign, weak crossed fingers.
-First-line: nighttime extension splint (elbow 45°), avoid leaning. Surgery: in situ decompression (equivalent outcomes in most RCTs) vs anterior transposition (subcutaneous/submuscular) if the nerve subluxates, after prior surgery, or with cubitus valgus; medial epicondylectomy alternative. Elbow flexion test; McGowan grading.`],
-['anatomy', `Guyon’s canal zones`, `Boundaries: pisiform (ulnar), hook of hamate (radial), volar carpal ligament roof, transverse carpal ligament/ pisohamate ligament floor. Ulnar artery and nerve pass through.
-Zone 1: proximal to bifurcation → mixed motor + sensory loss (ganglion, hook of hamate fracture).
-Zone 2: deep motor branch → motor only (intrinsics, adductor pollicis) — ganglion most common cause; also hook of hamate nonunion, cyclists.
-Zone 3: superficial sensory branch → sensory only (ulnar artery thrombosis/aneurysm — hypothenar hammer syndrome; Allen test, angiography).
-Dorsal cutaneous branch leaves ~5–8 cm proximal to the wrist, so dorsal ulnar sensation is normal (differentiates from cubital tunnel).`],
-['diagnosis', `Dupuytren disease: cells, cords, indications, and the spiral cord`, `Myofibroblasts (α-smooth muscle actin), increased type III:I collagen ratio; northern European men, alcohol, diabetes, epilepsy, HIV; ectopic: Ledderhose (plantar), Peyronie, Garrod knuckle pads (aggressive diathesis).
-Cords: pretendinous (MCP contracture), central, spiral (from pretendinous + spiral band + lateral digital sheet + Grayson ligament — displaces the neurovascular bundle centrally and superficially → most dangerous), lateral, retrovascular (DIP), natatory (web contracture), abductor digiti minimi cord (small finger PIP).
-Indications: MCP contracture ≥30° or any PIP contracture, positive tabletop test. Options: collagenase clostridium histolyticum (inject cord, manipulate next day; skin tears, tendon rupture at small finger PIP), needle aponeurotomy (high recurrence), limited fasciectomy (standard; recurrence ~20–50%), dermofasciectomy with skin graft for recurrence/diathesis. PIP contractures recover less than MCP.`],
-['diagnosis', `Boutonnière vs swan-neck deformity`, `Boutonnière: central slip injury → PIP flexion, DIP hyperextension (lateral bands migrate volar to the PIP axis, triangular ligament attenuates). Elson test (with PIP flexed 90° over table edge, resisted middle phalanx extension produces DIP extension = central slip torn). Acute closed: PIP extension splint 6 weeks with DIP free (active DIP flexion pulls lateral bands dorsally). Chronic: address contracture first, then central slip reconstruction; terminal tendon release (Fowler) for the DIP.
-Swan-neck: PIP hyperextension, DIP flexion. Causes: chronic mallet, FDS rupture/laxity, volar plate laxity, intrinsic tightness (RA), MCP volar subluxation. Treat cause: FDS tenodesis, spiral oblique retinacular ligament reconstruction, DIP fusion.`],
-['management', `Mallet finger`, `Terminal extensor tendon disruption at the DIP (tendinous or bony avulsion). Full-time DIP extension splint (Stack) 6–8 weeks then nights 2–4 weeks; even delayed presentation up to ~3 months responds to splinting. Never hyperextend (skin necrosis).
-Surgery (extension-block pinning or ORIF) for volar subluxation of the distal phalanx or large fragment (>30–50% of joint) with subluxation; otherwise bony fragments still do well with splinting. Chronic → swan-neck; DIP fusion if painful arthritis.`],
-['diagnosis', `Thumb UCL injury (skier’s/gamekeeper’s thumb) and the Stener lesion`, `Ulnar collateral ligament of the thumb MCP; acute = skier’s, chronic attenuation = gamekeeper’s.
-Stress test in 30° flexion (isolates proper collateral) and extension (accessory collateral/volar plate): >30–35° opening or >15° more than the other side, no endpoint = complete tear. X-ray first (avulsion fragment; avoid displacing it).
-Stener lesion: the adductor aponeurosis slips between the torn distal UCL and its insertion on the proximal phalanx → cannot heal → surgical repair (suture anchor). Palpable mass on the ulnar MCP; ultrasound/MRI can confirm. Partial tears: thumb spica 4–6 weeks. Chronic instability: reconstruction with free tendon graft; MCP fusion if arthritic.`],
-['management', `Metacarpal fractures: acceptable angulation, shortening, and thumb base fractures`, `Acceptable apex-dorsal angulation of metacarpal necks/shafts: index/long 10–20°, ring 30°, small 40° (up to 50–70° for small finger neck/boxer’s per some). NO rotational malalignment (scissoring; nail plate alignment; each 5° of malrotation → up to 1.5 cm of overlap at fingertip). Each 2 mm of shortening ≈ 7° extensor lag; accept <5 mm.
-Bennett fracture: intra-articular 1st metacarpal base; APL pulls the shaft proximal/dorsal/radial while the volar-ulnar beak fragment stays attached to the anterior oblique (beak) ligament; treat with CRPP or ORIF (traction, pronation, abduction).
-Rolando: comminuted Y/T intra-articular base → ORIF or distraction ex-fix. Extra-articular base fractures tolerate up to 30° angulation.`],
-['management', `Fingertip injuries and Seymour fracture`, `Subungual hematoma: trephinate; repair nail bed when hematoma >50% with associated fracture is now controversial — repair if nail plate is disrupted. Keep nail plate/foil in fold to stent.
-Amputation with no exposed bone → healing by secondary intention (best sensation). Exposed bone: V-Y advancement (Atasoy volar for transverse/dorsal-oblique; Kutler bilateral); Moberg (thumb only — volar advancement; risks dorsal skin necrosis in fingers); cross-finger flap for volar-oblique loss; thenar flap for index/long in young patients; revision amputation (avoid shortening past FDP insertion when possible).
-Seymour fracture: child’s distal phalanx physeal (SH I/II) fracture with nail bed laceration and the nail plate proximally displaced out of the fold — an open fracture: remove nail, extract interposed germinal matrix, irrigate, reduce, antibiotics, ± pin. Missed → osteomyelitis, growth arrest.`],
-['management', `Replantation: indications, contraindications, sequence, ischemia times`, `Indications: thumb, multiple digits, any pediatric amputation, hand/wrist/forearm level (sharp), single digit distal to the FDS insertion (zone I).
-Relative contraindications: single digit in zone II (proximal to FDS — poor motion), severe crush/avulsion (red streak sign along vessels, ribbon sign), prolonged ischemia, mangled, medically unstable, smoker/psychiatric.
-Ischemia: digits (no muscle) 12 h warm / 24 h cold; proximal amputations with muscle 6 h warm / 12 h cold. Transport: wrap in saline gauze, bag, on ice — never directly on ice or in water.
-Sequence: bone shortening/fixation → extensor tendons → flexor tendons → arteries → nerves → veins (repair ≥2 veins per artery) → skin. Post-op: warm room, aspirin, no caffeine/nicotine. Venous congestion (blue, brisk bleeding) → leeches (Hirudo; prophylactic ciprofloxacin/Bactrim for Aeromonas hydrophila). Arterial insufficiency (pale, no bleeding) → return to OR.`],
-['diagnosis', `Hand infections: Kanavel signs, bites, felon, paronychia, herpetic whitlow`, `Pyogenic flexor tenosynovitis — Kanavel: fusiform swelling, flexed resting posture, tenderness along the sheath, pain with passive extension (earliest/most specific). Treat with urgent I&D (catheter irrigation) + antibiotics; horseshoe abscess via radial (FPL) and ulnar (small finger) bursae communicating through Parona’s space (deep to FDP in distal forearm).
-Human bite / fight bite (Eikenella corrodens + anaerobes + strep/staph): explore the MCP joint (extensor tendon injury migrates proximally when hand opens), irrigate, leave open, amoxicillin-clavulanate. Cat bite: Pasteurella multocida, amoxicillin-clavulanate. Dog bite: Pasteurella, Capnocytophaga.
-Felon: pulp abscess in septated compartments → unilateral longitudinal incision (avoid fishmouth). Paronychia: S. aureus; chronic → Candida (remove nail). Herpetic whitlow (HSV; healthcare workers/children): vesicles, clear fluid — do NOT incise; acyclovir. Deep space: collar-button (web) abscess needs dorsal + volar incisions; thenar/midpalmar spaces.`],
-['classification', `TFCC tears: Palmer classification and ulnar impaction`, `Class 1 (traumatic): 1A central perforation (avascular → arthroscopic debridement); 1B peripheral ulnar avulsion ± ulnar styloid fracture, DRUJ instability (vascular periphery → repair, open or arthroscopic outside-in); 1C distal (ulnocarpal ligaments); 1D radial avulsion (repair to radius).
-Class 2 (degenerative, ulnar impaction): 2A TFCC wear → 2B + lunate/ulnar head chondromalacia → 2C TFCC perforation → 2D + LT ligament tear → 2E + ulnocarpal arthritis.
-Ulnar impaction: ulnar-positive variance (pronated grip PA view accentuates), lunate cystic changes; treat with ulnar shortening osteotomy (also tightens the ulnocarpal ligaments) or wafer resection (2–4 mm; needs intact TFCC periphery).
-Blood supply: peripheral 10–40% from ulnar artery branches; central disc avascular.`],
-['management', `Tendon transfers for radial, median, and ulnar nerve palsy`, `Principles: expendable donor, adequate excursion and power (transfer loses one MRC grade), straight line of pull, one tendon–one function, supple joints, synergy, tissue equilibrium.
-Radial nerve (standard set): PT → ECRB (wrist extension); FCU or FCR → EDC (finger extension; FCR preserves ulnar-sided wrist flexion — Boyes/Brand); PL → rerouted EPL (thumb extension).
-Low median (opposition): EIP opponensplasty (Burkhalter; no PL needed), FDS ring (Bunnell/Royle-Thompson), PL (Camitz — for CTS with atrophy), abductor digiti minimi (Huber — children/congenital).
-High median: add BR → FPL, ECRL → FDP index/long (or side-to-side FDP tenodesis).
-Ulnar: claw correction with Zancolli lasso (FDS to A1/A2) or static volar plate capsulodesis; key pinch: ECRB + graft to adductor pollicis; index abduction: APL slip/EIP to first dorsal interosseous.`],
-['diagnosis', `Ganglions and the other common hand masses`, `Ganglion (most common hand mass): dorsal wrist from the scapholunate joint (~70%), volar wrist from radioscaphoid/STT (adjacent to radial artery — Allen test), volar retinacular cyst from the A1 pulley, mucous cyst at the DIP from osteoarthritis (treat the osteophyte; nail groove deformity). Aspiration ~50% recurrence; excision with capsular stalk ~5–10% recurrence.
-Giant cell tumor of tendon sheath (localized PVNS): 2nd most common; firm, slow, volar fingers; recurrence 10–20% after marginal excision.
-Epidermal inclusion cyst (after penetrating injury), lipoma, glomus tumor (subungual, cold sensitivity, pinpoint pain, bluish nail; MRI; excise), enchondroma (most common bone tumor in the hand; curettage after fracture heals).`],
-['classification', `Thumb CMC arthritis: Eaton staging and treatment`, `Eaton-Littler: I joint widening/synovitis, normal contour; II mild narrowing, osteophytes/loose bodies <2 mm; III >2 mm osteophytes, sclerosis, cysts; IV STT (pantrapezial) involvement.
-Exam: grind test, shoulder sign (dorsoradial subluxation), MCP hyperextension (Z-deformity) — address the MCP (capsulodesis or fusion) if >30°.
-Nonop first: splint, NSAIDs, steroid injection. Surgery: trapeziectomy (± ligament reconstruction and tendon interposition with FCR — LRTI; outcomes equivalent to simple trapeziectomy with hematoma distraction) for III–IV; CMC arthrodesis for young heavy laborers stage II–III (needs a healthy STT joint); Eaton ligament reconstruction or metacarpal extension osteotomy for stage I–II in young patients. Arthroplasty implants have higher failure.`]
+['a','Scaphoid blood supply pattern','Retrograde from the dorsal carpal branch of the radial artery → proximal pole AVN risk.'],
+['d','Most common scaphoid fracture location','Waist (~65%).'],
+['m','Nondisplaced scaphoid waist fracture','Cast 8–12 weeks (or percutaneous screw for faster return).'],
+['m','Scaphoid fracture indications for ORIF','Displacement > 1 mm, proximal pole, humpback, DISI.'],
+['d','Humpback deformity threshold','Intrascaphoid angle > 35°.'],
+['m','Scaphoid nonunion with proximal pole AVN','Vascularized graft (1,2-ICSRA or medial femoral condyle).'],
+['c','SNAC stage I','Radial styloid arthritis.'],
+['c','SNAC stage II','Scaphocapitate arthritis.'],
+['c','SNAC stage III','Periscaphoid/capitolunate arthritis.'],
+['m','SNAC/SLAC II–III options','Scaphoidectomy + four-corner fusion, or proximal row carpectomy.'],
+['m','Proximal row carpectomy requirements','Intact capitate head and lunate fossa.'],
+['d','Kienböck disease association','Ulnar-negative variance.'],
+['c','Lichtman stage I','Normal x-ray; MRI positive.'],
+['c','Lichtman stage II','Lunate sclerosis, no collapse.'],
+['c','Lichtman stage IIIA vs IIIB','IIIA lunate collapse, normal carpal alignment; IIIB fixed scaphoid flexion/carpal collapse.'],
+['c','Lichtman stage IV','Pan-carpal arthritis.'],
+['m','Kienböck II–IIIA with ulnar-negative variance','Radial shortening osteotomy.'],
+['m','Kienböck IIIB','STT/scaphocapitate fusion or PRC.'],
+['d','Strongest portion of the scapholunate ligament','Dorsal.'],
+['d','Watson test','Scaphoid shift — SL instability.'],
+['d','Terry Thomas sign','SL gap > 3 mm.'],
+['d','Normal scapholunate angle','30–60°.'],
+['d','DISI: ligament and lunate position','SL ligament; lunate extends; SL angle > 70°.'],
+['d','VISI: ligament and lunate position','LT ligament; lunate flexes; SL angle < 30°.'],
+['c','SLAC stage I','Radial styloid.'],
+['c','SLAC stage II','Scaphoid fossa.'],
+['c','SLAC stage III','Capitolunate.'],
+['c','Mayfield stage I','Scapholunate disruption.'],
+['c','Mayfield stage II','Capitolunate (perilunate) dislocation.'],
+['c','Mayfield stage III','Lunotriquetral disruption.'],
+['c','Mayfield stage IV','Lunate dislocation (volar, "spilled teacup").'],
+['d','Most common greater-arc perilunate injury','Trans-scaphoid perilunate dislocation.'],
+['m','Perilunate dislocation treatment','Emergent closed reduction → open reduction, ligament repair, pinning.'],
+['d','Nerve at risk with lunate dislocation','Median (carpal tunnel).'],
+['d','Normal distal radius radial inclination','~22°.'],
+['d','Normal distal radius volar tilt','~11°.'],
+['d','Normal distal radius radial height','~11 mm.'],
+['d','Distal radius: acceptable radial shortening','< 3 mm.'],
+['d','Distal radius: acceptable dorsal tilt','< 10°.'],
+['d','Distal radius: acceptable articular step-off','< 2 mm.'],
+['a','Approach for a volar distal radius plate','FCR approach.'],
+['d','Tendon rupture after nondisplaced distal radius fracture','EPL (at Lister tubercle) → EIP-to-EPL transfer.'],
+['d','Cause of FPL rupture after volar plating','Plate placed distal to the watershed line (Soong grade).'],
+['m','Reducing CRPS after distal radius fracture','Vitamin C 500 mg/day.'],
+['a','Extensor compartment 1 contents','APL, EPB (de Quervain).'],
+['a','Extensor compartment 2 contents','ECRL, ECRB.'],
+['a','Extensor compartment 3 contents','EPL (around Lister tubercle).'],
+['a','Extensor compartment 4 contents','EDC, EIP.'],
+['a','Extensor compartment 5 contents','EDM.'],
+['a','Extensor compartment 6 contents','ECU.'],
+['d','Intersection syndrome location','1st over 2nd compartment, ~4 cm proximal to the wrist.'],
+['d','Vaughan-Jackson syndrome','Extensor rupture from caput ulnae in RA — EDM first, then ring/small EDC.'],
+['d','De Quervain surgical pitfall','EPB often in a separate subcompartment — release both.'],
+['c','Flexor tendon zone I','Distal to the FDS insertion (jersey finger).'],
+['c','Flexor tendon zone II','A1 pulley to FDS insertion ("no man\'s land").'],
+['c','Flexor tendon zone IV','Carpal tunnel.'],
+['a','Most important flexor pulleys','A2 (proximal phalanx) and A4 (middle phalanx).'],
+['d','Flexor repair strength depends on…','Number of core strands (4–6 allow early active motion).'],
+['d','Epitendinous suture contribution','~20% added strength; smoother gliding.'],
+['d','Flexor repair gap that predicts failure','> 3 mm.'],
+['d','When flexor repairs are weakest','Days 5–21 (rupture peaks 7–10 days).'],
+['c','Leddy-Packer type I jersey finger','Retracts to the palm, both vincula torn → repair within 7–10 days.'],
+['c','Leddy-Packer type II jersey finger','Retracts to the PIP, held by the long vinculum.'],
+['c','Leddy-Packer type III jersey finger','Bony fragment caught at A4 → ORIF.'],
+['d','Quadriga effect','Advancing FDP > 1 cm → loss of flexion in adjacent fingers.'],
+['d','Most common jersey finger digit','Ring finger.'],
+['m','Trigger finger first-line treatment','Corticosteroid injection (less effective in diabetics).'],
+['m','Trigger finger release: which pulley','A1 only — never A2 (bowstringing).'],
+['d','Pediatric trigger thumb finding','Notta nodule on FPL; presents at 1–3 years.'],
+['m','Pediatric trigger thumb management','Observe (~30% resolve); release A1 after age 1 if persistent.'],
+['a','Contents of the carpal tunnel','4 FDS, 4 FDP, FPL, median nerve.'],
+['a','Most common course of the recurrent motor branch','Extraligamentous (~50%), then subligamentous, transligamentous.'],
+['a','Palmar cutaneous branch of the median nerve origin','~5 cm proximal to the wrist crease, between FCR and palmaris — spared in CTS.'],
+['d','NCS thresholds for carpal tunnel syndrome','Distal motor latency > 4.5 ms; sensory latency > 3.5 ms.'],
+['d','Predictor of good carpal tunnel release outcome','Response to steroid injection.'],
+['a','Cubital tunnel compression sites, proximal → distal','Arcade of Struthers, medial intermuscular septum, medial epicondyle, Osborne ligament, FCU aponeurosis.'],
+['a','Most common cubital tunnel compression site','Osborne ligament (cubital tunnel retinaculum).'],
+['d','Froment sign','FPL substitutes for weak adductor pollicis (ulnar nerve).'],
+['d','Wartenberg sign','Abducted small finger — unopposed EDM.'],
+['d','Ulnar paradox','Clawing is worse with LOW (distal) ulnar lesions.'],
+['d','Sensory clue separating cubital tunnel from Guyon canal','Dorsal ulnar hand numb in cubital tunnel (dorsal cutaneous branch spared at Guyon).'],
+['m','Cubital tunnel first-line treatment','Nighttime elbow extension splint (~45°).'],
+['m','When to transpose rather than decompress in situ','Nerve subluxates, revision surgery, cubitus valgus.'],
+['a','Guyon zone 1 deficit','Mixed motor + sensory (proximal to bifurcation).'],
+['a','Guyon zone 2 deficit','Motor only (deep branch) — ganglion most common.'],
+['a','Guyon zone 3 deficit','Sensory only — ulnar artery thrombosis (hypothenar hammer).'],
+['d','Dupuytren cell type and collagen','Myofibroblasts; increased type III:I ratio.'],
+['a','Dupuytren cord that displaces the neurovascular bundle','Spiral cord (central and superficial).'],
+['d','Dupuytren cord causing MCP contracture','Pretendinous cord.'],
+['d','Dupuytren cord causing DIP contracture','Retrovascular cord.'],
+['m','Dupuytren surgical indications','MCP contracture ≥ 30° or any PIP contracture; positive tabletop test.'],
+['m','Collagenase (Xiaflex) risks','Skin tears; flexor rupture at the small finger PIP.'],
+['d','Dupuytren diathesis features','Ledderhose (plantar), Peyronie, Garrod knuckle pads, young age, bilateral.'],
+['d','Boutonnière deformity','PIP flexion + DIP hyperextension (central slip injury).'],
+['d','Elson test','Central slip integrity — resisted middle phalanx extension over table edge.'],
+['m','Acute closed boutonnière','PIP extension splint 6 weeks, DIP free.'],
+['d','Swan-neck deformity','PIP hyperextension + DIP flexion.'],
+['d','Swan-neck causes','Chronic mallet, FDS rupture, volar plate laxity, intrinsic tightness (RA).'],
+['m','Mallet finger treatment','Full-time DIP extension splint 6–8 weeks (never hyperextend).'],
+['m','Mallet finger surgical indication','Volar subluxation of the distal phalanx / large fragment with subluxation.'],
+['d','Stener lesion','Adductor aponeurosis interposed between torn UCL and its insertion → will not heal.'],
+['d','Thumb UCL stress test for complete tear','> 30–35° opening or > 15° vs contralateral, no endpoint (test at 30° flexion).'],
+['m','Complete thumb UCL tear','Surgical repair (suture anchor).'],
+['d','Acceptable metacarpal neck angulation: index/long','10–20°.'],
+['d','Acceptable metacarpal neck angulation: ring','30°.'],
+['d','Acceptable metacarpal neck angulation: small','40° (boxer\'s; up to 50–70° by some).'],
+['d','Metacarpal shortening: effect on extension','Each 2 mm ≈ 7° extensor lag; accept < 5 mm.'],
+['d','Never acceptable in metacarpal fractures','Rotational malalignment (scissoring).'],
+['d','Bennett fracture deforming force','APL pulls the shaft proximal/dorsal/radial; beak fragment held by the anterior oblique ligament.'],
+['d','Rolando fracture','Comminuted Y/T intra-articular thumb metacarpal base.'],
+['d','Acceptable angulation, extra-articular thumb metacarpal base','Up to 30°.'],
+['m','Fingertip amputation with exposed bone, transverse/dorsal-oblique','V-Y (Atasoy) advancement.'],
+['m','Volar advancement flap reserved for the thumb','Moberg flap.'],
+['m','Fingertip loss, volar-oblique','Cross-finger flap.'],
+['d','Seymour fracture','Child distal phalanx physeal fracture + nail bed laceration = open fracture.'],
+['m','Seymour fracture treatment','Remove nail, extract interposed matrix, irrigate, reduce, antibiotics.'],
+['m','Replantation indications','Thumb, multiple digits, any pediatric amputation, hand/wrist/forearm, single digit distal to FDS.'],
+['m','Replantation relative contraindications','Single digit in zone II, severe crush/avulsion (red streak, ribbon sign), prolonged ischemia.'],
+['d','Ischemia limits for digits','12 h warm / 24 h cold.'],
+['d','Ischemia limits for muscle-containing amputations','6 h warm / 12 h cold.'],
+['m','Replantation sequence','Bone → extensor → flexor → artery → nerve → vein (≥ 2 veins per artery) → skin.'],
+['m','Venous congestion after replant','Leeches; prophylactic ciprofloxacin/Bactrim (Aeromonas hydrophila).'],
+['m','Amputated part transport','Saline gauze, sealed bag, on ice — never directly on ice or in water.'],
+['d','Kanavel signs','Fusiform swelling, flexed posture, sheath tenderness, pain with passive extension.'],
+['d','Most specific/earliest Kanavel sign','Pain with passive extension.'],
+['a','Horseshoe abscess route','Radial (FPL) and ulnar (small finger) bursae via Parona space.'],
+['d','Fight bite organism','Eikenella corrodens (plus anaerobes/strep/staph).'],
+['d','Cat bite organism','Pasteurella multocida → amoxicillin-clavulanate.'],
+['m','Felon incision','Unilateral longitudinal (avoid fishmouth).'],
+['d','Chronic paronychia organism','Candida (remove nail).'],
+['m','Herpetic whitlow','Do NOT incise; acyclovir.'],
+['m','Collar-button (web space) abscess','Dorsal + volar incisions.'],
+['c','Palmer 1A TFCC tear','Central perforation → arthroscopic debridement.'],
+['c','Palmer 1B TFCC tear','Peripheral ulnar avulsion (vascular) → repair.'],
+['c','Palmer 1D TFCC tear','Radial avulsion → repair to radius.'],
+['c','Palmer class 2 TFCC lesion','Degenerative — ulnar impaction.'],
+['m','Ulnar impaction treatment','Ulnar shortening osteotomy (or wafer resection 2–4 mm).'],
+['d','Vascular part of the TFCC','Peripheral 10–40% (central disc avascular).'],
+['m','Tendon transfer principles','Expendable donor, adequate power (loses one grade), straight line, one tendon–one function, supple joints.'],
+['m','Radial nerve palsy: wrist extension transfer','PT → ECRB.'],
+['m','Radial nerve palsy: finger extension transfer','FCU or FCR → EDC.'],
+['m','Radial nerve palsy: thumb extension transfer','PL → rerouted EPL.'],
+['m','Low median palsy opponensplasty options','EIP (Burkhalter), FDS ring (Bunnell), PL (Camitz), ADM (Huber — children).'],
+['m','High median palsy additional transfers','BR → FPL; ECRL → FDP index/long.'],
+['m','Ulnar claw correction','Zancolli lasso (FDS to A1/A2) or volar plate capsulodesis.'],
+['d','Most common hand mass','Ganglion — dorsal wrist from the SL joint (~70%).'],
+['d','Volar wrist ganglion origin and hazard','Radioscaphoid/STT joint; adjacent to the radial artery (Allen test).'],
+['m','Mucous cyst treatment','Excise the DIP osteophyte.'],
+['d','Second most common hand mass','Giant cell tumor of tendon sheath.'],
+['d','Glomus tumor triad','Cold sensitivity, pinpoint pain, bluish subungual discoloration.'],
+['d','Most common bone tumor of the hand','Enchondroma.'],
+['c','Eaton stage I thumb CMC','Joint widening/synovitis, normal contour.'],
+['c','Eaton stage II thumb CMC','Osteophytes < 2 mm.'],
+['c','Eaton stage III thumb CMC','Osteophytes > 2 mm, narrowing, sclerosis.'],
+['c','Eaton stage IV thumb CMC','STT (pantrapezial) involvement.'],
+['m','Thumb CMC stage III–IV surgery','Trapeziectomy ± LRTI (equivalent to simple trapeziectomy).'],
+['m','Thumb CMC arthrodesis candidate','Young heavy laborer, stage II–III, healthy STT joint.'],
+['m','Thumb MCP hyperextension > 30° with CMC arthritis','Address MCP (capsulodesis or fusion).'],
+['d','Brachial plexus: Erb palsy roots and posture','C5–6; waiter\'s tip.'],
+['d','Brachial plexus: Klumpke palsy roots and signs','C8–T1; claw hand, Horner.'],
 ]);
 
 // ======================= HIP & KNEE =======================
 _add('hk', [
-['classification', `Garden classification of femoral neck fractures`, `I: incomplete / valgus-impacted.
-II: complete, nondisplaced.
-III: complete, partially displaced — trabeculae of head and acetabulum not aligned (head tilted into varus).
-IV: complete, fully displaced — head trabeculae realign with the acetabulum.
-Practical split: nondisplaced (I–II) vs displaced (III–IV); inter-observer reliability is poor beyond that. Displacement, not stage, drives AVN and nonunion risk.`],
-['classification', `Pauwels classification and why it matters for fixation`, `Angle of the fracture line from the horizontal:
-I: <30° (compression forces; stable).
-II: 30–50°.
-III: >50° (vertical; shear forces; highest nonunion/varus collapse).
-Pauwels III in a young patient → anatomic (open) reduction and a fixed-angle device (sliding hip screw ± derotation screw) rather than three parallel cancellous screws; consider medial buttress plate. Screw placement: inverted triangle, along the calcar (posteroinferior screw supports), avoid starting below the lesser trochanter (subtrochanteric fracture).`],
-['management', `Femoral neck fracture management by age and displacement — the trials to know`, `Young/physiologically active (<60–65): urgent anatomic reduction (open if closed fails) and internal fixation within 24 h — reduce AVN/nonunion; capsulotomy controversial.
-Elderly nondisplaced/valgus-impacted: in situ screws or SHS (posterior tilt >20° on lateral predicts failure → consider arthroplasty). FAITH trial: SHS vs cancellous screws — no overall difference; SHS favored in smokers, basicervical and displaced fractures.
-Elderly displaced: arthroplasty. THA for ambulatory, cognitively intact, independent patients (better function, fewer reoperations; HEALTH trial: no difference in secondary procedures at 2 years vs hemi, THA modestly better function); hemiarthroplasty for lower demand/cognitive impairment. Cemented stems reduce periprosthetic fracture and revision (WHiTE 5) — watch for bone cement implantation syndrome.
-Surgery within 24–48 h reduces mortality; 1-year mortality after hip fracture ~20–30%.`],
-['anatomy', `Femoral head blood supply and the surgical dislocation that protects it`, `Dominant: deep branch of the MEDIAL femoral circumflex artery (from profunda; runs posterior to the obturator externus tendon and along the posterior neck as the lateral epiphyseal/retinacular vessels).
-Minor: lateral femoral circumflex (anterior/inferior), artery of the ligamentum teres (obturator; minor in adults).
-Ganz safe surgical dislocation: trochanteric flip osteotomy, anterior Z-capsulotomy, dislocate anteriorly; keep obturator externus and short external rotators intact to protect the MFCA. Posterior THA approach releases the external rotators — MFCA at risk only if dissection goes deep to obturator externus. Piriformis-entry femoral nailing in children/adolescents risks the MFCA → AVN, so use a trochanteric/lateral entry.`],
-['management', `Intertrochanteric fractures: stable vs unstable and implant choice`, `Stable: intact posteromedial cortex (calcar), no reverse obliquity, no subtrochanteric extension, intact lateral wall → sliding hip screw (SHS) or cephalomedullary nail equivalent.
-Unstable (reverse obliquity AO 31-A3, subtrochanteric extension, comminuted posteromedial/lesser trochanter, thin lateral wall <20.5 mm on AP — Hsu) → cephalomedullary nail. Never use an SHS for reverse obliquity (medializes the shaft, cuts out).
-Tip-apex distance (TAD) <25 mm (center-center on AP and lateral) is the strongest predictor against screw cut-out; anterior-superior placement is worst. Compression screw should engage the head center.
-Nail: reduction before nailing (avoid varus/flexion), long vs short nails similar; anterior cortical perforation from radius-of-curvature mismatch with long nails.`],
-['management', `Subtrochanteric fractures: deforming forces and fixation`, `Proximal fragment: flexed (iliopsoas), abducted (gluteus medius/minimus), externally rotated (short external rotators). Distal fragment: adducted and shortened (adductors, hamstrings) → varus/procurvatum malalignment is the classic error.
-Reduce before reaming — clamps/cerclage through a small open approach if needed; check on lateral. Cephalomedullary nail is standard (load-sharing); 95° blade plate/proximal femoral locking plate for reverse obliquity in select cases (higher failure).
-Atypical (bisphosphonate) subtrochanteric fractures: transverse/short oblique, lateral cortical beak, prodromal thigh pain, often bilateral (image the other femur); full-length reconstruction-type nail, stop bisphosphonates, consider teriparatide; prophylactic nailing of contralateral incomplete fracture with pain.`],
-['classification', `Hip dislocation and Pipkin femoral head fractures`, `Posterior (~90%): flexed, adducted, internally rotated limb (dashboard); associated posterior wall fractures, sciatic nerve injury 10–20% (peroneal division), femoral head fractures, ipsilateral knee injuries (PCL, patella). Anterior: extended, abducted, externally rotated; femoral head impaction/indentation fractures.
-Emergent closed reduction (<6 h) reduces AVN (5–40%); post-reduction CT for incarcerated fragments/wall fractures; irreducible → open.
-Pipkin: I head fracture BELOW the fovea (non-weight-bearing) → excise or fix; II head fracture ABOVE the fovea (weight-bearing) → ORIF (anterior Smith-Petersen approach or surgical dislocation); III head fracture + femoral neck fracture (highest AVN; young → ORIF, old → arthroplasty); IV head fracture + acetabular fracture → address both (Kocher-Langenbeck).`],
-['management', `Femoral shaft fractures: timing, nail choice, and the injury you must not miss`, `Reamed antegrade IM nail within 24 h in the resuscitated patient reduces pulmonary complications (ARDS), length of stay, mortality; reaming improves union. Damage-control external fixation for the under-resuscitated (lactate >2.5 mmol/L, base deficit >8, pH <7.25, hypothermic, coagulopathic), severe chest/head injury; convert to nail within ~2 weeks.
-Ipsilateral femoral NECK fracture in 2–9%; ~30% missed → dedicated fine-cut CT of the neck (or MRI) for every shaft fracture; fix the neck first/anatomically (cannulated screws or SHS + retrograde or reconstruction nail).
-Retrograde nail: ipsilateral acetabular/neck/tibial fractures (floating knee), obese, pregnant, bilateral. Trochanteric entry nails have a lateral bend; piriformis entry is straight (no valgus mismatch, but harder in obese and risks AVN in adolescents).
-Complications: malrotation (>15°; compare lesser trochanter profile/femoral neck version), leg length, heterotopic ossification of abductors (antegrade), anterior knee pain (retrograde), nonunion (exchange reamed nailing; dynamize if axially stable).`],
-['management', `Distal femur fractures and the Hoffa fragment`, `Distal fragment displaces into extension/recurvatum (gastrocnemius pull) and varus; proximal fragment shortens. Fix with a lateral locking plate (bridge for comminution; avoid overly stiff constructs — nonunion) or retrograde IM nail (extra-articular/simple intra-articular; needs open box in TKA).
-Hoffa fracture: coronal-plane condyle fracture (lateral condyle more common, ~38% of C-type on CT) — needs lag screws anterior-to-posterior; get a CT.
-Periprosthetic above a TKA: well-fixed component → retrograde nail (open-box PS or CR femoral components) or distal femoral locking plate; loose component → distal femoral replacement (elderly) or revision. Elderly comminuted → primary distal femoral replacement is increasingly accepted.`],
-['classification', `Schatzker classification of tibial plateau fractures`, `I: lateral split (young, dense bone) → lag screws.
-II: lateral split-depression (most common) → elevate, graft, buttress/raft plate.
-III: pure lateral depression (osteoporotic) → elevate, graft.
-IV: medial plateau — highest energy of the unicondylar types, associated with knee dislocation (vascular injury, peroneal nerve), often fracture-dislocation; medial buttress plating.
-V: bicondylar. VI: bicondylar with metaphyseal-diaphyseal dissociation → staged ex-fix, dual plating (posteromedial + lateral).
-Surgical indications: articular depression >3 mm (some >2 mm lateral), condylar widening >5 mm, varus/valgus instability >10° in extension, medial/bicondylar, open, compartment syndrome. Lateral meniscus tears common with split-depression (repair through the arthrotomy). CT for every plateau; span first if soft tissue compromised (Moore classification for fracture-dislocations).`],
-['management', `Patella fractures`, `Vertical fractures are usually stable (extensor mechanism intact). Nonoperative if <2–3 mm articular step, <3 mm displacement, and active extension intact (cylinder cast/brace in extension, weight-bear).
-Anterior tension band (K-wires or cannulated screws with figure-of-8 wire) converts tensile forces to compression — for transverse fractures. Plating for comminution. Partial patellectomy for a comminuted pole with tendon reattachment (advance tendon close to articular surface to avoid tilt); total patellectomy is last resort (loss of ~50% extensor moment).
-Symptomatic hardware is the most common complication; also loss of fixation (obese, early motion), stiffness, post-traumatic arthritis.`],
-['classification', `Knee dislocation: Schenck classification, vascular workup, and the dimple sign`, `Schenck: KD I single cruciate + collateral; KD II both cruciates only; KD III both cruciates + one collateral (IIIM medial, IIIL lateral — IIIL has more peroneal nerve injury); KD IV all four; KD V periarticular fracture-dislocation.
-Popliteal artery injury 5–40% (tethered at the adductor hiatus and soleus arch) — even after spontaneous reduction. Every knee dislocation: reduce, then ABI; ABI <0.9 → CT angiography or vascular surgery; normal ABI + normal pulses → serial exams. Hard signs (absent pulse, expanding hematoma, ischemia) → immediate vascular surgery/OR. Peroneal nerve injury ~25% (posterolateral).
-Irreducible posterolateral dislocation → medial “dimple” (buttonholing of the medial femoral condyle through the capsule) → open reduction.
-Obese low-energy dislocations (ultra-low-velocity) carry high vascular risk. Definitive ligament reconstruction at ~2–3 weeks once vascular status is secure; ex-fix bridging if grossly unstable.`],
-['diagnosis', `Extensor mechanism ruptures and the Insall-Salvati ratio`, `Quadriceps tendon rupture: >40 years, diabetics, renal failure, fluoroquinolones/steroids; palpable suprapatellar gap; patella baja on lateral. Patellar tendon rupture: <40 years, jumping athletes, prior tendinopathy/steroid injection; patella alta.
-Insall-Salvati ratio = patellar tendon length / patellar length (lateral, 30° flexion); normal 0.8–1.2; >1.2 alta, <0.8 baja. Caton-Deschamps and Blackburne-Peel are alternatives less affected by tendon insertion variability.
-Repair acutely (within 2 weeks) with transosseous sutures/anchors; protect patellar tendon repairs with a cerclage/suture augmentation; early protected motion. Chronic: quadriceps lengthening (V-Y/Codivilla) or graft augmentation (hamstring, Achilles allograft).`],
-['anatomy', `THA approaches: intervals, nerves at risk, and characteristic complications`, `Posterior (Moore/Southern): gluteus maximus split, short external rotators released (repair capsule/rotators lowers dislocation); sciatic nerve; historically highest dislocation.
-Direct lateral (Hardinge): splits gluteus medius/minimus anterior third → abductor weakness/limp; superior gluteal nerve injured if the split extends >5 cm proximal to the greater trochanter tip; heterotopic ossification.
-Anterolateral (Watson-Jones): between tensor fasciae latae and gluteus medius (both superior gluteal nerve — not truly internervous).
-Direct anterior (Smith-Petersen/Hueter): TFL (superior gluteal) / sartorius (femoral) interval; lateral femoral cutaneous nerve numbness common; femoral exposure difficult → periprosthetic femur fracture, trochanteric fracture, wound complications in obese pannus; ascending branch of the LFCA ligated; lower early dislocation.`],
-['management', `THA instability: causes, safe zones, and salvage options`, `Most common early complication after posterior approach (1–3%); posterior dislocation with flexion/adduction/internal rotation. Risks: prior hip surgery, female, age >70, neuromuscular disease/dementia, abductor deficiency, component malposition, small heads, impingement (osteophytes, cup overhang, head-neck ratio).
-Lewinnek “safe zone”: cup abduction 40 ± 10°, anteversion 15 ± 10° — but many dislocations occur inside it; spinopelvic stiffness (fused lumbar spine, stiff pelvis) matters: stiff spine → more functional anteversion needed (the spinal fusion patient dislocates anteriorly on standing/posteriorly on sitting).
-Closed reduction; two or more dislocations → evaluate cause (CT version). Revise malpositioned components; larger head/lipped liner; dual-mobility for recurrent instability with reasonable abductors; constrained liner for abductor deficiency/neuromuscular (highest failure, needs well-fixed shell).`],
-['diagnosis', `Leg length and offset in THA — restoring both`, `Preop template from the lesser trochanter; intraop measure from a fixed pelvic pin to the trochanter, and check shuck/telescoping and soft-tissue tension.
-Lengthening: higher neck cut / longer neck / seating the stem proud. Offset: increases abductor moment arm and tension (stability, less impingement, less limp) without lengthening — use high-offset stems, lateralized liners; decreasing offset → instability and abductor weakness.
-LLD is the most common cause of litigation after THA; perceived LLD may be from pelvic obliquity/spinal deformity — measure true (ASIS to medial malleolus) vs apparent. Up to ~1 cm generally tolerated; nerve stretch (sciatic) with lengthening >4 cm / risk rises above ~2.5 cm in DDH.`],
-['classification', `Vancouver classification of periprosthetic femur fractures around a THA`, `A: trochanteric (AG greater, AL lesser; AL with calcar involvement may mean loose stem).
-B1: around/just distal to stem, stem WELL FIXED → ORIF (cable-plate, locking plate ± strut allograft; bypass the stem by ≥2 cortical diameters).
-B2: stem LOOSE, adequate bone stock → revision to a long (diaphyseal-engaging) stem bypassing the fracture ± ORIF.
-B3: stem loose, POOR bone stock (osteolysis/comminution) → revision with proximal femoral replacement or allograft-prosthetic composite (or modular tapered stem if isthmus intact).
-C: well distal to the stem → ORIF independent of the stem.
-Under-recognizing a loose stem (treating a B2 as B1) is the classic failure — check preop x-rays for subsidence/lucency, and stress the stem intraop. Risk: cementless tapered-wedge stems, Dorr C bone, osteoporotic women.`],
-['classification', `Periprosthetic fractures around a TKA (Lewis-Rorabeck) and acetabular fractures after THA`, `Supracondylar femur above TKA — Lewis-Rorabeck: I nondisplaced, prosthesis stable → nonop (elderly) or fix; II displaced, prosthesis stable → ORIF (distal femoral locking plate or retrograde nail through an open box; check femoral component design/notch width); III loose or failing prosthesis → revision (distal femoral replacement in elderly).
-Tibial: Felix classification (I plateau, II adjacent to stem, III distal to stem, IV tubercle; A well-fixed, B loose, C intraoperative).
-Acetabular fractures during THA: press-fit under-reaming >2 mm, osteoporosis, dysplasia; posterior column intact and cup stable → observe/protected weight-bearing; unstable → revise with multi-hole cup + screws ± posterior column plate. Notching the anterior femoral cortex in TKA raises supracondylar fracture risk.`],
-['classification', `Paprosky classification of acetabular and femoral bone loss (revision THA)`, `Acetabular: I minimal deformity, supportive rim → hemispherical cup. IIA superior bone loss, intact rim (superomedial migration); IIB superolateral migration with unsupportive dome; IIC medial wall loss (Köhler line violated) but rim intact → jumbo cup ± augments, medial graft. IIIA >3 cm superolateral migration, ischial lysis, Köhler intact (up-and-out) → augments/structural graft + cup. IIIB >3 cm superomedial migration, Köhler violated, severe ischial lysis, high risk of pelvic discontinuity (up-and-in) → cup-cage, custom triflange, distraction technique.
-Femoral: I minimal metaphyseal loss → primary-type stem. II extensive metaphyseal loss, intact diaphysis → extensively porous-coated or modular tapered stem. IIIA metaphysis non-supportive, >4 cm of intact diaphysis → extensively porous-coated cylindrical (≥6 cm scratch fit) or modular fluted tapered titanium stem. IIIB <4 cm intact diaphysis → modular fluted tapered stem. IV no isthmus, wide canal → impaction grafting, allograft-prosthetic composite, or proximal femoral replacement.`],
-['diagnosis', `Periprosthetic joint infection: diagnostic criteria and acute vs chronic management`, `Major criteria (either = PJI): sinus tract communicating with the joint; two positive cultures with the same organism.
-Minor (2018 ICM scoring): elevated CRP (>10 mg/L) or D-dimer, ESR >30; synovial WBC >3000/µL (chronic; >10,000 acute), PMN >70–80% (chronic; >90% acute), positive alpha-defensin, leukocyte esterase ++, positive histology (>5 PMN/HPF), single positive culture, positive intraoperative purulence.
-Get ESR/CRP first, then aspirate (hold antibiotics 2 weeks before); hold cultures 14 days for Cutibacterium acnes (shoulders). Metal-on-metal, hemarthrosis, crystals can raise WBC.
-Acute (<4 weeks from surgery or <3 weeks of symptoms of hematogenous infection) with well-fixed implants and susceptible organism → DAIR (debridement, antibiotics, irrigation, implant retention) with exchange of modular parts (~50–70% success; worse with S. aureus/MRSA, sinus, immunocompromised). Chronic → two-stage exchange (antibiotic spacer, 6 weeks IV, reimplant) is the US standard; one-stage in select cases. Chronic suppression for unfit patients. Most common organisms: coagulase-negative staph and S. aureus.`],
-['anatomy', `TKA component alignment and rotation landmarks`, `Goal: neutral mechanical axis (hip center → knee center → ankle center); tibial cut perpendicular to the tibial mechanical axis (0–3° posterior slope; more slope for CR); distal femoral cut at 5–7° valgus to the anatomic axis (≈ perpendicular to mechanical axis).
-Femoral rotation: 3° external rotation relative to the posterior condylar axis ≈ parallel to the transepicondylar axis ≈ perpendicular to Whiteside’s (AP trochlear) line. Internal rotation of the femoral component → patellar maltracking, flexion instability/asymmetry, anterior knee pain. Valgus knees have a hypoplastic lateral condyle → posterior condylar referencing under-rotates.
-Tibial rotation: center on the medial third (medial border to junction of medial/middle third) of the tibial tubercle; internal rotation → patellar maltracking. Patellar component medialized slightly and thickness restored (avoid overstuffing); keep ≥12–13 mm of residual patella.
-Kinematic alignment is an alternative philosophy (restores native joint line obliquity).`],
-['management', `TKA gap balancing: fixing tight or loose flexion/extension gaps`, `Tight in both flexion and extension → resect more proximal tibia.
-Tight in extension only → resect more distal femur, release posterior capsule/osteophytes.
-Tight in flexion only → downsize the femoral component (increase posterior condyle resection), increase tibial slope, release the PCL (CR) / convert to PS.
-Loose in flexion, balanced in extension → upsize femur (posterior augment), decrease slope, thicker insert + more distal femoral resection.
-Loose in extension only → distal femoral augments (avoid thicker poly which would tighten flexion).
-Loose in both → thicker polyethylene insert.
-Joint line elevation >4–8 mm → patella baja, mid-flexion instability; cut minimal distal femur.`],
-['management', `Soft-tissue releases for varus and valgus knees in TKA`, `Varus knee (tight medial): remove osteophytes and deep MCL subperiosteally, then semimembranosus, posteromedial capsule, superficial MCL (pie-crusting or sleeve elevation), PCL. Beware over-release → valgus instability.
-Valgus knee (tight lateral): osteophytes, lateral capsule, then iliotibial band (tight in EXTENSION — release/pie-crust off Gerdy’s), popliteus (tight in FLEXION), LCL, posterolateral capsule, lateral gastrocnemius; lateral epicondylar sliding osteotomy for severe. Consider a constrained (VVC) insert if the LCL is released or MCL is attenuated. Common peroneal nerve palsy after correcting large valgus/flexion contracture → flex the knee, loosen dressings.
-Medial pivot/ PS designs help; over-releasing the ITB in a valgus knee risks flexion instability.`],
-['diagnosis', `Patellar tracking and clunk after TKA`, `Maltracking causes: internal rotation of femoral or tibial component (most important), lateralized patellar button, overstuffed patellofemoral joint (thick patella/anterior femoral translation), medialized femoral component, tight lateral retinaculum. Fix by correcting component rotation (CT: femoral rotation vs TEA, tibial vs tubercle); lateral release alone is for isolated tilt.
-Patellar clunk syndrome: fibrous nodule at the quadriceps tendon–patella junction catches on the intercondylar box of a PS femoral component as the knee extends from flexion (≈30–45°) → painful clunk; treat with arthroscopic debridement; modern designs reduce incidence.
-Patellar fracture after TKA (Ortiguera & Berry): I intact mechanism/implant → nonop; II disrupted mechanism → repair; III loose patellar component → revise or resection.`],
-['diagnosis', `Cruciate-retaining vs posterior-stabilized vs constrained TKA — when each`, `CR: preserves PCL for femoral rollback (proprioception, bone-conserving); risk of paradoxical anterior femoral sliding, late PCL rupture → flexion instability. Contraindicated when PCL is absent/incompetent, prior patellectomy, inflammatory arthritis (late PCL attrition), severe deformity requiring extensive release.
-PS: post-cam substitutes for the PCL — more reliable rollback and flexion; risks: post wear/fracture, patellar clunk, cam jump (dislocation) if flexion gap is loose, more bone removed (box).
-Varus-valgus constrained (VVC): tall post for collateral incompetence (MCL attenuation, over-release) — often needs stems.
-Rotating hinge: global instability, massive bone loss, distal femoral replacement, non-functional extensor mechanism/collaterals.
-Medial pivot/ultracongruent inserts: anterior lip substitutes for PCL without a box.`],
-['management', `Stiffness after TKA: predictors and timing of manipulation`, `Best predictor of postoperative range of motion = preoperative range of motion. Other risks: obesity, prior surgery, patella baja, overstuffing, tight flexion gap/undersized femur, malrotation, infection, CRPS, poor pain control.
-Manipulation under anesthesia within the first 6–12 weeks if flexion <90° (best results early; risk of fracture/tendon rupture when late). After 3 months: arthroscopic or open lysis of adhesions; component revision only if malposition/overstuffing identified. Always rule out infection first.`],
-['management', `Unicompartmental knee arthroplasty: indications and contraindications`, `Classic (Kozinn & Scott) indications: isolated medial (or lateral) compartment OA/osteonecrosis, age >60, weight <82 kg, low demand, pain localized to the compartment, ROM >90°, flexion contracture <5°, angular deformity <10° varus/<15° valgus and passively correctable, intact ACL; age/weight criteria now relaxed.
-Contraindications: inflammatory arthritis, ACL deficiency (especially mobile-bearing — bearing dislocation), tricompartmental disease, fixed deformity, symptomatic patellofemoral arthritis (relative; lateral facet worse), prior HTO (relative).
-Compared with TKA: faster recovery, better kinematics, lower morbidity; higher revision rate (bearing dislocation, progression of OA in other compartment, tibial subsidence — avoid under-correction into varus). Lateral UKA: fixed bearing preferred.`],
-['management', `High tibial osteotomy and distal femoral osteotomy: who, how, and the slope/patella effects`, `HTO for young/active patient with isolated medial compartment OA + varus, ROM >90–120°, flexion contracture <10–15°, no lateral compartment/patellofemoral disease, BMI <30, non-smoker, stable ligaments (or corrected concurrently). Target: mechanical axis through the Fujisawa point (62.5% of tibial width, lateral) / 3–5° mechanical valgus.
-Medial opening wedge: single cut, adjustable, but INCREASES posterior tibial slope (if hinge/gap placed wrong) and DECREASES patellar height (baja); needs graft/plate; lateral hinge fracture. Lateral closing wedge: faster union, but shortens, injures proximal tibiofibular joint/peroneal nerve, DECREASES slope, makes later TKA harder.
-Distal femoral (varus-producing) osteotomy for valgus knee with lateral OA (deformity at the femur); lateral opening or medial closing wedge.
-Contraindications: inflammatory arthritis, lateral meniscectomy, >15–20° correction, fixed flexion contracture.`],
-['diagnosis', `Femoroacetabular impingement vs hip dysplasia — measurements and matched treatment`, `Cam: aspherical head-neck junction (alpha angle >50–55° on Dunn view; pistol-grip deformity; young athletic men; delaminates anterosuperior cartilage). Pincer: acetabular overcoverage — crossover sign (retroversion), coxa profunda, protrusio, LCEA >40°; labral degeneration/ossification. Anterior impingement test (FADIR); CT for morphology.
-Arthroscopy (osteochondroplasty, rim trim, labral repair) for FAI with Tönnis grade 0–1 OA and joint space >2 mm; outcomes worse with OA, age >40–50, dysplasia.
-Dysplasia: LCEA <20° (borderline 20–25°), Tönnis (acetabular index) angle >10°, broken Shenton line, anterior undercoverage (ACEA); labral hypertrophy, instability. Skeletally mature, congruent, minimal OA → Bernese periacetabular osteotomy (PAO) — arthroscopy alone in true dysplasia worsens instability. Closed triradiate cartilage → Salter/triple/Dega instead.`],
-['diagnosis', `THA bearing surfaces and adverse local tissue reactions`, `Metal-on-highly-crosslinked polyethylene: workhorse; low wear, few catastrophic modes.
-Ceramic-on-ceramic: lowest wear, hardest; squeaking (~1–5%; cup malposition, edge loading), fracture (rare with modern delta ceramics — never place a new ceramic head on a used trunnion; use a titanium sleeve), stripe wear.
-Ceramic-on-polyethylene: low wear, no fracture of liner, safe for young.
-Metal-on-metal (largely abandoned): adverse local tissue reaction/pseudotumor (lymphocyte-dominated ALVAL), elevated cobalt/chromium ions (>7 ppb concerning), worse with small cups placed steeply (edge loading), women, large heads; monitor with MARS-MRI and ion levels.
-Trunnionosis: mechanically assisted crevice corrosion at the head-neck taper (CoCr head on titanium neck, larger heads, higher offset) — cobalt > chromium ion elevation; treat with ceramic head + titanium sleeve.`],
-['diagnosis', `Cemented vs cementless fixation principles`, `Cementless ingrowth requires: pore size 50–150 µm, porosity 40–50%, initial micromotion <50 µm (fibrous tissue at >150 µm), gaps <50 µm (bone can bridge ~1 mm with time). Ongrowth (grit-blast) vs ingrowth (porous/trabecular metal). Hydroxyapatite coating accelerates bonding.
-Cement (PMMA): mechanical interdigitation, no adhesion; weakest in tension/shear, strongest in compression; third-generation techniques — vacuum mixing, pulsatile lavage, canal plug, retrograde pressurized injection, centralizer, 2–5 mm mantle. Cement implantation syndrome (hypotension, hypoxia — embolic/ vasodilation) especially in elderly hip fractures with unvented canals.
-Choose cemented femur for Dorr C stovepipe canal, very osteoporotic/elderly (hemiarthroplasty), some revision/tumor. Cementless cups now standard regardless of age.`],
-['anatomy', `Nerve and vessel injuries in THA: acetabular screw quadrants and nerve palsies`, `Wasielewski quadrants (line from ASIS through the acetabular center, second line perpendicular): POSTERIOR-SUPERIOR is the safe zone (thickest bone, sciatic notch far); posterior-inferior — sciatic nerve, inferior gluteal vessels; ANTERIOR-SUPERIOR — external iliac artery/vein (most dangerous); anterior-inferior — obturator nerve and vessels.
-Sciatic nerve palsy (~0.5–1%, peroneal division): risks — DDH, revision, posterior approach, women, lengthening >4 cm (relative risk from ~2.5 cm), hematoma, retractor placement. Management: flex knee/extend hip, decompress hematoma, shorten if grossly overlengthened; foot drop AFO. Femoral nerve: anterior approaches, anterior retractors over the acetabular rim, cement extrusion. Obturator: anteroinferior screws, cement. LFCN: direct anterior.`],
-['management', `Blood management and VTE prophylaxis in arthroplasty`, `Tranexamic acid (IV, topical, or oral) reduces blood loss and transfusion after THA/TKA without increasing VTE; relative caution with recent stents/thrombotic history, but AAOS/AAHKS endorse broad use. Preoperative anemia correction (iron, EPO); restrictive transfusion (Hb <7–8 g/dL). Hypotensive anesthesia.
-VTE: AAOS — pharmacologic and/or mechanical prophylaxis for all; aspirin is acceptable for standard-risk patients (PEPPER/ CRISTAL context); LMWH, DOACs, warfarin alternatives; typical duration 10–14 days minimum, up to 35 days after THA. No routine post-op duplex screening. Neuraxial anesthesia reduces VTE. Prior VTE, cancer, obesity, prolonged immobility → stronger agents. Symptomatic PE ~0.5–1%.`],
-['management', `Arthroplasty in rheumatoid arthritis and other inflammatory conditions`, `Preoperative lateral cervical flexion-extension radiographs (atlantoaxial instability — ADI >3.5 mm) before intubation for RA patients.
-Medications: continue methotrexate and hydroxychloroquine; hold biologic TNF inhibitors for one dosing interval (surgery at end of cycle) and restart at wound healing (~2 weeks); stress-dose steroids for chronic users.
-TKA: PS designs (PCL attenuates late); higher infection risk; protrusio acetabuli in hips (medial graft, place cup at anatomic center). Juvenile idiopathic arthritis: small components/custom, ankylosis, anesthesia challenges (micrognathia).
-Ankylosing spondylitis: high heterotopic ossification risk (prophylaxis); fused spine changes pelvic tilt — place cup by functional position; hip flexion contracture.`],
-['management', `Knee osteoarthritis: what AAOS guidelines support and reject nonoperatively`, `Strong support: exercise/physical therapy (land or aquatic), weight loss for BMI >25, oral/topical NSAIDs, self-management programs; tramadol (moderate).
-Intra-articular corticosteroids: short-term relief (weeks); repeated injections may accelerate cartilage loss; avoid injection within ~3 months of a planned TKA (infection risk).
-Not recommended / cannot recommend: hyaluronic acid (no clinically meaningful benefit), glucosamine/chondroitin, lateral wedge insoles, acupuncture, arthroscopic lavage/debridement for OA (no benefit), PRP/stem cells (insufficient evidence), opioids.
-Unloader brace may help unicompartmental disease. Kellgren-Lawrence grading 0–4 (4 = large osteophytes, marked narrowing, sclerosis, deformity).`],
-['management', `THA in developmental dysplasia: Crowe classification and technical points`, `Crowe: I <50% subluxation (femoral head migration <10% of pelvic height), II 50–75%, III 75–100%, IV >100% (fully dislocated; false acetabulum).
-Place the cup at the true (anatomic) acetabulum (best bone stock, restores biomechanics); deficient anterosuperior rim → medialize, small cup, structural femoral head autograft, or augments; high hip center compromises abductors/loosening.
-Femur: excessive anteversion, narrow straight canal, small head — modular or conical stems; Crowe IV needs subtrochanteric shortening derotational osteotomy (limit lengthening to <4 cm; sciatic nerve palsy risk).
-Higher dislocation, nerve palsy, loosening rates than routine THA. Previous pelvic/femoral osteotomies distort anatomy.`],
-['diagnosis', `Iliopsoas impingement and other groin pain after THA`, `Anterior groin pain with resisted hip flexion (straight-leg raise, stairs, getting out of a car) after THA → iliopsoas tendinitis from the anterior cup edge overhanging/uncovered (retroverted or oversized cup), long screws, a large collar, or excess offset. CT to measure anterior cup overhang (>8 mm → cup revision more reliable); diagnostic/therapeutic image-guided injection; iliopsoas release (arthroscopic/open) if cup well positioned.
-Other groin pain causes: loosening, infection (ESR/CRP, aspiration), stress fracture of the pubic ramus, trunnionosis/ALTR (ion levels, MARS-MRI), referred spine/hernia, adductor strain, occult acetabular fracture.`],
-['diagnosis', `Radiographic evaluation of implant loosening: Gruen and DeLee-Charnley zones, signs`, `Gruen zones (femur, AP): 1 = greater trochanter proximal-lateral, 2–3 lateral, 4 = tip, 5–6 medial, 7 = calcar. Lateral view zones 8–14.
-DeLee-Charnley acetabular zones: I superolateral, II superior/medial (dome), III inferomedial.
-Cementless loosening signs: progressive subsidence >2–3 mm, complete radiolucent line >2 mm, pedestal formation without bony contact, cortical hypertrophy/spot welds absent, cup migration/rotation. Cemented: complete radiolucency at cement-bone or debonding at prosthesis-cement interface, cement fracture, stem subsidence.
-Stress shielding: proximal bone loss with a stiff extensively-coated stem (Engh). Osteolysis: scalloped, expansile lucencies (poly debris) — cup screw holes, greater trochanter; CT underestimates less than radiographs.`],
-['management', `Wound and skin considerations for TKA and THA`, `Use the most lateral previous incision when possible (skin blood supply comes from medial perforators; lateral flap most at risk); maintain skin bridges ≥7 cm; avoid undermining. Prior HTO/ patellectomy/ stiff knee: tibial tubercle osteotomy or quadriceps snip (extend V-Y) for exposure; protect the patellar tendon insertion (peel-off = disaster; pin it).
-Persistent drainage >5–7 days → return to OR for debridement (do not wait); superficial dehiscence → early plastic surgery input (medial gastrocnemius flap for exposed knee implants).
-Risk factors to optimize preop: HbA1c <7.5–8%, BMI <40, smoking cessation 4–6 weeks, albumin >3.5, MRSA decolonization, anemia, vitamin D, dental issues.`],
-['diagnosis', `Osteonecrosis of the knee: spontaneous (SONK) vs secondary`, `SONK: elderly women, sudden medial knee pain, medial femoral condyle (weight-bearing zone); now thought to be a subchondral insufficiency fracture, often with a medial meniscus root tear. MRI shows bone marrow edema with a crescentic subchondral line; x-rays lag. Small lesions (<3.5 cm² / <40% condyle width) → protected weight-bearing, may resolve; large/collapsed → UKA or TKA. Arthroscopy alone (meniscectomy) worsens it.
-Secondary osteonecrosis: younger, bilateral/multifocal, steroids/alcohol/sickle/SLE, involves epiphysis and metaphysis of femur and tibia; core decompression precollapse; TKA post-collapse (cemented, stems if metaphyseal involvement).`],
-['management', `Conversion and complex primary hips: fused hips, prior osteotomies, Paget, protrusio`, `Ankylosed/fused hip → THA: needs functioning abductors (EMG/CT assessment); worse results if fused >15–20 years or in childhood; high nerve palsy and dislocation risk.
-Protrusio acetabuli (RA, Paget, OI, Marfan, Otto pelvis): medialized head, Köhler line crossed; restore the hip center laterally with medial morselized graft and a rim-supported cup; avoid medial cup placement.
-Paget: hard sclerotic bone bleeds — pre-treat with bisphosphonates; deformed femur (varus/anterior bow) may need osteotomy; cemented stems; high HO risk.
-Prior femoral osteotomy: remove hardware (may require staged), distorted canal → modular/S-ROM or osteotomy; prior acetabular osteotomy (PAO/Chiari) alters version/retroversion — CT plan.`],
-['classification', `Femoral neck fractures in the young: reduction goals and complications`, `Anatomic reduction is the most important modifiable factor (varus and posterior tilt predict AVN/nonunion); accept <15° valgus and <10° AP angulation; Lowell alignment index (S-curves). Open reduction through Watson-Jones/Smith-Petersen if closed is imperfect.
-Fixation: three cannulated screws (inverted triangle, one along the calcar) for stable patterns; SHS ± derotation screw for vertical (Pauwels III) or basicervical patterns; length-stable (fully threaded) screws or medial buttress plate for vertical shear.
-AVN 10–30% (higher with displacement, delay), nonunion 5–30%. Salvage of nonunion in young → valgus intertrochanteric osteotomy (converts shear to compression) if head viable; AVN with collapse → THA.`],
-['diagnosis', `Squeaking, clunks and noises after THA — diagnosis logic`, `Squeaking: ceramic-on-ceramic (also MoM) — associated with edge loading (steep/anteverted cups), stripe wear, impingement, certain stem/neck alloys (thin titanium necks resonate), taller/heavier active patients; usually benign; revise if painful/instability/malposition.
-Clunk/clicking: subluxation (component malposition, impingement), loose modular parts, iliopsoas snapping over cup, loose bodies (cement, ceramic fragments after ceramic fracture — needs revision with synovectomy and new bearing).
-Persistent pain workup order: infection labs → radiographs (loosening, position) → CT (version, osteolysis) → metal ions/MARS-MRI (ALTR) → nuclear imaging; consider spine/hernia/vascular causes.`],
-['management', `Total joint arthroplasty in the diabetic, obese, and elderly patient — optimization numbers`, `HbA1c target <7.5–8% (higher → surgical site infection, PJI); perioperative glucose <200 mg/dL. BMI ≥40 → 2–3× PJI/dislocation risk; weight loss to <40 recommended; bariatric surgery before arthroplasty does not clearly reduce complications.
-Malnutrition: albumin <3.5 g/dL, transferrin <200 mg/dL, total lymphocyte count <1500 → wound complications. Smoking → stop ≥4–6 weeks (nicotine test). Anemia Hb <12–13 → workup and iron/EPO. Vitamin D deficiency common. Opioid-naïve patients do better; preop opioid weaning.
-Elderly hip fracture: surgery within 24–48 h, regional nerve blocks (fascia iliaca), delirium prevention, early mobilization, osteoporosis treatment (own-the-bone), 1-year mortality ~20–30%.`],
-['classification', `Patellofemoral arthroplasty and isolated patellofemoral OA`, `Isolated PF OA: anterior knee pain with stairs, sitting (theater sign), crepitus; Merchant/skyline views show lateral facet wear; often with trochlear dysplasia. Nonop: quad/hip strengthening, weight loss, taping/bracing.
-PF arthroplasty: isolated PF OA (Iwano 3–4) with no tibiofemoral disease, no inflammatory arthritis, correctable malalignment (TT-TG <20 or corrected), age typically <60; onlay designs outperform inlay. Failure mode = progression of tibiofemoral OA (revision to TKA is straightforward). Alternatives: TKA in older patients (reliable), tibial tubercle anteromedialization for lateral/distal chondral lesions, lateral facetectomy.`]
+['c','Garden I','Incomplete / valgus-impacted.'],
+['c','Garden II','Complete, nondisplaced.'],
+['c','Garden III','Complete, partially displaced — trabeculae not aligned.'],
+['c','Garden IV','Complete, fully displaced — trabeculae realign with the acetabulum.'],
+['c','Pauwels I','Fracture line < 30° from horizontal.'],
+['c','Pauwels II','30–50°.'],
+['c','Pauwels III','> 50° — vertical shear; highest nonunion.'],
+['m','Pauwels III in a young patient','Anatomic reduction + fixed-angle device (SHS ± derotation screw) ± medial buttress.'],
+['m','Cannulated screw configuration for femoral neck','Inverted triangle; one along the calcar; don\'t start below the lesser trochanter.'],
+['m','Young displaced femoral neck fracture','Urgent anatomic (open if needed) reduction and fixation within 24 h.'],
+['m','Displaced femoral neck fracture, active cognitively intact elderly','Total hip arthroplasty.'],
+['m','Displaced femoral neck fracture, low-demand/cognitively impaired elderly','Hemiarthroplasty (cemented stem).'],
+['d','Why cement the hemiarthroplasty stem','Fewer periprosthetic fractures and revisions (watch for cement implantation syndrome).'],
+['d','FAITH trial','SHS vs cancellous screws: no overall difference; SHS favored in smokers, basicervical, displaced.'],
+['d','HEALTH trial','THA vs hemi for displaced neck fracture: similar reoperation at 2 years; modestly better function with THA.'],
+['d','Posterior tilt on lateral predicting fixation failure (valgus-impacted neck)','> 20°.'],
+['d','Hip fracture: surgery timing and 1-year mortality','Within 24–48 h; 1-year mortality 20–30%.'],
+['a','Dominant blood supply to the femoral head','Deep branch of the medial femoral circumflex artery.'],
+['a','Structure protecting the MFCA in surgical dislocation','Obturator externus (and short external rotators left intact).'],
+['a','Why avoid piriformis-entry nails in adolescents','MFCA injury → femoral head AVN.'],
+['d','Stable intertrochanteric fracture criteria','Intact posteromedial calcar, no reverse obliquity, no subtroch extension, intact lateral wall.'],
+['m','Implant for reverse-obliquity intertrochanteric fracture','Cephalomedullary nail — never SHS.'],
+['d','Lateral wall thickness predicting SHS failure','< 20.5 mm (Hsu).'],
+['d','Tip-apex distance goal','< 25 mm (center-center).'],
+['d','Worst lag-screw position for cut-out','Anterior-superior.'],
+['d','Subtrochanteric fracture: proximal fragment deforming forces','Flexed (iliopsoas), abducted (gluteus medius), externally rotated (short ERs).'],
+['d','Subtrochanteric fracture: distal fragment deformity','Adducted and shortened (adductors) → varus/procurvatum error.'],
+['m','Subtrochanteric fracture: reduction rule','Reduce before reaming (clamps/cerclage through a small open approach).'],
+['m','Atypical femur fracture management','Full-length nail; stop bisphosphonate; consider teriparatide; image the other femur.'],
+['d','Posterior hip dislocation limb position','Flexed, adducted, internally rotated.'],
+['d','Anterior hip dislocation limb position','Extended, abducted, externally rotated.'],
+['d','Nerve injury with posterior hip dislocation','Sciatic (peroneal division), 10–20%.'],
+['m','Hip dislocation reduction timing','< 6 h to reduce AVN.'],
+['m','After hip reduction, next study','CT for incarcerated fragments / wall fractures.'],
+['c','Pipkin I','Head fracture below the fovea → excise or fix.'],
+['c','Pipkin II','Head fracture above the fovea (weight-bearing) → ORIF.'],
+['c','Pipkin III','Head + femoral neck fracture — highest AVN.'],
+['c','Pipkin IV','Head + acetabular fracture.'],
+['m','Femoral shaft fracture timing in a resuscitated patient','Reamed IM nail within 24 h (fewer pulmonary complications).'],
+['d','Damage-control thresholds (femoral shaft)','Lactate > 2.5, base deficit > 8, pH < 7.25, hypothermia, coagulopathy.'],
+['d','Ipsilateral femoral neck fracture with shaft fracture','2–9%; ~30% missed → fine-cut CT of the neck.'],
+['m','Combined neck + shaft fracture priority','Fix the neck first/anatomically.'],
+['m','Retrograde femoral nail indications','Floating knee, ipsilateral acetabular/neck fracture, obesity, pregnancy, bilateral.'],
+['d','Most common complication of femoral nailing','Malrotation (> 15°).'],
+['d','Distal femur fracture: distal fragment deforming force','Gastrocnemius → extension/recurvatum.'],
+['d','Hoffa fracture','Coronal-plane condylar fracture (lateral more common) → A-to-P lag screws; get CT.'],
+['m','Periprosthetic distal femur fracture above a well-fixed TKA','Retrograde nail (open box) or lateral locking plate.'],
+['m','Periprosthetic distal femur fracture with loose TKA','Distal femoral replacement / revision.'],
+['c','Schatzker I','Lateral split (young) → lag screws.'],
+['c','Schatzker II','Lateral split-depression — most common.'],
+['c','Schatzker III','Pure lateral depression (osteoporotic).'],
+['c','Schatzker IV','Medial plateau — highest energy; check for knee dislocation/vascular injury.'],
+['c','Schatzker V','Bicondylar.'],
+['c','Schatzker VI','Bicondylar + metaphyseal-diaphyseal dissociation.'],
+['d','Tibial plateau surgical thresholds','Depression > 3 mm, widening > 5 mm, instability > 10° in extension.'],
+['d','Meniscal tear commonly seen with split-depression plateau fractures','Lateral meniscus.'],
+['m','Nonoperative patella fracture criteria','< 2–3 mm step, < 3 mm displacement, intact extensor mechanism.'],
+['m','Transverse patella fracture fixation','Anterior tension band (converts tension to compression).'],
+['d','Most common patella fixation complication','Symptomatic hardware.'],
+['c','Schenck KD I','One cruciate + collateral.'],
+['c','Schenck KD II','Both cruciates only.'],
+['c','Schenck KD III','Both cruciates + one collateral (IIIM or IIIL).'],
+['c','Schenck KD IV','All four ligaments.'],
+['c','Schenck KD V','Periarticular fracture-dislocation.'],
+['d','Knee dislocation: popliteal artery injury rate and why','5–40%; tethered at the adductor hiatus and soleus arch.'],
+['d','ABI threshold after knee dislocation','< 0.9 → CT angiography.'],
+['d','Knee dislocation peroneal nerve injury rate','~25% (higher in IIIL).'],
+['d','Dimple sign','Irreducible posterolateral dislocation — medial condyle buttonholed through capsule → open reduction.'],
+['d','Quad tendon rupture demographics','> 40 y; diabetes, renal failure, fluoroquinolones/steroids.'],
+['d','Patellar tendon rupture demographics','< 40 y; jumping athletes; prior tendinopathy/steroid injection.'],
+['d','Insall-Salvati ratio normal range','0.8–1.2 (> 1.2 alta, < 0.8 baja).'],
+['d','Patella position after patellar tendon vs quad tendon rupture','Alta with patellar tendon; baja with quad tendon.'],
+['a','Posterior THA approach: nerve at risk','Sciatic.'],
+['a','Direct lateral (Hardinge) approach: nerve at risk and limit','Superior gluteal — don\'t split gluteus medius > 5 cm above the trochanter tip.'],
+['a','Direct lateral approach characteristic complication','Abductor weakness/limp.'],
+['a','Watson-Jones interval','TFL / gluteus medius (both superior gluteal nerve).'],
+['a','Direct anterior (Hueter) interval','TFL (superior gluteal) / sartorius (femoral).'],
+['a','Direct anterior approach nerve most often affected','Lateral femoral cutaneous nerve.'],
+['d','Direct anterior approach characteristic complications','Periprosthetic femur/trochanteric fracture, wound issues in obese; lower early dislocation.'],
+['d','Most common early complication of posterior-approach THA','Dislocation (posterior, with flexion/adduction/IR).'],
+['d','Lewinnek safe zone','Abduction 40 ± 10°, anteversion 15 ± 10°.'],
+['d','Stiff/fused lumbar spine and THA','Needs more functional anteversion; higher dislocation risk.'],
+['m','Recurrent THA dislocation with abductor deficiency','Constrained liner (well-fixed shell).'],
+['m','Recurrent THA dislocation with reasonable abductors','Dual-mobility bearing; fix component malposition first.'],
+['d','Increasing femoral offset does what?','Increases abductor tension/moment arm and stability without lengthening.'],
+['d','Most common cause of THA litigation','Leg-length discrepancy.'],
+['d','Lengthening threshold for sciatic nerve stretch','Risk rises above ~2.5 cm; > 4 cm high risk.'],
+['c','Vancouver A','Trochanteric (AG greater, AL lesser).'],
+['c','Vancouver B1','Around the stem, stem well fixed → ORIF.'],
+['c','Vancouver B2','Stem loose, good bone → long revision stem.'],
+['c','Vancouver B3','Stem loose, poor bone → proximal femoral replacement / APC.'],
+['c','Vancouver C','Distal to the stem → ORIF.'],
+['d','Classic Vancouver error','Treating a loose stem (B2) as B1.'],
+['c','Lewis-Rorabeck I','Nondisplaced, prosthesis stable.'],
+['c','Lewis-Rorabeck II','Displaced, prosthesis stable → ORIF.'],
+['c','Lewis-Rorabeck III','Loose/failing prosthesis → revision.'],
+['m','Intraop acetabular fracture, cup stable','Observe / protected weight-bearing.'],
+['c','Paprosky acetabular IIIA','> 3 cm superolateral migration, Köhler line intact (up-and-out).'],
+['c','Paprosky acetabular IIIB','> 3 cm superomedial migration, Köhler violated; risk of pelvic discontinuity.'],
+['m','Paprosky IIIB acetabulum reconstruction','Cup-cage, custom triflange, distraction.'],
+['c','Paprosky femoral IIIA','Nonsupportive metaphysis, > 4 cm intact diaphysis.'],
+['c','Paprosky femoral IIIB','< 4 cm intact diaphysis → modular fluted tapered stem.'],
+['c','Paprosky femoral IV','No isthmus → impaction grafting, APC, or PFR.'],
+['d','PJI major criteria','Sinus tract, or two positive cultures with the same organism.'],
+['d','PJI synovial WBC threshold (chronic)','> 3000/µL; PMN > 70–80%.'],
+['d','PJI serum screen','CRP > 10 mg/L; ESR > 30.'],
+['d','PJI histology threshold','> 5 PMN per high-power field.'],
+['m','Antibiotic hold before joint aspiration','2 weeks.'],
+['m','Culture hold duration for Cutibacterium acnes','14 days.'],
+['m','Acute PJI (< 4 weeks) with well-fixed implants','DAIR with modular exchange.'],
+['m','Chronic PJI standard (US)','Two-stage exchange.'],
+['d','Most common PJI organisms','Coagulase-negative staph and S. aureus.'],
+['a','TKA tibial cut','Perpendicular to the mechanical axis; 0–3° posterior slope.'],
+['a','TKA distal femoral cut','5–7° valgus to the anatomic axis.'],
+['a','TKA femoral rotation landmarks','3° ER to posterior condylar axis ≈ parallel to TEA ≈ perpendicular to Whiteside line.'],
+['d','Effect of internally rotating the femoral component','Patellar maltracking, flexion asymmetry, anterior knee pain.'],
+['a','TKA tibial rotation landmark','Medial third of the tibial tubercle.'],
+['d','Minimum residual patella thickness','≥ 12–13 mm.'],
+['d','Effect of elevating the joint line > 4–8 mm','Patella baja, mid-flexion instability.'],
+['m','TKA tight in flexion AND extension','Cut more proximal tibia.'],
+['m','TKA tight in extension only','More distal femur; release posterior capsule.'],
+['m','TKA tight in flexion only','Downsize femur, add slope, release PCL/convert to PS.'],
+['m','TKA loose in flexion, balanced in extension','Upsize femur (posterior augments), less slope.'],
+['m','TKA loose in extension only','Distal femoral augments (not thicker poly).'],
+['m','TKA loose in flexion AND extension','Thicker polyethylene.'],
+['m','Varus knee release sequence','Osteophytes, deep MCL, semimembranosus, posteromedial capsule, superficial MCL, PCL.'],
+['m','Valgus knee: structure tight in extension','Iliotibial band (pie-crust off Gerdy).'],
+['m','Valgus knee: structure tight in flexion','Popliteus.'],
+['d','Nerve palsy after correcting a large valgus/flexion contracture','Common peroneal → flex knee, loosen dressings.'],
+['d','Patellar clunk syndrome','Fibrous nodule catching in the PS box at ~30–45° extension → arthroscopic debridement.'],
+['d','Most important cause of patellar maltracking after TKA','Internal rotation of femoral or tibial component.'],
+['c','Ortiguera & Berry patella fracture type III','Loose patellar component → revise or resect.'],
+['d','Contraindications to cruciate-retaining TKA','Absent/incompetent PCL, prior patellectomy, inflammatory arthritis.'],
+['d','Posterior-stabilized TKA risks','Post wear/fracture, patellar clunk, cam jump with loose flexion gap.'],
+['m','Indication for varus-valgus constrained insert','Collateral (MCL) incompetence.'],
+['m','Indication for rotating hinge','Global instability, massive bone loss, absent collaterals.'],
+['d','Best predictor of post-TKA ROM','Preoperative ROM.'],
+['m','Manipulation under anesthesia timing','Within 6–12 weeks if flexion < 90°.'],
+['d','UKA contraindications','Inflammatory arthritis, ACL deficiency, tricompartmental disease, fixed deformity.'],
+['d','UKA classic (Kozinn-Scott) criteria','ROM > 90°, flexion contracture < 5°, varus < 10°/valgus < 15°, correctable.'],
+['d','Mobile-bearing UKA specific failure','Bearing dislocation (esp. with ACL deficiency).'],
+['d','HTO correction target','Mechanical axis through Fujisawa point (62.5% width) / 3–5° valgus.'],
+['d','Medial opening-wedge HTO effects','Increases posterior slope; lowers patella (baja).'],
+['d','Lateral closing-wedge HTO effects','Decreases slope; risks peroneal nerve/proximal tibiofibular joint.'],
+['m','Valgus knee with lateral OA in a young patient','Distal femoral osteotomy.'],
+['d','HTO contraindications','Inflammatory arthritis, lateral compartment OA, flexion contracture > 15°, prior lateral meniscectomy.'],
+['d','Cam FAI measurement','Alpha angle > 50–55° (Dunn view).'],
+['d','Pincer FAI signs','Crossover sign, coxa profunda, LCEA > 40°.'],
+['d','Hip dysplasia measurements','LCEA < 20° (borderline 20–25°); Tönnis angle > 10°.'],
+['m','Skeletally mature symptomatic dysplasia with minimal OA','Bernese periacetabular osteotomy.'],
+['d','Why not arthroscopy alone in true dysplasia','Worsens instability.'],
+['d','Hip arthroscopy poor-prognosis factors','Tönnis ≥ 2, joint space < 2 mm, dysplasia, age > 45–50.'],
+['d','Ceramic-on-ceramic bearing complications','Squeaking, fracture, stripe wear.'],
+['m','Placing a new ceramic head on a used trunnion','Never bare — use a titanium sleeve.'],
+['d','Metal-on-metal ALTR workup','Cobalt/chromium ions (> 7 ppb concerning), MARS-MRI.'],
+['d','Trunnionosis ion pattern','Cobalt > chromium.'],
+['d','Cementless ingrowth: pore size and micromotion','Pores 50–150 µm; micromotion < 50 µm (fibrous at > 150 µm).'],
+['d','Third-generation cementing techniques','Vacuum mixing, pulsatile lavage, canal plug, pressurization, centralizer.'],
+['d','Cement implantation syndrome','Hypotension/hypoxia during pressurized cementing.'],
+['m','Dorr C (stovepipe) femur','Cemented stem.'],
+['a','Safe quadrant for acetabular screws','Posterior-superior.'],
+['a','Danger of anterior-superior acetabular screws','External iliac artery/vein.'],
+['a','Danger of anterior-inferior acetabular screws','Obturator nerve/vessels.'],
+['a','Danger of posterior-inferior acetabular screws','Sciatic nerve, inferior gluteal vessels.'],
+['d','THA sciatic palsy risk factors','DDH, revision, posterior approach, female, lengthening.'],
+['a','Femoral nerve injury mechanism in THA','Anterior acetabular retractor / cement extrusion.'],
+['m','Tranexamic acid in arthroplasty','Reduces blood loss/transfusion; no increase in VTE.'],
+['m','VTE prophylaxis duration after THA','10–14 days minimum, up to 35 days.'],
+['m','Aspirin for VTE prophylaxis','Acceptable for standard-risk arthroplasty patients (AAOS).'],
+['m','TNF inhibitors around arthroplasty','Hold one dosing interval; continue methotrexate.'],
+['m','TKA implant preference in RA','Posterior-stabilized (late PCL attenuation).'],
+['m','Protrusio acetabuli in THA','Medial morselized graft; rim-supported cup; restore the hip center laterally.'],
+['m','Knee OA: strongly supported nonoperative measures','Exercise/PT, weight loss (BMI > 25), NSAIDs.'],
+['m','Knee OA: not recommended by AAOS','Hyaluronic acid, glucosamine/chondroitin, lateral wedge insoles, arthroscopic lavage.'],
+['d','Corticosteroid injection and TKA timing','Avoid within ~3 months of surgery.'],
+['c','Crowe I DDH','< 50% subluxation.'],
+['c','Crowe IV DDH','> 100% — fully dislocated with false acetabulum.'],
+['m','Cup placement in DDH THA','True (anatomic) acetabulum.'],
+['m','Crowe IV femoral technique','Subtrochanteric shortening derotational osteotomy; limit lengthening < 4 cm.'],
+['d','Iliopsoas impingement after THA','Groin pain with resisted flexion; anterior cup overhang (> 8 mm → revise cup).'],
+['a','Gruen zone 1','Proximal-lateral (greater trochanter).'],
+['a','Gruen zone 4','Stem tip.'],
+['a','Gruen zone 7','Calcar (proximal-medial).'],
+['a','DeLee-Charnley zones','I superolateral, II dome, III inferomedial.'],
+['d','Cementless stem loosening signs','Subsidence > 2–3 mm, complete lucency > 2 mm, pedestal without bony contact.'],
+['m','Persistent wound drainage after arthroplasty','Return to OR by 5–7 days.'],
+['m','Prior knee incisions: which to use','Most lateral; skin bridge ≥ 7 cm.'],
+['m','Exposure aids for the stiff knee in TKA','Quadriceps snip, V-Y, tibial tubercle osteotomy.'],
+['d','SONK','Elderly woman, sudden medial pain, MFC subchondral fracture; often medial root tear.'],
+['m','Small SONK lesion','Protected weight-bearing — may resolve.'],
+['d','Secondary knee osteonecrosis pattern','Young, bilateral/multifocal, epiphysis + metaphysis; steroids/alcohol.'],
+['d','HbA1c target before arthroplasty','< 7.5–8%.'],
+['d','BMI threshold for markedly increased PJI risk','≥ 40.'],
+['d','Malnutrition markers raising wound complications','Albumin < 3.5, transferrin < 200, TLC < 1500.'],
+['m','Smoking cessation before arthroplasty','≥ 4–6 weeks.'],
+['m','Patellofemoral arthroplasty candidate','Isolated PF OA, no tibiofemoral disease, correctable alignment.'],
+['d','PFA main failure mode','Progression of tibiofemoral OA.'],
+['m','Young femoral neck nonunion with viable head','Valgus intertrochanteric osteotomy.'],
+['d','Cause of squeaking in ceramic THA','Edge loading from steep/anteverted cup; stripe wear.'],
+['d','Fused hip conversion to THA: key prerequisite','Functioning abductors.'],
 ]);
+
 // ======================= ONCOLOGY =======================
 _add('onc', [
-['management', `Workup and biopsy principles for a suspected bone sarcoma`, `Order: history/exam → plain radiographs (matrix: chondroid rings-and-arcs; osteoid cloud-like; ground-glass = fibrous dysplasia; margins: geographic/sclerotic = latent, permeative/moth-eaten = aggressive; periosteal reaction: Codman triangle, sunburst, onion-skin = aggressive) → labs (CBC, ESR/CRP, ALP, LDH, Ca, SPEP/UPEP if >40) → MRI of the entire bone (skip lesions) → staging (CT chest, bone scan or PET) → THEN biopsy.
-Biopsy (Mankin): performed by the treating (resecting) surgeon; longitudinal incision in line with the future resection; shortest path through a single compartment; avoid neurovascular bundles and joint; meticulous hemostasis, no flaps; drain exits in line with the incision; core needle biopsy (≥90% accurate) preferred; frozen section to confirm diagnostic tissue; send cultures (“culture what you biopsy, biopsy what you culture”). A poorly placed biopsy tract can convert limb salvage to amputation.`],
-['classification', `Enneking staging and surgical margins`, `Benign: 1 latent (inactive, sclerotic rim; e.g., NOF), 2 active (grows, thin rim; UBC), 3 aggressive (extends beyond compartment; GCT, ABC).
-Malignant: IA low grade intracompartmental; IB low grade extracompartmental; IIA high grade intracompartmental; IIB high grade extracompartmental; III any grade with metastasis (regional or distant). (AJCC uses size, grade, mets.)
-Margins: intralesional (through the tumor — curettage), marginal (through the reactive zone/pseudocapsule — leaves satellites in high-grade), wide (cuff of normal tissue; standard for sarcoma), radical (entire compartment).
-Benign active → intralesional + adjuvants; benign aggressive → extended intralesional or marginal; high-grade sarcoma → wide.`],
-['diagnosis', `Osteosarcoma: presentation, variants, treatment, and prognosis`, `Most common primary malignant bone tumor in children/adolescents (2nd overall to myeloma); bimodal (teens; elderly with Paget/radiation). Metaphysis of distal femur > proximal tibia > proximal humerus. Sunburst/Codman, osteoid matrix, soft-tissue mass; high ALP/LDH = worse prognosis. Genetics: RB1 (retinoblastoma), TP53 (Li-Fraumeni), Rothmund-Thomson.
-Conventional (high-grade intramedullary): neoadjuvant chemotherapy (methotrexate, doxorubicin, cisplatin ± ifosfamide) → wide resection/limb salvage (~90% of cases) → adjuvant chemo. ≥90% tumor necrosis after chemo = good responder. 5-year survival ~65–70% localized; ~20–30% with lung mets (resect pulmonary mets).
-Variants: parosteal (low grade, surface, posterior distal femur, women 30s, MDM2/CDK4 amplification → wide resection only, no chemo); periosteal (intermediate, chondroblastic, diaphysis, surface); telangiectatic (high grade, lytic with fluid-fluid levels — mimics ABC); low-grade central; secondary (Paget, radiation — poor prognosis). Pathologic fracture is no longer an absolute indication for amputation.`],
-['diagnosis', `Ewing sarcoma`, `2nd most common malignant bone tumor in children (peak 10–20 y; rare in Black patients). Diaphysis/metadiaphysis of long bones, pelvis, ribs. Permeative/moth-eaten lysis, onion-skin (lamellated) periosteal reaction, large soft-tissue mass. Fever, leukocytosis, elevated ESR — mimics osteomyelitis (biopsy and culture both).
-Small round blue cells, CD99 (MIC2) positive, PAS+ glycogen; t(11;22) EWSR1-FLI1 (85%) or t(21;22) EWSR1-ERG.
-Treatment: multiagent chemo (vincristine, doxorubicin, cyclophosphamide alternating with ifosfamide/etoposide — VDC/IE) → wide resection when feasible, radiation for unresectable/positive margins (radiosensitive) → chemo. Survival ~70% localized, ~30% metastatic; worse with pelvic site, size >8 cm, mets, poor necrosis, older age.`],
-['diagnosis', `Chondrosarcoma: distinguishing from enchondroma and matched treatment`, `Adults 40–70; pelvis, proximal femur, shoulder girdle, ribs; rare in hands/feet (there, enchondroma). Rings-and-arcs matrix; signs of malignancy vs enchondroma: pain, size >5 cm, endosteal scalloping >2/3 cortical thickness, cortical destruction/thickening, soft-tissue mass, periosteal reaction, growth in an adult. IDH1/IDH2 mutations. Secondary from osteochondroma (cap >2 cm in adults) or enchondromatosis (Ollier 25–30%, Maffucci higher).
-Chemo- and radiation-resistant → surgery. Grade 1 (atypical cartilaginous tumor) in the extremity: extended intralesional curettage with adjuvant + cement acceptable; pelvic/axial or grade 2–3 → wide resection.
-Variants: dedifferentiated (high-grade sarcoma adjacent to low-grade cartilage — worst prognosis), clear cell (epiphyseal, low grade), mesenchymal (young, small round cells + cartilage — chemo-sensitive), periosteal/juxtacortical.`],
-['diagnosis', `Multiple myeloma and lymphoma of bone`, `Myeloma: most common primary malignant bone tumor in adults (>40). Punched-out lytic lesions, diffuse osteopenia, vertebral compression fractures; COLD on bone scan (skeletal survey/whole-body low-dose CT/MRI/PET instead). CRAB: hyperCalcemia, Renal failure, Anemia, Bone lesions. SPEP/UPEP M-spike, Bence-Jones proteins, serum free light chains, bone marrow plasma cells >10%; CD138+. Solitary plasmacytoma → radiation (many progress to myeloma).
-Treatment: chemo (bortezomib, lenalidomide, dexamethasone), stem-cell transplant, bisphosphonates/denosumab (reduce skeletal events), radiation for pain/impending fracture; surgery for impending/actual fractures with survival expected.
-Primary lymphoma of bone (diffuse large B-cell, CD20+): adults, diaphysis, extensive soft-tissue mass with relatively subtle bone destruction, B symptoms; chemo (R-CHOP) ± radiation — surgery only for fixation. Both are highly radiosensitive; do not resect.`],
-['management', `Metastatic bone disease: workup of an unknown primary, Mirels, and fixation principles`, `Most common malignant bone lesion overall. Primaries: breast, lung, prostate (blastic), kidney and thyroid (lytic, hypervascular — embolize before surgery), also melanoma, GI. Patient >40 with a destructive bone lesion → history/exam (breast, prostate, thyroid), labs (CBC, ESR, Ca, ALP, SPEP/UPEP, PSA), CT chest/abdomen/pelvis + bone scan (Rougraff protocol identifies ~85% of primaries), then biopsy (never assume a solitary lesion is a met — sarcoma must be excluded).
-Mirels scoring (site, pain, lesion type, size >2/3 diameter): ≥9 → prophylactic fixation; ≤7 → radiation. Peritrochanteric lesions and functional pain are high risk.
-Fixation protects the whole bone: cephalomedullary nail for intertroch/subtroch/shaft, cemented (long-stem) arthroplasty for femoral neck/head, cement augmentation, locking plates + cement for periarticular. Post-op radiation to the entire construct. Adjuvants: bisphosphonates/denosumab reduce skeletal events; radiation for pain; solitary renal cell met → consider wide resection (potential cure). Spine: SINS score for instability; MESCC with >3-month life expectancy → decompression/stabilization + radiation (Patchell).`],
-['diagnosis', `Giant cell tumor of bone`, `Ages 20–40 (skeletally mature; slightly more women); epiphyseal-metaphyseal, eccentric, lytic, extends to subchondral bone, no matrix, thin/absent sclerotic rim; distal femur, proximal tibia, distal radius, sacrum. Histology: uniform multinucleated osteoclast-like giant cells (RANKL from neoplastic stromal cells, H3F3A G34W mutation). Benign but locally aggressive; 2–5% “benign” lung mets (CT chest at diagnosis and follow-up); malignant transformation rare (radiation-associated).
-Treatment: extended intralesional curettage (high-speed burr) + adjuvant (phenol, liquid nitrogen, argon beam) + PMMA cement (immediate stability, thermal adjuvant, allows radiographic detection of recurrence ~10–25%). Wide resection for expendable bones (fibula, ulna) or extensive joint destruction (allograft/megaprosthesis). Denosumab for unresectable/sacral/spinal disease or to shrink before surgery (higher recurrence after curettage following denosumab). Radiation only when surgery impossible.`],
-['diagnosis', `Aneurysmal bone cyst vs unicameral bone cyst`, `ABC: <20 y, eccentric, expansile, lytic, thin “eggshell” cortex, metaphysis of long bones or posterior elements of the spine; MRI fluid-fluid levels (not specific — also telangiectatic osteosarcoma, GCT); USP6 rearrangement in primary ABC; secondary ABC in GCT, chondroblastoma, osteoblastoma, FD, telangiectatic OS — so biopsy the solid components. Treatment: extended curettage + bone graft (recurrence 10–30%), sclerotherapy (doxycycline, Ethibloc), selective embolization for pelvis/spine.
-UBC (simple cyst): 5–15 y, central, metaphyseal, proximal humerus (most) and proximal femur; thin cortex; “fallen leaf/fragment” sign with a fracture; active if adjacent to the physis, latent if migrated away. Fracture usually heals in a cast (cyst may resolve ~15%); aspiration + methylprednisolone or bone marrow/DBM injection (multiple rounds); curettage + graft (± internal fixation) for proximal femur/high fracture risk.`],
-['diagnosis', `Osteoid osteoma vs osteoblastoma`, `Osteoid osteoma: <25 y, night pain relieved by NSAIDs/aspirin (prostaglandin E2 producing nidus); <1.5–2 cm radiolucent nidus with dense reactive sclerosis; proximal femur, tibial diaphysis, posterior elements of the spine (painful scoliosis with the lesion on the concave side; no vertebral rotation/wedging); thin-cut CT is diagnostic (MRI misleading — edema). Bone scan hot. Treatment: NSAIDs (may burn out in 3–4 years), CT-guided radiofrequency ablation (~90% success; avoid within ~1 cm of neural structures/skin), surgical excision.
-Osteoblastoma: >2 cm, posterior elements of the spine (~40%), less sclerosis, more expansile/aggressive, pain not NSAID-responsive; treat with curettage/marginal excision (recurrence 10–20%).`],
-['diagnosis', `Enchondroma and the enchondromatoses`, `Most common tumor of the hand (phalanges/metacarpals); also metaphyseal long bones (proximal humerus, distal femur). Central, lytic, stippled/popcorn calcification (long bones), mild expansion in the hand; usually asymptomatic incidental finding. Hands: pathologic fracture → let it heal then curettage + graft (or fix acutely). Long bones: observe with serial imaging (6 months, then yearly); biopsy/treat if pain, growth, scalloping >2/3 cortex, >5 cm, or bone-scan/MRI changes — low-grade chondrosarcoma looks similar histologically, so radiographic behavior guides treatment.
-Ollier disease: multiple enchondromas, unilateral, limb-length discrepancy and angular deformity; ~25–30% risk of chondrosarcoma. Maffucci syndrome: enchondromas + soft-tissue hemangiomas (phleboliths); higher malignancy risk including visceral (ovarian, glioma). IDH1/2 somatic mosaic mutations.`],
-['diagnosis', `Osteochondroma and multiple hereditary exostoses`, `Most common benign bone tumor; metaphyseal (physeal cartilage displaced); cortex and medullary canal continuous with the host bone (pathognomonic); grows away from the joint; stops growing at maturity; cartilage cap <2 cm in adults (MRI). Sessile or pedunculated. Symptoms: mechanical, bursitis, fracture through the stalk, nerve/vessel compression (popliteal pseudoaneurysm), SCFE-like proximal femur lesions.
-Malignant transformation (secondary chondrosarcoma) <1% solitary, 1–5% MHE — suspect with growth after skeletal maturity, new pain, cap >2 cm.
-MHE: autosomal dominant EXT1 (worse phenotype) / EXT2 (heparan sulfate synthesis); short stature, forearm deformity (ulnar shortening/bowing, radial head dislocation — Masada classification), knee valgus, ankle valgus (distal fibula), LLD. Excise symptomatic lesions after skeletal maturity when practical (recurrence if cap left); forearm: excise + ulnar lengthening or hemiepiphysiodesis.`],
-['diagnosis', `Chondroblastoma, chondromyxoid fibroma, and the fibrous lesions (FD, OFD, NOF)`, `Chondroblastoma: EPIPHYSEAL/apophyseal in the skeletally immature (proximal humerus, femur, tibia); lytic with thin sclerotic rim, chicken-wire calcification, surrounding edema; H3F3B K36M; curettage + graft; 1–2% lung mets.
-Chondromyxoid fibroma: eccentric metaphyseal proximal tibia, lobulated with sclerotic scalloped border; curettage (recurrence ~25%).
-Fibrous dysplasia: GNAS (Gsα) activating mutation; ground-glass, long lesion, thin cortex, “shepherd’s crook” proximal femoral varus; histology: “Chinese letters” woven bone WITHOUT osteoblastic rimming; McCune-Albright (polyostotic FD + café-au-lait with coast-of-Maine borders + precocious puberty), Mazabraud (intramuscular myxomas). Bisphosphonates for pain; internal fixation (IM device; cortical strut allograft) for proximal femur — cancellous graft gets resorbed into FD; malignant transformation <1%.
-Osteofibrous dysplasia: anterior tibial cortex in children <10, intracortical bubbly lesion, osteoblastic rimming present; observe (relation to adamantinoma — biopsy if atypical).
-Nonossifying fibroma / fibrous cortical defect: most common benign lesion in children (30–40%), eccentric metaphyseal, multiloculated, sclerotic scalloped border, resolves with maturity; observe; fix if >50% width and symptomatic/fracture. Jaffe-Campanacci: multiple NOFs + café-au-lait.`],
-['diagnosis', `Adamantinoma and chordoma`, `Adamantinoma: rare low-grade malignant epithelial tumor of the anterior tibial diaphysis (also fibula) in adults 20–40; multiloculated “soap-bubble” lytic lesion with sclerosis, cortical expansion; keratin-positive epithelial islands in fibrous stroma; wide resection (chemo/radiation resistant); lung mets ~15–20%.
-Chordoma: notochord remnants — sacrococcygeal (50%), clivus/spheno-occipital (35%), mobile spine; men 40–70; slow, presacral mass with bowel/bladder symptoms; physaliferous (bubbly) cells, brachyury (T) nuclear positive, S-100 and keratin positive; en bloc resection with negative margins (sacrectomy: preserving both S3 roots preserves continence in most; bilateral S2 sacrifice → incontinence); proton/carbon beam radiation for margins or unresectable. Local recurrence common; late lung mets.`],
-['diagnosis', `Langerhans cell histiocytosis (eosinophilic granuloma)`, `“The great mimicker.” Children <10; skull (punched-out beveled lesions), vertebra plana (flattened body with preserved discs — classic), ribs, pelvis, diaphysis of long bones (periosteal reaction can look aggressive). Histology: Langerhans cells with coffee-bean/kidney nuclei, eosinophils; CD1a and S-100 positive, Birbeck granules (tennis rackets) on EM; BRAF V600E in ~50%.
-Solitary bone lesion: self-limited — observation, biopsy to confirm, curettage or intralesional steroid injection; vertebra plana reconstitutes height in children. Multifocal bone → chemo (vinblastine/prednisone). Hand-Schüller-Christian (multifocal + diabetes insipidus + exophthalmos); Letterer-Siwe (infant, visceral, fatal).`],
-['diagnosis', `Soft-tissue sarcomas: red flags, common types, and radiation timing`, `Red flags for any soft-tissue mass: >5 cm, deep to fascia, growing, painful, recurrent → MRI then core/incisional biopsy (do not excise blindly — “whoops” procedure). Staging: CT chest (lungs = main site of mets); LN mets in synovial, epithelioid, clear cell, rhabdomyosarcoma, angiosarcoma.
-Undifferentiated pleomorphic sarcoma (old MFH) and liposarcoma most common in adults (myxoid liposarcoma t(12;16) FUS-DDIT3 — extrapulmonary mets: retroperitoneum, spine; well-differentiated liposarcoma MDM2 amplification). Synovial sarcoma: young adults, near joints (not in them), calcifications ~30%, t(X;18) SS18-SSX. Rhabdomyosarcoma: most common in children (embryonal; alveolar t(2;13) PAX3-FOXO1 worse). Epithelioid sarcoma: hand/forearm of young adults, ulcerating, LN spread; INI1 loss. Clear cell sarcoma: melanoma of soft parts, tendons of foot, EWSR1-ATF1.
-Treatment: wide resection + radiation for high-grade or >5 cm. Preoperative radiation: lower dose (50 Gy), smaller field, better late function, but ~2× wound complications (35% vs 17% — O’Sullivan); postoperative: higher dose (60–66 Gy), more fibrosis/edema. Chemo (doxorubicin/ifosfamide) for selected high-risk/chemosensitive types.`],
-['diagnosis', `Benign soft-tissue tumors and tumor-like conditions to recognize`, `Lipoma (most common; homogeneous fat on MRI, suppresses on STIR — thick septa/nodules suggest liposarcoma). Schwannoma (eccentric on nerve, encapsulated, S-100+, shells out; Antoni A/B, Verocay bodies) vs neurofibroma (intrinsic to nerve, cannot be separated, NF1; malignant transformation to MPNST ~10% in NF1 — growth/pain). Hemangioma (phleboliths, serpiginous). Glomus (subungual).
-Desmoid / aggressive fibromatosis: infiltrative, no mets, high recurrence; β-catenin (CTNNB1) or APC (Gardner); treat with observation first (many stabilize), NSAIDs/tamoxifen, sorafenib, radiation; wide resection reserved.
-Tenosynovial giant cell tumor (PVNS): diffuse intra-articular (knee), hemosiderin → low signal on T1 and T2 with blooming on gradient echo, bloody effusion; CSF1 translocation; synovectomy (high recurrence); pexidartinib (CSF1R inhibitor). Synovial chondromatosis: cartilage metaplasia, multiple loose bodies → synovectomy.
-Myositis ossificans: post-traumatic, ZONAL — mature bone peripherally, immature center (opposite of osteosarcoma); wait 6–12 months for maturation (cold bone scan) before excision.`],
-['diagnosis', `Bone lesion location cheat-sheet: epiphysis, metaphysis, diaphysis, posterior elements`, `Epiphysis (skeletally immature): chondroblastoma; (adult): giant cell tumor, clear cell chondrosarcoma; infection/subchondral cyst.
-Metaphysis: osteosarcoma, NOF/FCD, UBC, ABC, osteochondroma, chondromyxoid fibroma, enchondroma, osteomyelitis.
-Diaphysis: Ewing sarcoma, lymphoma, fibrous dysplasia, adamantinoma (tibia), osteoid osteoma, LCH, myeloma/metastasis, osteofibrous dysplasia (anterior tibial cortex).
-Spine posterior elements: osteoid osteoma, osteoblastoma, ABC. Vertebral body: hemangioma (vertical “corduroy” striations, polka-dot on CT), metastasis, myeloma, GCT, LCH (vertebra plana), chordoma (sacrum). Multiple lytic lesions >40 y: mets, myeloma. Sclerotic mets: prostate, breast, carcinoid.`],
-['management', `Chemotherapy and radiation toxicities relevant to orthopaedics`, `Doxorubicin: cardiomyopathy (cumulative dose). Cisplatin: nephrotoxicity, ototoxicity, neuropathy. Methotrexate: mucositis, hepatotoxicity, myelosuppression (leucovorin rescue). Ifosfamide/cyclophosphamide: hemorrhagic cystitis (mesna), nephrotoxicity, encephalopathy. Vincristine: peripheral neuropathy, foot drop. Etoposide: secondary leukemia. All: myelosuppression, wound-healing delay (time surgery ~3 weeks after cycle, ANC >1500).
-Radiation: post-radiation fracture (femur after soft-tissue sarcoma RT; risk with >60 Gy, circumferential fields, periosteal stripping, women, age — prophylactic IM nailing considered); radiation-induced sarcoma (latency 5–20 years, poor prognosis); growth arrest and scoliosis in children (asymmetric fields); fibrosis, joint contracture, lymphedema; wound complications when preoperative.`],
-['management', `Limb-salvage reconstruction options and their failure modes`, `Endoprosthesis (megaprosthesis): immediate stability/weight-bearing; failures — aseptic loosening (compress/rotating hinge designs help), infection (~10%; silver-coated), mechanical, soft-tissue attachment loss. Preferred in adults for distal femur/proximal tibia (needs medial gastrocnemius flap for extensor mechanism/coverage).
-Allograft (intercalary/osteoarticular): biologic, restores bone stock; fracture ~19%, nonunion ~17%, infection ~11%, cartilage degeneration; allograft-prosthetic composite combines both (proximal humerus, proximal femur — abductor reattachment).
-Rotationplasty (Van Nes): young children with distal femoral tumors — ankle becomes the knee; durable, high function, but cosmesis. Expandable prostheses for growing children (lengthening complications). Arthrodesis for high-demand patients. Amputation: survival equivalent to limb salvage when margins adequate; indicated for major neurovascular involvement, pathologic fracture with contamination, failed salvage, infection.
-Pediatric physeal growth arrest planning (contralateral epiphysiodesis).`],
-['diagnosis', `Pathologic fracture: sarcoma vs metastasis vs benign — how management differs`, `Assume a lesion is a primary sarcoma until proven otherwise in a patient <40 or with no known primary; never nail through an unbiopsied aggressive lesion (contaminates the whole bone → amputation). Immobilize, complete staging, biopsy, then plan.
-Osteosarcoma with pathologic fracture: neoadjuvant chemo, then wide resection is still possible if the hematoma can be included (slightly higher local recurrence); amputation for gross contamination.
-Metastasis/myeloma with survival >6 weeks: stabilize the entire bone (nail/cemented arthroplasty), post-op radiation; embolize renal/thyroid.
-Benign (UBC, NOF, FD): most heal in a cast; proximal femur lesions → fix (cephalomedullary/ blade plate) to prevent varus.
-Fracture through a bone with an enchondroma in the hand: heal first, then curettage. Always send tissue and cultures at fixation of any lesion-related fracture.`]
+['d','Chondroid matrix appearance','Rings and arcs / popcorn calcification.'],
+['d','Osteoid matrix appearance','Cloud-like / fluffy.'],
+['d','Ground-glass matrix suggests…','Fibrous dysplasia.'],
+['d','Aggressive periosteal reactions','Codman triangle, sunburst, onion-skin (lamellated).'],
+['d','Geographic sclerotic margin means…','Latent/benign lesion.'],
+['d','Permeative / moth-eaten margin means…','Aggressive lesion.'],
+['m','Staging before or after biopsy?','Before — MRI whole bone, CT chest, bone scan.'],
+['m','Biopsy incision orientation','Longitudinal, in line with the future resection.'],
+['m','Biopsy: who performs it','The surgeon who will do the definitive resection.'],
+['m','Biopsy drain placement','Exits in line with the incision.'],
+['m','Biopsy: compartments and neurovascular bundles','Cross a single compartment; avoid neurovascular bundles and joints.'],
+['d','Core needle biopsy accuracy','≥ 90%.'],
+['c','Enneking benign stage 1','Latent (e.g., NOF).'],
+['c','Enneking benign stage 2','Active (e.g., UBC).'],
+['c','Enneking benign stage 3','Aggressive (GCT, ABC).'],
+['c','Enneking IA vs IB','Low grade; A intracompartmental, B extracompartmental.'],
+['c','Enneking II','High grade (A intra-, B extracompartmental).'],
+['c','Enneking III','Any grade with metastasis.'],
+['c','Intralesional margin','Through the tumor (curettage).'],
+['c','Marginal margin','Through the reactive zone / pseudocapsule.'],
+['c','Wide margin','Cuff of normal tissue — standard for sarcoma.'],
+['c','Radical margin','Entire compartment.'],
+['d','Most common primary malignant bone tumor overall','Multiple myeloma.'],
+['d','Most common primary malignant bone tumor in children','Osteosarcoma.'],
+['d','Osteosarcoma typical locations','Metaphysis: distal femur > proximal tibia > proximal humerus.'],
+['d','Osteosarcoma genetic associations','RB1, TP53 (Li-Fraumeni), Rothmund-Thomson.'],
+['m','Osteosarcoma treatment sequence','Neoadjuvant chemo → wide resection → adjuvant chemo.'],
+['m','Osteosarcoma chemotherapy agents','Methotrexate, doxorubicin, cisplatin ± ifosfamide.'],
+['d','Good chemotherapy response in osteosarcoma','≥ 90% tumor necrosis.'],
+['d','Osteosarcoma 5-year survival, localized','~65–70%.'],
+['d','Parosteal osteosarcoma','Low grade, surface, posterior distal femur; MDM2/CDK4 amplification.'],
+['m','Parosteal osteosarcoma treatment','Wide resection only — no chemotherapy.'],
+['d','Periosteal osteosarcoma','Intermediate grade, chondroblastic, diaphyseal surface.'],
+['d','Telangiectatic osteosarcoma mimics…','Aneurysmal bone cyst (fluid-fluid levels) — high grade.'],
+['d','Ewing sarcoma translocation','t(11;22) EWSR1-FLI1.'],
+['d','Ewing sarcoma immunostain','CD99 (MIC2) positive.'],
+['d','Ewing sarcoma location and periosteal reaction','Diaphysis; onion-skin.'],
+['d','Ewing sarcoma mimics which condition clinically?','Osteomyelitis (fever, leukocytosis, high ESR).'],
+['m','Ewing sarcoma chemotherapy','VDC/IE: vincristine, doxorubicin, cyclophosphamide / ifosfamide, etoposide.'],
+['m','Ewing sarcoma: role of radiation','Radiosensitive — for unresectable disease or positive margins.'],
+['d','Ewing sarcoma poor-prognosis factors','Pelvic site, size > 8 cm, metastases, poor necrosis.'],
+['d','Chondrosarcoma demographics and sites','Adults 40–70; pelvis, proximal femur, shoulder girdle.'],
+['d','Signs favoring chondrosarcoma over enchondroma','Pain, > 5 cm, endosteal scalloping > 2/3 cortex, cortical breach, soft-tissue mass.'],
+['d','Chondrosarcoma mutations','IDH1/IDH2.'],
+['m','Chondrosarcoma treatment','Surgery — chemo and radiation resistant.'],
+['m','Grade 1 extremity chondrosarcoma','Extended intralesional curettage acceptable.'],
+['d','Worst chondrosarcoma variant','Dedifferentiated.'],
+['d','Chondrosarcoma variant that is chemosensitive','Mesenchymal.'],
+['d','Epiphyseal chondrosarcoma variant','Clear cell.'],
+['d','Myeloma bone scan','Cold — use skeletal survey / whole-body imaging.'],
+['d','Myeloma CRAB features','Hypercalcemia, renal failure, anemia, bone lesions.'],
+['d','Myeloma marker on immunohistochemistry','CD138.'],
+['m','Solitary plasmacytoma treatment','Radiation.'],
+['d','Primary lymphoma of bone appearance','Diaphysis, large soft-tissue mass, subtle bone destruction; CD20+.'],
+['m','Lymphoma of bone treatment','R-CHOP chemotherapy ± radiation; surgery only for fixation.'],
+['d','Most common malignant bone lesion overall','Metastasis.'],
+['d','Blastic metastases come from…','Prostate (also breast, carcinoid).'],
+['d','Hypervascular metastases to embolize preop','Renal cell and thyroid.'],
+['d','Rougraff workup for unknown primary','History/exam, labs (SPEP/UPEP, PSA), CT chest/abdomen/pelvis, bone scan → biopsy; finds ~85%.'],
+['d','Mirels score components','Site, pain, lesion type, size (> 2/3 diameter).'],
+['m','Mirels ≥ 9','Prophylactic fixation.'],
+['m','Mirels ≤ 7','Radiation.'],
+['m','Metastatic femoral neck lesion','Cemented (long-stem) arthroplasty.'],
+['m','Metastatic intertrochanteric/subtrochanteric lesion','Long cephalomedullary nail protecting the whole bone.'],
+['m','Solitary renal cell metastasis','Consider wide resection (potential cure).'],
+['m','Bisphosphonates/denosumab in bone metastases','Reduce skeletal-related events.'],
+['d','GCT demographics and location','20–40 y; epiphyseal-metaphyseal, eccentric, to subchondral bone.'],
+['d','GCT mutation','H3F3A G34W.'],
+['d','GCT "benign" metastasis rate','2–5% lung mets.'],
+['m','GCT standard treatment','Extended curettage + burr + adjuvant (phenol/argon/cryo) + PMMA.'],
+['d','GCT recurrence after curettage','~10–25%.'],
+['m','Denosumab in GCT','Unresectable/sacral/spinal disease or to shrink before surgery.'],
+['d','Why avoid radiation for GCT','Malignant transformation.'],
+['d','ABC demographics and imaging','< 20 y; eccentric expansile lytic; fluid-fluid levels.'],
+['d','Primary ABC molecular finding','USP6 rearrangement.'],
+['d','Lesions with secondary ABC change','GCT, chondroblastoma, osteoblastoma, FD, telangiectatic OS.'],
+['m','ABC treatment','Curettage + graft (recurrence 10–30%); sclerotherapy option.'],
+['d','UBC location and sign','Central metaphyseal proximal humerus; fallen-leaf sign with fracture.'],
+['d','Active vs latent UBC','Active if adjacent to the physis.'],
+['m','UBC treatment options','Observation/cast for fracture; steroid or marrow injection; curettage + graft ± fixation (proximal femur).'],
+['d','Osteoid osteoma size and pain pattern','< 1.5–2 cm nidus; night pain relieved by NSAIDs (prostaglandins).'],
+['d','Osteoid osteoma best imaging','Thin-cut CT.'],
+['d','Osteoid osteoma in the spine','Painful scoliosis, lesion on the concave side / apex of convexity, posterior elements.'],
+['m','Osteoid osteoma treatment options','NSAIDs (may burn out 3–4 y), RFA, excision.'],
+['d','Osteoblastoma vs osteoid osteoma','≥ 2 cm, posterior elements, no NSAID relief, more aggressive → curettage/excision.'],
+['d','Most common tumor of the hand','Enchondroma.'],
+['m','Enchondroma with pathologic fracture','Let fracture heal, then curettage + graft.'],
+['d','Ollier disease','Multiple enchondromas, unilateral; ~25–30% chondrosarcoma risk.'],
+['d','Maffucci syndrome','Enchondromas + soft-tissue hemangiomas (phleboliths); higher malignancy risk.'],
+['d','Most common benign bone tumor','Osteochondroma.'],
+['d','Osteochondroma pathognomonic feature','Cortical and medullary continuity with the host bone.'],
+['d','Osteochondroma cartilage cap concerning for malignancy','> 2 cm in an adult.'],
+['d','MHE genes','EXT1 (worse), EXT2.'],
+['d','MHE chondrosarcoma risk','1–5%.'],
+['d','MHE forearm deformity','Ulnar shortening/bowing, radial head dislocation.'],
+['d','Chondroblastoma location and age','Epiphysis of the skeletally immature.'],
+['d','Chondroblastoma histology hallmark','Chicken-wire calcification; H3F3B K36M.'],
+['d','Chondromyxoid fibroma location','Eccentric metaphyseal proximal tibia.'],
+['d','Fibrous dysplasia mutation','GNAS (Gsα).'],
+['d','Fibrous dysplasia histology','"Chinese letters" woven bone without osteoblastic rimming.'],
+['d','Shepherd\'s crook deformity','Proximal femoral varus in fibrous dysplasia.'],
+['d','McCune-Albright triad','Polyostotic FD, coast-of-Maine café-au-lait, precocious puberty.'],
+['d','Mazabraud syndrome','Fibrous dysplasia + intramuscular myxomas.'],
+['m','Proximal femur fibrous dysplasia fixation','IM device / cortical strut — cancellous graft gets resorbed.'],
+['d','Osteofibrous dysplasia location','Anterior tibial cortex in children < 10.'],
+['d','Most common benign bone lesion in children','Nonossifying fibroma.'],
+['m','NOF fixation indication','> 50% of bone width with symptoms/fracture risk.'],
+['d','Jaffe-Campanacci syndrome','Multiple NOFs + café-au-lait.'],
+['d','Adamantinoma location and marker','Anterior tibial diaphysis, adults 20–40; keratin-positive.'],
+['m','Adamantinoma treatment','Wide resection (chemo/radiation resistant).'],
+['d','Chordoma sites','Sacrococcygeal (50%), clivus (35%), mobile spine.'],
+['d','Chordoma histology and marker','Physaliferous cells; brachyury.'],
+['m','Chordoma treatment','En bloc resection; proton/carbon beam for margins.'],
+['d','Sacral root sacrifice and continence','Preserving both S3 (or all roots on one side) preserves function in most.'],
+['d','LCH spine finding','Vertebra plana with preserved discs.'],
+['d','LCH histology markers','CD1a and S-100; Birbeck granules.'],
+['d','Soft-tissue mass red flags','> 5 cm, deep to fascia, growing, painful.'],
+['d','Most common adult soft-tissue sarcoma','Undifferentiated pleomorphic sarcoma (then liposarcoma).'],
+['d','Synovial sarcoma translocation','t(X;18) SS18-SSX.'],
+['d','Myxoid liposarcoma translocation and metastasis pattern','t(12;16) FUS-DDIT3; extrapulmonary (retroperitoneum, spine).'],
+['d','Well-differentiated liposarcoma marker','MDM2 amplification.'],
+['d','Alveolar rhabdomyosarcoma translocation','t(2;13) PAX3-FOXO1 (worse than embryonal).'],
+['d','Epithelioid sarcoma','Hand/forearm of young adults, ulcerates, INI1 loss, LN spread.'],
+['d','Sarcomas that spread to lymph nodes','Synovial, clear cell, angiosarcoma, rhabdomyosarcoma, epithelioid ("SCARE").'],
+['m','Preoperative vs postoperative sarcoma radiation','Preop: lower dose, smaller field, better function, 2× wound complications (35% vs 17%).'],
+['d','Schwannoma vs neurofibroma','Schwannoma eccentric, shells out (S-100). Neurofibroma intrinsic, cannot be separated, NF1.'],
+['d','MPNST risk in NF1','~10%.'],
+['d','Desmoid tumor genetics','CTNNB1 (β-catenin) or APC (Gardner).'],
+['m','Desmoid first-line management','Observation; NSAIDs/tamoxifen, sorafenib; surgery reserved.'],
+['d','PVNS MRI hallmark','Low signal on T1 and T2 with gradient-echo blooming (hemosiderin).'],
+['d','PVNS molecular finding and drug','CSF1 translocation; pexidartinib.'],
+['d','Myositis ossificans vs osteosarcoma on imaging','MO: mature bone peripherally (zonal). OS: central mineralization.'],
+['m','Myositis ossificans excision timing','After maturation 6–12 months (cold bone scan).'],
+['d','Epiphyseal lesions','Chondroblastoma (immature), GCT (adult), clear cell chondrosarcoma.'],
+['d','Diaphyseal lesions','Ewing, lymphoma, FD, adamantinoma, osteoid osteoma, LCH, myeloma.'],
+['d','Posterior element spine lesions','Osteoid osteoma, osteoblastoma, ABC.'],
+['d','Vertebral hemangioma signs','Vertical corduroy striations; polka-dot on CT.'],
+['d','Doxorubicin toxicity','Cardiomyopathy.'],
+['d','Cisplatin toxicity','Nephrotoxicity, ototoxicity.'],
+['d','Ifosfamide toxicity and protector','Hemorrhagic cystitis — mesna.'],
+['d','Vincristine toxicity','Peripheral neuropathy.'],
+['d','Methotrexate toxicity and rescue','Mucositis, hepatotoxicity — leucovorin.'],
+['d','Post-radiation fracture risk factors','> 60 Gy, circumferential field, periosteal stripping.'],
+['d','Radiation-induced sarcoma latency','5–20 years.'],
+['d','Allograft complication rates','Fracture ~19%, nonunion ~17%, infection ~11%.'],
+['d','Rotationplasty (Van Nes)','Ankle becomes the knee — young children with distal femoral tumors.'],
+['m','Amputation vs limb salvage survival','Equivalent when margins are adequate.'],
+['m','Pathologic fracture through an unknown aggressive lesion','Immobilize, stage, biopsy — never nail first.'],
+['d','Poor prognostic labs in osteosarcoma','Elevated ALP and LDH.'],
 ]);
 
 // ======================= PEDIATRICS =======================
 _add('peds', [
-['classification', `Salter-Harris classification and growth-arrest risk`, `I: through the physis only (widened/displaced; often diagnosed clinically). II: physis + metaphyseal fragment (Thurston-Holland) — most common. III: physis + epiphysis (intra-articular) → anatomic reduction. IV: metaphysis through physis into epiphysis → anatomic reduction (crosses germinal layer; highest arrest for reducible types). V: crush of the physis — diagnosed retrospectively; poor prognosis. (VI: perichondral ring injury — Rang.)
-Fractures propagate through the hypertrophic zone/zone of provisional calcification, sparing the germinal (reserve/proliferative) layers in I–II.
-Arrest risk depends more on location than type: distal femur (~50% regardless of type), distal tibia, proximal tibia high; distal radius low. Cross the physis only with smooth pins, perpendicular, few passes. Follow for growth arrest (Harris/Park growth lines) 6–12 months.`],
-['classification', `Supracondylar humerus fractures: Gartland, nerves, and the pulseless hand`, `Extension type 95%. Gartland I nondisplaced (long-arm cast 3 weeks); II displaced, posterior cortex intact (hinged) → CRPP for most (cast only if no rotation/medial comminution and anterior humeral line intersects capitellum); III completely displaced → CRPP; IV multidirectional instability (periosteum circumferentially torn).
-Nerve injuries (usually neurapraxia, observe): AIN most common overall (posterolateral displacement — “OK sign”), radial (posteromedial displacement), ulnar (flexion-type and iatrogenic medial pin). Median/AIN and brachial artery: antecubital fossa, anteromedial spike.
-Pin configuration: 2–3 divergent lateral pins (biomechanically adequate; add a third for type III/comminution); medial pin only with a mini-open/extended elbow to protect the ulnar nerve. Anterior humeral line should pass through the middle third of the capitellum; Baumann angle ~70–75° (compare contralateral).
-Pulseless pink (perfused) hand after reduction/pinning → observe closely 24–48 h; pulseless WHITE hand → immediate vascular exploration at the antecubital fossa. Compartment syndrome risk: floating elbow, excessive flexion in cast, delayed treatment. Cubitus varus (gunstock) = malunion (medial column collapse/rotation) → cosmetic mostly; later lateral condyle fracture and tardy PLRI risk.`],
-['classification', `Lateral condyle fractures in children`, `Second most common pediatric elbow fracture (age 6). Milch I: fracture lateral to the trochlear groove through the capitellar ossification center (SH IV); Milch II: extends into the trochlea (SH II) — elbow may dislocate. Jakob/Weiss displacement: <2 mm → cast with weekly radiographs for 3 weeks (late displacement common); 2–4 mm with intact articular cartilage (arthrogram) → CRPP; >4 mm/rotated → ORIF (lateral approach; avoid posterior dissection — blood supply enters posteriorly → AVN). Internal oblique view shows displacement best.
-Complications: nonunion (→ cubitus valgus → tardy ulnar nerve palsy; treat nonunion with in situ fixation/graft), lateral spur/overgrowth (common, benign), AVN, stiffness, fishtail deformity (trochlear AVN).`],
-['management', `Medial epicondyle fractures and elbow dislocation in children`, `Peak 9–14 y; apophyseal avulsion (flexor-pronator mass/UCL); ~50% associated with elbow dislocation (may spontaneously reduce — look for the fragment). Ulnar nerve symptoms ~10–15%.
-Absolute surgical indication: incarcerated fragment in the joint (after attempted extraction by supination/valgus — Roberts maneuver, extract openly). Relative: displacement >5 mm (measurement unreliable on AP — use distal humerus axial view/CT), valgus instability in a throwing athlete/gymnast, ulnar nerve dysfunction, open fracture. Otherwise cast 2–3 weeks then early motion; fibrous nonunion is common but usually asymptomatic.
-Fixation: single screw (± washer) from anteromedial; avoid the ulnar nerve. Watch for stiffness with prolonged immobilization.`],
-['diagnosis', `Nursemaid’s elbow (radial head subluxation)`, `Age 1–4; longitudinal traction on a pronated, extended arm; the annular ligament slips over the radial head and becomes interposed. Child holds arm pronated/flexed, refuses to use it; no swelling. Radiographs not needed if the history is classic (obtain if trauma/swelling or failed reduction).
-Reduction: hyperpronation (higher first-attempt success, less painful) or supination-flexion with the thumb on the radial head; palpable click; immediate use of the arm. No immobilization; recurrence ~25% — resolves by age 5 as the annular ligament thickens.`],
-['management', `Pediatric forearm and distal radius fractures: what to accept and how to treat`, `Remodeling greatest with young age, near the physis, in the plane of joint motion; rotational deformity and angulation in the mid-diaphysis remodel poorly.
-Acceptable shaft angulation: <10 y ≈ 15–20° (distal), 10–15° (mid-shaft); >10 y ≈ 10°; rotation <30–45°; complete bayonet apposition acceptable in <10 y with <1 cm shortening. Distal metaphyseal: up to 20–30° in young children with growth remaining. Physeal (SH II) distal radius: reduce once; do not remanipulate after 7–10 days (physeal injury).
-Both-bone shaft in older children/adolescents or failed closed reduction → flexible IM nails (radius first, up to 2–3 open reductions accepted; leave ends short to avoid EPL irritation; remove at 6–12 months); plates for near-mature adolescents/comminution. Refracture ~5% (after cast removal or nail removal; protect 4–6 weeks). Above-elbow cast with a good three-point mold (cast index <0.8).
-Monteggia in kids: reduce the ulna (plastic deformation counts) and the radial head follows; if missed >4 weeks → annular ligament reconstruction/ulnar osteotomy.`],
-['management', `Pediatric femoral shaft fractures by age`, `<6 months: Pavlik harness or splint (non-accidental trauma workup in non-ambulatory infants).
-6 months–5 years: immediate spica cast (or after brief traction if >2–3 cm shortening); accept up to ~15° varus/valgus, 20–30° sagittal, 1–2 cm shortening (overgrowth ~1–2 cm in 2–10 y). Shortening >2–3 cm or polytrauma → traction/surgery.
-5–11 years: flexible titanium elastic nails (length-stable patterns, weight <49 kg; retrograde from distal metaphysis, nail diameter ~40% of canal each; pain at insertion site most common complication); submuscular plating or ex-fix for length-unstable/comminuted fractures or >49 kg.
-≥11 years / >49 kg: rigid IM nail with trochanteric or lateral entry — NEVER piriformis entry (femoral head AVN from MFCA injury); also plates.
-Child abuse: femur fracture in a non-ambulatory child is highly suspicious → skeletal survey.`],
-['diagnosis', `DDH: risk factors, exam, imaging, and age-based treatment`, `Risks: female (6:1), breech, first-born, oligohydramnios, family history, swaddling; left hip 60%. Barlow (dislocates a reduced hip with adduction/posterior push), Ortolani (reduces with abduction — clunk). >3 months: limited abduction, asymmetric folds, Galeazzi (femoral shortening), Trendelenburg gait when walking. Bilateral: waddling, hyperlordosis.
-Imaging: ultrasound (Graf α >60° normal; femoral head coverage >50%) from ~6 weeks to 4–6 months; radiographs after 4–6 months (Hilgenreiner, Perkins line, Shenton line, acetabular index <25–30°). Screening US for breech/family history at 6 weeks.
-0–6 months: Pavlik harness (hips flexed 90–100°, abduction within safe zone); confirm reduction by 3–4 weeks or stop (Pavlik disease — posterior acetabular wear); complications: femoral nerve palsy (over-flexion), AVN (forced abduction).
-6–18 months: closed reduction under anesthesia with arthrogram (medial dye pool <5–7 mm, safe zone of Ramsey; adductor tenotomy) + spica 3 months; open reduction if unstable/failed.
->18 months: open reduction (anterior) ± femoral shortening (>2–3 y) ± pelvic osteotomy (Salter, Pemberton, Dega). Blocks to reduction: iliopsoas (hourglass capsule), inverted limbus, pulvinar, ligamentum teres, transverse acetabular ligament. Teratologic (arthrogryposis, myelomeningocele) → open reduction.`],
-['classification', `Legg-Calvé-Perthes: prognostic factors, lateral pillar, and containment`, `Idiopathic femoral head AVN, boys 4–8 (4–5:1), delayed bone age, hyperactivity, second-hand smoke; 10–15% bilateral (asynchronous — symmetric bilateral suggests MED, hypothyroidism, sickle cell). Limp, hip/knee pain, loss of internal rotation and abduction.
-Waldenström stages: initial (sclerosis, small head), fragmentation, reossification, remodeled. Catterall head-at-risk signs: Gage sign, lateral calcification, lateral subluxation, horizontal physis, metaphyseal cysts.
-Herring lateral pillar (in fragmentation): A no loss of height (good), B >50% height, B/C border, C <50%. Prognosis: age at onset (<6 good regardless; >8 poor) and lateral pillar. Outcome by Stulberg (sphericity/congruence).
-Treatment: maintain motion (PT, NSAIDs, limited weight-bearing); containment (proximal femoral varus osteotomy or Salter/shelf/triple osteotomy) for age >8 with pillar B or B/C (benefit shown by Herring); <6 → nonop; hinge abduction/late → valgus osteotomy or shelf; adolescent/adult sequelae → FAI surgery/THA.`],
-['diagnosis', `SCFE: stability, imaging, and treatment`, `Obese adolescent (11–14), through the hypertrophic zone; hypothyroidism, panhypopituitarism, renal osteodystrophy, growth hormone in atypical patients (<10 y, >16 y, thin, short) → endocrine workup. Presents with groin/thigh/KNEE pain, limp, limb externally rotated, obligate external rotation with hip flexion (Drehmann sign), loss of internal rotation.
-Loder: stable (can walk ± crutches) AVN <10%; unstable (cannot walk) AVN up to ~50%. Klein line (fails to intersect epiphysis on AP), Southwick slip angle (<30° mild, 30–60 moderate, >60 severe); frog-lateral; bilateral at presentation ~20–40%.
-Treatment: in situ fixation with a single cannulated screw (center-center, perpendicular to the physis, entry anterior on the neck, 5 threads across; avoid persistent penetration → chondrolysis). Unstable → urgent (<24 h) in situ pinning (± gentle serendipitous reduction) or modified Dunn capital realignment via surgical dislocation (higher AVN in some series). Prophylactic contralateral pinning if endocrinopathy, age <10, open triradiate, or unreliable follow-up. Later: cam FAI → osteoplasty/proximal femoral osteotomy; AVN/chondrolysis salvage.`],
-['diagnosis', `Septic hip vs transient synovitis: Kocher criteria and organisms by age`, `Kocher: non–weight-bearing, fever >38.5 °C, ESR >40 mm/h, WBC >12,000; CRP >2 mg/dL added (Caird). Probability: 1 factor ~3%, 2 ~40%, 3 ~93%, 4 >99% (original data; lower in validation). Ultrasound-guided aspiration: septic if WBC >50,000 with PMN >75% (also consider >25,000 in kids).
-Septic arthritis → urgent open I&D (anterior approach preferred for the hip — Smith-Petersen; avoid the posterior approach and the MFCA), IV then oral antibiotics 3–4 weeks. Delay >4 days → AVN/chondrolysis/dislocation.
-Organisms: neonates — Group B strep, S. aureus, gram-negatives; <4 y — Kingella kingae (indolent; PCR/blood culture bottle), S. aureus (MRSA/PVL → aggressive, multifocal, DVT/emboli — screen with ultrasound); older — S. aureus, strep; adolescents — Neisseria gonorrhoeae; sickle cell — Salmonella; puncture wound of foot — Pseudomonas; Lyme arthritis (knee) mimics.
-Transient synovitis: afebrile/low fever, recent viral illness, walks with a limp, normal labs; NSAIDs, resolves 1–2 weeks; re-examine.`],
-['diagnosis', `Pediatric osteomyelitis`, `Hematogenous, metaphyseal (slow flow in terminal sinusoidal loops); femur > tibia. S. aureus (MRSA increasingly), Kingella <4 y, GBS neonates; sickle cell Salmonella. Brodie abscess = subacute. In joints where the metaphysis is intracapsular (hip, shoulder, elbow, ankle) → concomitant septic arthritis.
-Diagnosis: CRP (best for monitoring), ESR, blood cultures (positive ~50%), MRI (sensitive — subperiosteal abscess, pyomyositis, adjacent joint); radiographs lag 10–14 days. Aspirate/biopsy for culture before antibiotics when possible.
-Treatment: IV antibiotics (cefazolin or vancomycin/clindamycin for MRSA) transitioning to oral when clinically improving and CRP falling, total ~4–6 weeks; surgical drainage for abscess, failure to improve in 48–72 h, or sequestrum. Chronic → sequestrectomy, dead-space management. Complications: growth arrest, pathologic fracture, chronic osteomyelitis, DVT with MRSA.`],
-['management', `Clubfoot: Ponseti method`, `Talipes equinovarus: CAVE — Cavus, forefoot Adductus, hindfoot Varus, Equinus; talar neck medially deviated, navicular medially subluxed, calcaneus in varus/equinus under the talus. 1:1000, 50% bilateral, boys 2:1; check hips/spine, rule out syndromes (arthrogryposis, myelomeningocele → rigid, more recurrence). PITX1/TBX4 pathways.
-Ponseti: weekly serial long-leg casts (5–7): correct cavus FIRST by supinating the forefoot and elevating the 1st ray; then abduct the foot around the talar head with counter-pressure on the lateral talar head (NEVER on the calcaneus/cuboid; never pronate); equinus LAST — percutaneous Achilles tenotomy (~90%) at ~70° abduction, cast 3 weeks. Then foot-abduction brace (Denis Browne bar: 60–70° ER affected, 30–40° normal) 23 h/day for 3 months, then nights/naps to age 4 — brace non-compliance is the main cause of recurrence.
-Recurrence → repeat casting; dynamic supination in a 2.5–5-year-old → tibialis anterior transfer to the lateral cuneiform. Rigid/late/relapsed → posteromedial release (stiff results), Ilizarov for older. Pirani/Dimeglio scoring.`],
-['diagnosis', `Congenital vertical talus vs calcaneovalgus and metatarsus adductus`, `Congenital vertical talus: rigid rocker-bottom foot — fixed equinus hindfoot, dorsiflexed/abducted forefoot, dorsally dislocated navicular on the talar neck; 50% associated with myelomeningocele, arthrogryposis, chromosomal anomalies (screen). Diagnose with a forced PLANTARflexion lateral radiograph: navicular (talar axis) fails to align with the 1st metatarsal. Treat with reverse Ponseti (Dobbs) serial casting into plantarflexion/inversion, then percutaneous Achilles tenotomy + talonavicular pin; older/rigid → open reduction.
-Calcaneovalgus foot: positional (packaging), flexible, dorsiflexed foot to the shin — resolves; associated with DDH (examine hips) and posteromedial tibial bowing (LLD).
-Metatarsus adductus: most common congenital foot deformity; forefoot adduction with a normal hindfoot (heel bisector lateral to 2nd–3rd toe); flexible → resolves by 1–2 years (stretching); rigid → serial casts (before 8 months ideally); surgery rarely (tarsometatarsal release/osteotomies >4–6 y). Skewfoot = adductus + hindfoot valgus.`],
-['diagnosis', `Tarsal coalition`, `Rigid/peroneal spastic flatfoot in a 8–16-year-old, recurrent ankle sprains, restricted subtalar motion; autosomal dominant; bilateral 50%.
-Calcaneonavicular: 8–12 y; oblique radiograph, “anteater nose” sign on lateral; treat symptomatic with cast then resection with EDB (or fat) interposition — good results.
-Talocalcaneal (middle facet): 12–16 y; C-sign and talar beaking on lateral (beaking is not arthritis); CT to quantify; resection if <50% of the posterior facet involved and no arthritis/minimal hindfoot valgus (>16° valgus → add calcaneal osteotomy); otherwise subtalar or triple arthrodesis.
-Always try nonop first (cast 4–6 weeks, orthoses).`],
-['diagnosis', `Flexible flatfoot in children and when it is not benign`, `Physiologic flexible flatfoot: arch appears on toe-standing and with the Jack test (hallux dorsiflexion); heel inverts on toe-rise; normal in toddlers, most resolve by 6–10 years; no treatment/orthoses needed unless painful (then stretching, arch supports for comfort only; they do not change the arch).
-Symptomatic flexible flatfoot with tight heel cord → Achilles/gastrocnemius stretching; refractory → calcaneal lengthening osteotomy (Evans) ± medial cuneiform osteotomy, or arthroereisis (controversial).
-Red flags (rigid, painful, or asymmetric): tarsal coalition, congenital vertical talus, neuromuscular disease, accessory navicular, JIA.`],
-['classification', `Blount disease (tibia vara) vs physiologic bowing`, `Physiologic genu varum: symmetric bowing including femur and tibia, resolves by ~18–24 months, neutral by 2, then valgus peak at 3–4 years.
-Infantile Blount: obese early walkers (<3 y), Black ethnicity, often bilateral; medial proximal tibial physis growth disturbance (Langenskiöld I–VI); metaphyseal-diaphyseal angle (Drennan) >16° predicts progression (11–16 borderline; <11 physiologic); lateral thrust, internal tibial torsion. Treat: KAFO brace for stage I–II in <3 years; proximal tibial valgus osteotomy (overcorrect slightly) before age 4 for failed brace/stage III+; bar resection/epiphysiodesis of lateral side for stage V–VI; intra-articular depression → elevation osteotomy.
-Adolescent/juvenile Blount (>10 y): obese, unilateral, less severe physeal changes; lateral hemiepiphysiodesis (tension-band plate) if growth remains, or osteotomy (gradual correction with frame if severe). Rickets and MED in the differential (always check vitamin D/renal function).`],
-['diagnosis', `Genu valgum and the Cozen phenomenon`, `Physiologic valgus peaks at 3–4 years (up to ~15°, intermalleolar distance <8 cm) and settles to adult 5–7° by 7–8 years. Pathologic: persistent >8 y, intermalleolar distance >8–10 cm, asymmetric, short stature (rickets, renal osteodystrophy, MED, pseudoachondroplasia), post-traumatic.
-Cozen: valgus deformity after a proximal tibial metaphyseal (greenstick) fracture in a 2–8-year-old, appearing within 12–18 months (medial overgrowth); observe — usually remodels by 2–4 years; do not osteotomize early.
-Treatment of persistent valgus with growth remaining: guided growth with a medial distal femoral (and/or proximal tibial) tension-band plate (remove when corrected; rebound risk); near maturity → osteotomy. Patellofemoral instability and gait issues drive intervention.`],
-['management', `Limb-length discrepancy: growth contributions, prediction, and treatment thresholds`, `Annual growth at the knee physes: distal femur ~9 mm (3/8 in), proximal tibia ~6 mm (1/4 in); proximal femur ~3 mm, distal tibia ~5 mm. Girls stop growing ~14, boys ~16 (bone age). Prediction: Green-Anderson growth-remaining, Moseley straight-line graph, Paley multiplier (length at maturity = current length × multiplier — multiplier at birth ~5 (boys) / ~4.6 (girls)).
-Projected discrepancy at maturity: <2 cm → observe/shoe lift; 2–5 cm → epiphysiodesis of the long leg (percutaneous drill/screw; timed to bone age) or shortening in the mature; >5 cm → lengthening (distraction osteogenesis: latency 5–7 days, 1 mm/day in 0.25 mm increments; lengthen ≤15–20% of bone length per stage; motorized nails vs frames); >15–20 cm / non-functional foot → amputation/prosthesis.
-Causes: congenital (fibular hemimelia, PFFD, hemihypertrophy → Beckwith-Wiedemann/Wilms screening), physeal injury, infection, Ollier, NF1, vascular malformation, Perthes, overgrowth after femur fracture (~1 cm).`],
-['management', `Adolescent idiopathic scoliosis: risk of progression, bracing evidence, surgical indications`, `Cobb >10° with rotation; >10 y; girls progress more. Adams forward-bend + scoliometer ≥7° → radiograph. Progression risk: curve magnitude and remaining growth (Risser 0–1, premenarchal, open triradiate, Sanders stage ≤3). Atypical features → MRI: left thoracic curve, rapid progression, pain, neurologic signs/abnormal abdominal reflexes, juvenile onset (<10 y; 20% intraspinal anomaly), foot deformity.
-Observation: <25° (or mature). Bracing: 25–45° with Risser 0–2 — BrAIST RCT: bracing reduced progression to ≥50° (72% vs 48%), dose-dependent (≥13–18 h/day). Nighttime bending braces for single lumbar/thoracolumbar curves.
-Surgery: ≥45–50° (thoracic curves >50° progress ~1°/year in adulthood; lumbar >40–45°) → posterior spinal fusion with pedicle screws; selective thoracic fusion by Lenke classification (lumbar modifier, curve flexibility); anterior release for large/stiff curves; neuromonitoring (SSEP/MEP). Complications: neurologic injury (<1%), infection, pseudarthrosis, adding-on, PJK, SMA syndrome (weight loss after correction).`],
-['diagnosis', `Congenital scoliosis, Klippel-Feil, and associated anomalies`, `Congenital scoliosis from failure of formation (hemivertebra — fully segmented worst; wedge) or segmentation (unilateral unsegmented bar, block vertebra). Worst prognosis: unilateral bar with contralateral hemivertebra (progresses 5–10°/year). Bracing ineffective. Progressive curves → early surgery: hemivertebra excision (young, lumbar/lumbosacral), in situ fusion/convex hemiepiphysiodesis, growing rods/VEPTR for thoracic insufficiency.
-Associated anomalies (VACTERL): renal (20–30% → renal ultrasound), cardiac (10–15% → echocardiogram), intraspinal (tethered cord, diastematomyelia, syrinx 20–40% → MRI before surgery), rib fusions.
-Klippel-Feil: congenital cervical fusion; short neck, low hairline, limited motion (triad in <50%); hypermobile adjacent segments → instability risk (avoid contact sports for high-risk patterns); Sprengel deformity (undescended scapula, omovertebral bone — Woodward procedure) in 30%; renal, cardiac, hearing anomalies.`],
-['diagnosis', `Scheuermann kyphosis and infantile/juvenile scoliosis`, `Scheuermann: adolescents (more boys), rigid thoracic kyphosis >45° with ≥3 adjacent vertebrae wedged ≥5°, Schmorl nodes, endplate irregularity, disc narrowing; tight hamstrings, back pain; distinguish from postural kyphosis (flexible, corrects with extension). Thoracolumbar (type II) form is more painful. Bracing 55–80° with growth remaining (Milwaukee/TLSO); surgery >70–80° with pain/progression/neurologic deficit → posterior fusion with Ponte osteotomies (rarely anterior); avoid overcorrection (>50%) → proximal junctional kyphosis.
-Infantile idiopathic scoliosis (<3 y): more boys, left thoracic; Mehta rib-vertebral angle difference >20° or phase 2 rib-head overlap → progressive → serial Mehta (derotation) casting under anesthesia; MRI for all progressive. Resolving curves: RVAD <20°.
-Juvenile (3–10 y): high risk of progression and intraspinal pathology (~20%) → MRI; brace early, growing rods (magnetically controlled) for progressive curves to preserve thoracic growth; avoid early definitive fusion (crankshaft with anterior growth; thoracic insufficiency).`],
-['management', `Cerebral palsy: hip surveillance and gait surgery essentials`, `GMFCS I–V predicts hip displacement (I ~0%, V ~90%). Reimers migration percentage (MP): >30% → soft-tissue release (adductor longus, gracilis ± iliopsoas at the pelvic brim) in young children; >40–50% or failed → varus derotation osteotomy of the femur ± pelvic osteotomy (Dega/San Diego) with capsulorrhaphy; chronic painful dislocation in a non-ambulator → salvage (valgus osteotomy, McHale, arthroplasty). Screen with AP pelvis every 6–12 months by GMFCS.
-Scoliosis (GMFCS IV–V, long C-curve, pelvic obliquity) → PSF to the pelvis when >50° (bracing not effective; check nutrition/albumin, seizures, pulmonary).
-Gait: spastic diplegia/hemiplegia; instrumented gait analysis; single-event multilevel surgery at 6–10 y. Equinus → gastrocnemius recession (Strayer/Baker) preferred over Achilles lengthening in diplegia (avoids calcaneal/crouch gait). Crouch gait (hamstring/hip flexor tightness, over-lengthened Achilles, lever-arm dysfunction) → hamstring lengthening, patellar tendon advancement, address torsion. Stiff-knee gait (rectus femoris firing in swing on EMG) → rectus transfer to gracilis/sartorius. Botulinum toxin for dynamic spasticity (young), selective dorsal rhizotomy (ambulatory diplegia), intrathecal baclofen (quadriplegia).
-Upper limb: flexed wrist FCU → ECRB transfer (Green), thumb-in-palm (adductor release, EPL rerouting), pronation → pronator teres rerouting.`],
-['diagnosis', `Myelomeningocele: level and function, and orthopaedic principles`, `Neurologic level determines ambulation: thoracic/high lumbar (no quads) — wheelchair/exercise ambulation with HKAFO; L3 (quadriceps) — household ambulation with KAFO; L4 (quads + tibialis anterior + medial hamstrings) — community ambulation with AFOs (best level for ambulation prognosis; watch calcaneus foot from unopposed TA); L5 (EHL, hamstrings, glutes weak) — AFO; sacral — near-normal gait.
-Hip dislocation: do NOT reduce in high-level patients (function depends on level, not reduction; risk of stiffness); consider only for unilateral L4 with strong quads — controversial. Contractures → releases for bracing/sitting. Scoliosis (60% in thoracic level) → fusion; kyphosis → kyphectomy.
-Feet: clubfoot (rigid — Ponseti with higher recurrence; talectomy for rigid recurrent), calcaneus deformity (transfer TA to the calcaneus), vertical talus. Insensate skin → ulcers; fractures after immobilization (metaphyseal, present as warm swollen limb — minimize casting). Latex allergy (avoid latex from birth). Tethered cord/shunt failure: new spasticity, scoliosis progression, back pain, change in bladder function → neurosurgery.`],
-['diagnosis', `Duchenne and other neuromuscular disorders: orthopaedic key facts`, `Duchenne: X-linked, absent dystrophin (Becker = reduced); boys 3–6 y with Gower sign, calf pseudohypertrophy, toe-walking, CK 10–100× normal, genetic testing/biopsy. Corticosteroids (deflazacort/prednisone) prolong ambulation. Wheelchair ~10–12 y; scoliosis then progresses rapidly → posterior fusion early (Cobb 20–30°, before FVC drops below ~35–40% and cardiomyopathy worsens — steroids have reduced this). Contractures (equinus, hip flexion, ITB) → releases to prolong ambulation. Anesthesia: avoid succinylcholine and volatile agents (rhabdomyolysis/hyperkalemia; MH-like); cardiac evaluation.
-Spinal muscular atrophy: SMN1 deletion, anterior horn cell loss; hypotonia, tongue fasciculations; scoliosis, hip dislocation (usually left unreduced); nusinersen/gene therapy changed natural history; growing rods/fusion.
-Charcot-Marie-Tooth: see cavovarus foot; hip dysplasia in CMT (surveillance), scoliosis. Friedreich ataxia: cavovarus + scoliosis + cardiomyopathy. Arthrogryposis (amyoplasia): rigid symmetric contractures (elbows extended, wrists flexed, hips dislocated, clubfeet); teratologic hips → open reduction (bilateral often left), Ponseti with high recurrence, elbow: posterior release/triceps lengthening for feeding.`],
-['diagnosis', `Skeletal dysplasias: rapid-recognition table`, `Achondroplasia: FGFR3, rhizomelic, foramen magnum stenosis, lumbar stenosis, genu varum.
-Pseudoachondroplasia: COMP, normal face, ligamentous laxity, early hip OA.
-MED (multiple epiphyseal dysplasia): COMP/COL9/MATN3; irregular epiphyses (hips like bilateral symmetric Perthes), short stature mild, early OA.
-SED (spondyloepiphyseal dysplasia): COL2A1; spine + epiphyses, odontoid hypoplasia → C1–2 instability (flexion-extension films before anesthesia), retinal detachment, coxa vara. Kniest: COL2A1, dumbbell femurs.
-Diastrophic dysplasia: SLC26A2 (sulfate transporter); hitchhiker thumb, cauliflower ears, cervical kyphosis (resolves), rigid clubfeet, cleft palate.
-Cleidocranial dysplasia: RUNX2 (CBFA1); absent/hypoplastic clavicles, delayed fontanelle closure, supernumerary teeth, coxa vara.
-Morquio (MPS IVA): GALNS; odontoid hypoplasia + atlantoaxial instability (prophylactic fusion), keratan sulfate in urine, genu valgum, normal intelligence. Hurler (MPS I): α-L-iduronidase, intellectual disability.
-Larsen syndrome: filamin B; multiple congenital dislocations (knees, hips, elbows), cervical kyphosis (dangerous). Osteopetrosis: CLCN7/TCIRG1 (carbonic anhydrase II in AR form), dense brittle bone, marrow failure, hardware fixation difficult.`],
-['diagnosis', `Neurofibromatosis type 1 and congenital tibial bowing`, `NF1: chromosome 17 (neurofibromin, AD, 50% new). Café-au-lait spots (≥6, >5 mm prepubertal; coast-of-California smooth borders), axillary/inguinal freckling, Lisch nodules, neurofibromas.
-Spine: dystrophic scoliosis (short, sharp curves, rib penciling, vertebral scalloping, foraminal enlargement, dural ectasia — MRI) progresses relentlessly → early combined anterior + posterior fusion (high pseudarthrosis); non-dystrophic curves treated like idiopathic (may convert — follow closely). Cervical kyphosis.
-Tibia: anterolateral bowing = pre-pseudarthrosis (NF1 in ~50% of congenital pseudarthrosis of the tibia) → full-time clamshell brace, NEVER osteotomize an intact bowed tibia; established pseudarthrosis → resection, IM rod + bone graft ± BMP, Ilizarov transport, vascularized fibula; multiple failures → Syme/below-knee amputation. Other bowing: posteromedial (calcaneovalgus foot; benign, leaves LLD 3–4 cm); anteromedial (fibular hemimelia).`],
-['classification', `Congenital limb deficiencies: fibular hemimelia, PFFD, tibial hemimelia`, `Fibular hemimelia (most common long-bone deficiency): anteromedial tibial bow with skin dimple, ball-and-socket ankle, tarsal coalition, absent lateral rays, equinovalgus foot, ACL deficiency, genu valgum, femoral shortening (PFFD association). Achterman-Kalamchi (IA/IB partial, II absent) and Birch (by foot rays and projected LLD). Treatment: functional foot with ≥3 rays and projected LLD <30% → lengthening; non-functional foot/large LLD → Syme or Boyd amputation at ~10–18 months with early prosthetic fitting.
-Proximal focal femoral deficiency (Aitken A–D): short femur, flexed/abducted/ER hip, coxa vara/pseudarthrosis (A/B) or absent head/acetabulum (C/D); options: limb lengthening (mild), Syme + knee fusion, Van Nes rotationplasty (ankle as knee; needs stable hip), or prosthesis. 
-Tibial hemimelia (autosomal dominant; rare): absent tibia, varus foot, often no quadriceps → knee disarticulation (Brown procedure fails without quads); partial (distal) tibia → Syme + tibiofibular synostosis.`],
-['management', `Pediatric ACL and tibial spine fractures`, `Skeletally immature ACL tears: nonop management → high rate of meniscal/chondral injury; reconstruct with growth-respecting technique by Tanner stage/bone age: prepubescent (Tanner 1–2) → physeal-sparing (Kocher/Micheli iliotibial band over-the-top, or all-epiphyseal); adolescents with 1–2 years growth → transphyseal with soft-tissue graft, vertical tunnels, no bone plugs/fixation across the physis (bone blocks/screws crossing = growth arrest/valgus, recurvatum); near-mature → adult-type. Higher retear rates in adolescents.
-Tibial spine (eminence) fractures (Meyers-McKeever): I nondisplaced → cast in near extension; II anterior hinge → attempt closed reduction (aspirate hemarthrosis, extend), fix if not reduced; III completely displaced (IV comminuted) → arthroscopic/open reduction and fixation (suture or screw; entrapped anterior horn of the medial meniscus/intermeniscal ligament blocks reduction ~50%). Complications: arthrofibrosis (early ROM), residual ACL laxity.
-Discoid lateral meniscus (Watanabe: complete, incomplete, Wrisberg-type unstable): snapping knee in a young child; saucerization ± repair rather than total meniscectomy.`],
-['management', `Osteochondritis dissecans of the knee and capitellum`, `Knee: lateral aspect of the medial femoral condyle (~70%) (posterolateral, next to the notch); notch view; MRI for stability — high T2 rim, cysts, fluid under the fragment, defect. Juvenile (open physes) → high healing with 3–6 months of activity restriction/unloading (± brace); stable lesions failing nonop → transarticular or retroarticular drilling; unstable/detached → fixation (headless screws/bioabsorbable) ± bone graft; salvage → OATS/osteochondral allograft/ACI. Adults heal poorly → earlier surgery.
-Capitellar OCD: 12–17-year-old gymnasts/throwers (repetitive valgus compression); lateral elbow pain, loss of extension, locking; distinguish from Panner disease (<10 y, entire capitellum fragmented, self-limited, no loose bodies). Stable (open capitellar physis, <90° arc) → rest 6 months; unstable → arthroscopic debridement/microfracture, fixation, OATS for large lateral-wall lesions.`],
-['diagnosis', `Overuse injuries in young athletes: Little League elbow/shoulder and apophysitides`, `Little League elbow: medial epicondylar apophysitis from valgus overload (also lateral compression → capitellar OCD, posterior olecranon stress); treat rest 4–6 weeks, pitch counts (USA Baseball), no curveballs until maturity, mechanics.
-Little League shoulder: proximal humeral epiphysiolysis (widened physis on AP in ER, compare contralateral) → rest 3 months.
-Apophysitides (traction): Osgood-Schlatter (tibial tubercle, 10–15 y; ossicle may persist; rare tubercle avulsion), Sinding-Larsen-Johansson (inferior patellar pole), Sever (calcaneus), Iselin (5th MT base), medial epicondyle, iliac crest, ASIS/AIIS. Treat with activity modification, stretching, NSAIDs; imaging to exclude tumor/infection when atypical.
-Pelvic apophyseal avulsions (sprinters, kickers): ischial tuberosity (hamstrings — fix if displaced >2 cm; nonunion/pain), ASIS (sartorius), AIIS (rectus femoris — AIIS impingement later), lesser trochanter (iliopsoas), iliac crest (abdominals); most nonop with protected weight-bearing.`],
-['diagnosis', `Toddler’s fracture and non-accidental trauma`, `Toddler’s fracture: 9 months–3 years, low-energy twist; nondisplaced spiral/oblique distal tibial shaft fracture (may be occult — oblique views; radiographs at 10–14 days show periosteal reaction); short-leg cast/boot 3–4 weeks. Also calcaneal/cuboid occult fractures.
-Non-accidental trauma: fractures in a non-ambulatory infant, multiple fractures of different ages, classic metaphyseal (corner/bucket-handle) lesions, posterior rib fractures, scapular/sternal/spinous process fractures, complex skull fractures, humeral shaft in <3 y, femoral fractures in <1 y, inconsistent/changing history, delay in seeking care. Skeletal survey (repeat at 2 weeks) for <2–3 y; head CT; ophthalmology (retinal hemorrhages); mandated reporting. Differential: OI, rickets, Menkes, osteopenia of prematurity, Caffey disease.`],
-['diagnosis', `Pediatric cervical spine: normal variants and pathologies`, `Children <8 y: large head, lax ligaments, horizontal facets, incomplete ossification → upper cervical injuries dominate; use a backboard with occipital recess/mattress pad to avoid flexion. Normal variants: pseudosubluxation C2–3 (up to 4 mm; Swischuk line from the spinolaminar line of C1 to C3 within 1.5 mm of C2), ADI up to 5 mm, wedging of C3, wide prevertebral soft tissue on expiration, synchondroses (dens-body fuses ~6 y — apparent “fracture”).
-SCIWORA: spinal cord injury with normal radiographs/CT → MRI; children <8 y; delayed onset possible. Atlantoaxial rotatory subluxation: torticollis (“cock-robin”) after URI (Grisel) or minor trauma; Fielding types; dynamic CT; <1 week → soft collar/NSAIDs; 1–4 weeks → halter/halo traction; chronic/recurrent → C1–2 fusion.
-Os odontoideum (separate ossicle from remote unrecognized injury/developmental) → instability → C1–2 fusion if unstable/symptomatic. Down syndrome: atlantoaxial instability in 10–20% (ADI >5 mm; SAC <13 mm or symptoms → fusion); occipitocervical instability; screen before sports/anesthesia. Congenital muscular torticollis: SCM fibrosis/olive, DDH in up to 20%; stretching; release after 1 year if persistent.`],
-['management', `Pediatric ankle fractures: Tillaux, triplane, and the closure pattern`, `Distal tibial physis closes over ~18 months in a specific order: central → anteromedial → posterolateral, so late-adolescent fractures involve the open anterolateral part.
-Juvenile Tillaux (12–14 y, nearly closed physis): SH III avulsion of the anterolateral epiphysis by the AITFL with external rotation → CT; displacement >2 mm → closed/percutaneous or open reduction with an epiphyseal screw.
-Triplane (12–15 y): multiplanar — SH III on AP, SH II on lateral (2-, 3-, 4-part); CT for planning; reduce with internal rotation, fix if >2 mm displaced (epiphyseal + metaphyseal screws). Both have low growth-arrest risk (physis nearly closed).
-Younger children: SH I–II distal tibia (supination-ER) → closed reduction, long-leg cast; SH III/IV medial malleolus (supination-inversion) → anatomic reduction (arrest risk high — varus); distal fibula SH I common. Follow for growth arrest (Park-Harris lines).`],
-['management', `Physeal growth arrest: evaluation and treatment options`, `Causes: SH III–V, distal femur/tibia injuries, infection, tumor, radiation, Blount, iatrogenic hardware. Detect: converging or absent Park-Harris growth arrest line, angular deformity, LLD; MRI (physeal mapping) or CT to size the bar.
-Central/peripheral bar <50% of the physis and ≥2 years / ≥2 cm growth remaining → physeal bar resection (Langenskiöld) with interposition (fat, PMMA); >50% → complete epiphysiodesis of the involved physis (± contralateral) and treat LLD/angulation by osteotomy or guided growth of the healthy side.
-Angular deformity from a partial arrest with growth remaining: hemiepiphysiodesis of the opposite side (tension-band plate) or corrective osteotomy near maturity. Follow all physeal injuries (especially distal femur/tibia) with radiographs at 6 and 12 months.`],
-['diagnosis', `Rickets and juvenile idiopathic arthritis on the pediatric exam`, `Rickets: widened, cupped, frayed metaphyses; physeal widening; bowing, rachitic rosary, craniotabes, delayed walking, SCFE-like slips; nutritional vitamin D deficiency most common (breastfed dark-skinned infants) — treat with vitamin D/calcium and observe deformity (corrects); resistant → X-linked hypophosphatemia (PHEX; normal Ca, low phosphate — phosphate + calcitriol/burosumab); renal osteodystrophy. Osteotomy only after medical correction.
-JIA (≥6 weeks of arthritis, onset <16 y): oligoarticular (≤4 joints; ANA+ → uveitis screening with slit lamp; knee overgrowth → LLD and valgus; best prognosis), polyarticular (RF+/RF−), systemic (Still: fever, rash, hepatosplenomegaly, serositis; MAS), enthesitis-related (HLA-B27), psoriatic. Cervical spine: apophyseal joint ankylosis, atlantoaxial instability; micrognathia (TMJ) → anesthesia. Treat: NSAIDs, intra-articular triamcinolone hexacetonide, methotrexate, biologics; contractures → PT; arthroplasty for end-stage (small implants).`],
-['management', `Proximal humerus, clavicle, and phalangeal fractures in children: remodeling limits`, `Proximal humeral fractures (SH II or metaphyseal): huge remodeling (80% of humeral growth at this physis); accept any displacement <10 y; 10–13 y up to ~40–45° angulation and ≥50% displacement; adolescents near maturity → reduce and pin if >20–30°/ >50% displaced (long head of biceps may block reduction). Neer-Horwitz grades.
-Clavicle: nonop even with full displacement in children <12–14 y; adolescents with >2 cm shortening/100% displacement may be considered for ORIF (adult-like data, controversial; watch supraclavicular nerves and refracture after plate removal). Medial clavicle physis is the last to close (~25 y) → “SC dislocation” in a teen is usually a physeal fracture; posterior → CT, reduce with thoracic surgery available.
-Phalangeal neck fractures (children): little remodeling, rotational malalignment → CRPP. Extra-octave (small finger proximal phalanx SH II) → reduce with pencil in web space. Seymour fracture: open — nail bed care and antibiotics.`],
-['diagnosis', `Coxa vara, developmental and acquired`, `Congenital/developmental coxa vara: neck-shaft angle <110–120° with a triangular metaphyseal fragment (Fairbank triangle) on the inferior neck; painless limp/Trendelenburg, limited abduction; bilateral 30–50%. Hilgenreiner-epiphyseal angle (HEA): <45° normal, 45–60° observe, >60° → progressive → valgus-producing subtrochanteric osteotomy (correct HEA to <38°) ± greater trochanteric transfer later.
-Acquired: SCFE, Perthes, fibrous dysplasia (shepherd’s crook — internal fixation), osteogenesis imperfecta, cleidocranial dysplasia, rickets, post-infection, malunion.
-Coxa valga/anteversion: CP, DDH residual; femoral anteversion (in-toeing, W-sitting) normally resolves by 8–10 y → derotation osteotomy only for functional problems >50° persisting after 10 y.`]
-]);
-// ======================= SHOULDER & ELBOW =======================
-_add('se', [
-['diagnosis', `Rotator cuff tears: exam by tendon, healing predictors, and repair choices`, `Innervation: supraspinatus and infraspinatus — suprascapular nerve; teres minor — axillary; subscapularis — upper and lower subscapular nerves.
-Exam: Jobe/empty can (supraspinatus); external rotation lag/hornblower (infraspinatus/teres minor); lift-off, belly-press, bear-hug, increased passive ER (subscapularis); Popeye = biceps rupture.
-Poor healing predictors: age >65–70, tear size (>3 cm, retraction — Patte), Goutallier fatty infiltration ≥3 (>50% fat), tangent sign (atrophy), smoking, diabetes, chronicity. Single- vs double-row repair: similar clinical outcomes; double-row lower retear in large tears.
-Partial tears: >50% thickness → complete and repair (or in situ repair); <50% → debride ± acromioplasty. Irreparable massive posterosuperior tears without arthritis: partial repair/margin convergence, superior capsular reconstruction, lower trapezius or latissimus transfer (young laborer), balloon spacer; with arthropathy/pseudoparalysis in older → reverse TSA. Irreparable subscapularis → pectoralis major (or latissimus) transfer.`],
-['classification', `Acromion morphology, impingement, and os acromiale`, `Bigliani: type I flat, II curved, III hooked (associated with cuff tears; the hook is on the anterior acromion). Critical shoulder angle >35° and high acromial index associated with cuff tears; CSA <30° with OA.
-Impingement tests: Neer (forward flexion), Hawkins (flexion + IR). Treat nonoperatively first — scapular stabilizer/cuff rehab, injection; acromioplasty alone adds little in RCTs (CSAW). Coracoid (subcoracoid) impingement: anterior pain with flexion/IR/adduction, coracohumeral distance <6 mm.
-Os acromiale: unfused acromial apophysis (meso-acromion most common; fuses by ~25 y); seen on axillary view; painful → fixation (ORIF + bone graft) rather than excision of large fragments (deltoid origin).`],
-['diagnosis', `Anterior shoulder instability: lesions, recurrence, bone loss and Latarjet`, `Restraints: IGHL anterior band (90° abduction + ER — primary), MGHL (45°), SGHL/coracohumeral ligament (0°/inferior translation in adduction). Bankart (anteroinferior labral detachment) in ~90% of traumatic dislocations; Hill-Sachs posterolateral head impaction; ALPSA (medialized healed labrum), HAGL (humeral avulsion — open repair; suspect when no Bankart), GLAD, bony Bankart.
-First-time dislocation in age <20 → recurrence 80–90% nonop; >40 → cuff tear (up to 40%) and axillary nerve injury. Arthroscopic Bankart repair failure risks (ISIS score): age <20, competitive/contact/overhead sport, hyperlaxity, Hill-Sachs on AP in ER, glenoid bone loss.
-Bone loss: glenoid loss >20–25% (or “off-track” Hill-Sachs by glenoid track: Hill-Sachs interval > glenoid track = engaging) → Latarjet (coracoid transfer: bone block, conjoint tendon sling, capsular repair with CA ligament); complications — musculocutaneous/axillary nerve, graft nonunion/lysis, screw irritation, arthritis if lateral overhang. Off-track with <20% glenoid loss → Bankart + remplissage (infraspinatus tenodesis into the Hill-Sachs). Distal tibia allograft/iliac crest for revision/large loss.`],
-['diagnosis', `Posterior instability, locked posterior dislocation, and multidirectional instability`, `Posterior instability: repetitive posterior load (linemen, bench press) → posterior labral tear (reverse Bankart, Kim lesion); jerk/Kim tests; posterior capsulolabral repair; glenoid retroversion/dysplasia → posterior opening-wedge osteotomy or bone block.
-Locked posterior dislocation: seizure, electrocution, high-energy; arm fixed in IR, cannot ER; AP shows light-bulb sign — often missed; ALWAYS obtain axillary (or Velpeau) view/CT. Reverse Hill-Sachs (anteromedial head): <20% and <3 weeks → closed reduction (traction, lateral push); 20–40% → McLaughlin (subscapularis transfer into defect) or modified (lesser tuberosity transfer) / allograft; >40–50% or chronic in elderly → hemi/total arthroplasty (component in less retroversion).
-MDI: atraumatic, bilateral laxity, sulcus sign, often voluntary component; prolonged (≥6 months) rotator cuff/scapular stabilizer rehab first; failure → arthroscopic capsular plication or open inferior capsular shift; never thermal capsulorrhaphy; avoid surgery in psychiatric/voluntary dislocators.`],
-['classification', `SLAP tears: Snyder classification, the throwing shoulder, and biceps tenodesis`, `Snyder: I fraying of the superior labrum, biceps anchor intact; II detachment of the superior labrum and biceps anchor (most common; IIA anterior, IIB posterior, IIC combined); III bucket-handle superior labrum, anchor intact; IV bucket-handle extending into the biceps tendon. O’Brien active compression, dynamic labral shear; MR arthrogram.
-Throwing shoulder: GIRD (loss of internal rotation >20–25° / total arc deficit >5–10° vs contralateral — posterior capsular contracture) → “peel-back” of the biceps anchor in late cocking and posterosuperior internal impingement (articular-sided partial cuff tear + posterosuperior labrum); treat with sleeper/cross-body stretches first. Bennett lesion = posteroinferior glenoid ossification.
-Surgery: SLAP repair for young overhead athletes with type II; biceps tenodesis (or tenotomy in elderly) for patients >35–40, laborers, degenerative labrum, failed repair — better predictable outcomes. Avoid repairing type I/degenerative fraying.`],
-['diagnosis', `Biceps tendon: proximal and distal ruptures`, `Long head of biceps originates at the supraglenoid tubercle/superior labrum, passes the rotator interval under the transverse humeral ligament/“biceps pulley” (SGHL, CHL, subscapularis). Proximal rupture: Popeye deformity, minimal strength loss (~10–20% supination); treat nonop in older; tenodesis for young/cosmesis/cramping; instability of the LHB usually means a subscapularis/pulley lesion.
-Distal biceps rupture: middle-aged male lifting; eccentric load; hook test (highly sensitive), “reverse Popeye”, MRI (FABS view). Nonop → ~30–40% loss of supination strength and ~30% flexion endurance; repair within 2–3 weeks (retraction, scarring). Single-incision anterior (endobutton/anchor): LABCN neuropraxia most common; PIN injury with drilling/radial-side retractors — supinate the forearm; radial tuberosity anatomic footprint is ulnar/posterior. Two-incision (Boyd-Anderson): heterotopic ossification/radioulnar synostosis (avoid subperiosteal ulnar exposure). Chronic → allograft/autograft reconstruction.`],
-['management', `Adhesive capsulitis`, `Stages: freezing (painful, 2–9 months), frozen (stiff, 4–12 months), thawing (up to 2 years). Global loss of passive AND active motion with normal radiographs (differentiate from OA and locked dislocation — get an axillary view). Loss of external rotation in adduction reflects contracture of the coracohumeral ligament/rotator interval; capsular volume reduced.
-Risks: diabetes (worse, bilateral), thyroid disease, Dupuytren, after minor trauma/immobilization, post-surgical.
-Treatment: NSAIDs, physical therapy (within tolerable pain), intra-articular corticosteroid injection (best early), hydrodilatation; refractory >6 months → manipulation under anesthesia and/or arthroscopic capsular release (rotator interval, CHL, anterior/inferior capsule ± posterior); avoid manipulation alone in osteoporotic/diabetic (fracture, cuff tear). Most resolve, though residual mild stiffness is common.`],
-['classification', `Acromioclavicular joint injuries: Rockwood, CC ligaments, and distal clavicle excision`, `Anatomy: AC ligaments/capsule (superior/posterior strongest) resist anteroposterior translation; coracoclavicular ligaments — conoid (posteromedial, primary restraint to superior displacement) and trapezoid (anterolateral, resists AC compression/axial load).
-Rockwood: I AC sprain; II AC torn, CC intact (<25% elevation); III AC + CC torn (25–100% displacement) — mostly nonop (sling, early motion), surgery for overhead athletes/laborers is controversial; IV clavicle displaced posteriorly into/through trapezius (axillary view) → surgery; V >100% (CC distance >300%), deltotrapezial fascia detached → surgery; VI inferior (subcoracoid/subacromial) → surgery.
-Reconstruction: anatomic CC ligament reconstruction (free tendon graft — semitendinosus — through the clavicle around/through the coracoid) ± suspensory device; Weaver-Dunn (CA ligament transfer) is weaker. Complications: coracoid/clavicle fracture, loss of reduction, infection.
-AC arthritis/distal clavicle osteolysis (weight lifters): injection, then distal clavicle excision (Mumford) of ≤8–10 mm — over-resection >1 cm risks AC/CC instability.`],
-['diagnosis', `Scapular winging: medial vs lateral`, `Medial winging (medial border prominent, scapula displaced medially/superiorly): serratus anterior palsy — LONG THORACIC nerve (C5–7; traction, viral, surgery/axillary dissection, backpack). Worse with a wall push-up. Most recover in 6–24 months; persistent → pectoralis major (sternal head) transfer to the inferior scapula with fascia lata graft.
-Lateral winging (scapula displaced laterally, inferior angle rotated laterally, shoulder droop): trapezius palsy — SPINAL ACCESSORY nerve (posterior triangle lymph node biopsy, radical neck dissection). Eden-Lange procedure (transfer of levator scapulae and rhomboids laterally) for chronic; neurolysis/repair early.
-Rhomboid weakness (dorsal scapular nerve) causes mild lateral winging. Scapulothoracic bursitis/snapping scapula: superomedial angle, bursectomy/partial scapulectomy. FSHD (facioscapulohumeral dystrophy) → scapulothoracic fusion.`],
-['anatomy', `Suprascapular nerve and axillary nerve entrapment/injury sites`, `Suprascapular nerve (C5–6, upper trunk): passes under the transverse scapular ligament at the suprascapular notch (compression here → supraspinatus AND infraspinatus weakness/pain) then around the spinoglenoid notch under the spinoglenoid ligament (compression here — usually a paralabral ganglion cyst from a posterosuperior labral tear, or repetitive overhead volleyball — → infraspinatus only). MRI shows cyst/atrophy; EMG. Treat cyst by labral repair ± decompression; ligament release for notch entrapment.
-Axillary nerve (C5–6, posterior cord): through the quadrilateral space with the posterior humeral circumflex artery; branches to teres minor, posterior deltoid, superior lateral brachial cutaneous, then anterior deltoid. Injured in anterior dislocations, proximal humeral fractures, deltoid-splitting approaches (>5 cm below the acromion), shoulder arthroplasty (inferior capsule). Quadrilateral space syndrome: posterior shoulder pain, teres minor atrophy (FIA/MRI). Deltoid palsy testing: ER lag is teres minor; deltoid contraction palpable.`],
-['classification', `Glenohumeral osteoarthritis: Walch classification and anatomic TSA planning`, `Walch: A1/A2 centered head (concentric wear); B1 posterior subluxation without wear, B2 posterior subluxation with biconcave posterior glenoid wear (neoglenoid), B3 monoconcave posterior wear with retroversion >15°/subluxation >70%; C dysplastic retroversion >25°; D anteversion/anterior subluxation.
-Anatomic TSA (cemented pegged polyethylene glenoid) gives better pain relief and function than hemiarthroplasty when the cuff is intact; requires a functional rotator cuff (subscapularis repair — lesser tuberosity osteotomy or tenotomy) and adequate glenoid bone. Correct retroversion to <10–15° by eccentric reaming (limit ~10–15°), augmented glenoids, or bone graft; B3/C with >25–30° retroversion or >70% subluxation → reverse TSA.
-Radiolucent lines/glenoid loosening (rocking-horse from eccentric loading) is the most common long-term failure of anatomic TSA; component overstuffing → stiffness/cuff failure; subscapularis failure → anterior instability.`],
-['management', `Reverse total shoulder arthroplasty: indications, biomechanics, and complications`, `Indications: rotator cuff arthropathy, massive irreparable cuff tear with pseudoparalysis, 3–4-part proximal humerus fractures in the elderly (>70), failed anatomic arthroplasty, glenoid bone loss (B3/C), inflammatory arthritis with cuff deficiency, tumor, chronic locked dislocations. Requires a functioning deltoid (axillary nerve) — the primary motor.
-Biomechanics (Grammont): medialized and distalized center of rotation increases deltoid moment arm and recruits more deltoid fibers; semiconstrained. Lateralization (glenoid or humeral) reduces notching, improves ER and impingement-free motion.
-Complications: scapular notching (inferior glenoid impingement by the humeral cup — reduce with inferior baseplate placement, inferior tilt, lateralization), instability (most common early cause of reoperation; deltoid tension, subscapularis), acromial/scapular spine stress fractures, infection (Cutibacterium acnes — hold cultures 14 days; benzoyl peroxide prep), baseplate failure, neuropraxia from lengthening.
-Absent teres minor/external rotation → add latissimus ± teres major transfer (L’Episcopo) at the time of rTSA for horn-blower sign.`],
-['classification', `Rotator cuff tear arthropathy: Hamada, Seebauer, and the Milwaukee shoulder`, `Massive chronic cuff tear → loss of concavity-compression → superior migration of the head, acetabularization of the acromion, femoralization of the humeral head, glenohumeral arthritis; large effusion.
-Hamada: 1 acromiohumeral interval (AHI) >6 mm; 2 AHI ≤5 mm; 3 + acetabularization; 4 + glenohumeral narrowing (4A without, 4B with acetabularization); 5 humeral head collapse. Seebauer: IA/IB centered (stable), IIA/IIB decentered (unstable — anterosuperior escape).
-Milwaukee shoulder: elderly women, hydroxyapatite/basic calcium phosphate crystal-induced destructive arthropathy with bloody effusion.
-Treatment: rTSA (hemiarthroplasty with extended head historically for centered, pain-only cases); anterosuperior escape and pseudoparalysis → rTSA.`],
-['management', `Elbow stiffness and total elbow arthroplasty`, `Functional arc (Morrey): 30–130° flexion/extension, 50° pronation / 50° supination (100° total); loss >30° extension or flexion <130° impairs ADLs.
-Post-traumatic contracture: rule out HO/malunion/loose bodies (CT); nonop static-progressive/turnbuckle splints up to 6 months; then release — extrinsic (capsule, HO): anterior capsulectomy (lateral column/Kocher or medial over-the-top), posterior capsule/olecranon fossa osteophytes; ulnar nerve decompression/transposition when preop flexion <100° or any ulnar symptoms (flexion gain compresses the nerve). Intrinsic (articular): interposition arthroplasty (young) or TEA (elderly).
-TEA (linked semiconstrained): best for rheumatoid arthritis, also elderly comminuted distal humerus fractures, chronic instability; lifetime lifting restriction ~5 lb repetitive/10 lb single. Complications: infection (higher than other arthroplasties), aseptic loosening (activity), triceps insufficiency (avoid triceps-reflecting approaches when possible), ulnar neuropathy, periprosthetic fracture (Mayo classification), bushing wear.`],
-['diagnosis', `Elbow instability: PLRI, MCL insufficiency, and valgus extension overload`, `Lateral ulnar collateral ligament (LUCL, from lateral epicondyle to supinator crest of the ulna) is the primary restraint to posterolateral rotatory instability (PLRI): after dislocation or iatrogenic (lateral epicondylitis surgery/steroids); lateral pivot-shift (apprehension), chair push-up and tabletop relocation tests; treat with LUCL reconstruction (docking with palmaris/gracilis graft).
-Elbow dislocation mechanism (Horii circle): lateral → LUCL first, then anterior/posterior capsule, MCL last (posterior band). Simple dislocation → reduce, brief splint (≤1 week), early motion in a hinged brace, avoid varus stress; surgery if unstable beyond 30–45° of extension.
-MCL anterior bundle (anterior band) = primary valgus restraint 30–120°; radial head is a secondary valgus stabilizer (never excise the head with an MCL injury). Throwers: moving valgus stress test, milking maneuver, MRI arthrogram; rehab first; reconstruction (Tommy John — docking/ modified Jobe with palmaris) for complete tears in throwers who fail rehab; ulnar nerve transposition only if symptomatic. Valgus extension overload: posteromedial olecranon osteophytes/impingement → arthroscopic debridement (avoid removing >3 mm of olecranon — increases MCL strain).`],
-['diagnosis', `Lateral epicondylitis vs radial tunnel syndrome vs PIN syndrome`, `Lateral epicondylitis: angiofibroblastic hyperplasia (tendinosis, not inflammation) of the ECRB origin (± EDC); pain with resisted wrist/middle-finger extension, gripping; 80–95% resolve within 12 months nonop (activity modification, counterforce brace, eccentric exercises); corticosteroid injection gives short-term relief but WORSE outcomes at 1 year; PRP has some evidence. Surgery: ECRB debridement/release — stay anterior to the equator of the capitellum/radial head to avoid the LUCL (iatrogenic PLRI).
-Radial tunnel syndrome: PIN compression with PAIN only (no motor loss), maximal tenderness 3–4 cm distal to the lateral epicondyle over the supinator/arcade of Frohse; pain with resisted supination and resisted middle-finger extension; EMG usually normal; decompress if refractory (results unpredictable).
-PIN syndrome: MOTOR loss without sensory deficit — weak finger/thumb extension (MCP), wrist extends with radial deviation (ECRL spared), no pain typically; causes: arcade of Frohse (most common), Monteggia, lipoma/ganglion, rheumatoid synovitis; observe 3 months then explore. Compression sites (proximal→distal): fibrous bands over the radiocapitellar joint, recurrent radial vessels (leash of Henry), ECRB tendinous edge, arcade of Frohse, distal supinator edge.`],
-['diagnosis', `Anterior interosseous nerve syndrome and Parsonage-Turner`, `AIN (motor only): FPL, FDP to index and long, pronator quadratus → cannot make an “OK” sign (pinches with pulp-to-pulp), weak pronation with elbow flexed; no sensory loss. Compression: deep head of pronator teres, FDS arch, Gantzer muscle (accessory FPL), aberrant vessels; also after fractures (supracondylar in kids). Observe 3–6 months (spontaneous recovery common), then EMG-guided exploration.
-Pronator syndrome: median nerve compression proximal to AIN → forearm pain + sensory loss including the PALM (palmar cutaneous branch), no night symptoms; sites: ligament of Struthers (supracondylar process), lacertus fibrosus, pronator teres, FDS arch.
-Parsonage-Turner (brachial neuritis): acute severe shoulder pain followed by patchy weakness (often AIN or long thoracic/suprascapular pattern) days later, often after viral illness/vaccination/surgery; EMG multiple nerves; treat supportively — recovery over months to 2 years; avoid unnecessary decompression.`],
-['anatomy', `Shoulder surgical approaches: deltopectoral, posterior, and the “three sisters”`, `Deltopectoral: interval between deltoid (axillary nerve) and pectoralis major (medial/lateral pectoral) — cephalic vein marks it (take laterally with deltoid). Deep: conjoint tendon (coracobrachialis/short head — musculocutaneous nerve enters 5–8 cm distal to the coracoid, injured by vigorous medial retraction), subscapularis (upper 2/3 tendinous; axillary nerve runs along its inferior border — tug test; anterior humeral circumflex artery with two venae comitantes “three sisters” at the inferior border of the subscapularis — ligate). Rotator interval: SGHL, CHL, biceps.
-Posterior (Judet/Brodsky): internervous plane between infraspinatus (suprascapular) and teres minor (axillary); protect the axillary nerve/posterior humeral circumflex at the quadrilateral space inferiorly and the suprascapular nerve at the spinoglenoid notch medially (don’t retract infraspinatus more than 1.5 cm medial to the glenoid rim).
-Deltoid-splitting (lateral): limit to 5 cm distal to the acromion (axillary nerve). Arthroscopic portals: posterior soft spot (axillary nerve/posterior circumflex inferiorly, suprascapular medially), anterior lateral to the coracoid (musculocutaneous nerve medial), 5 o’clock portal risks the axillary nerve/cephalic vein.`],
-['diagnosis', `Calcific tendinitis and pectoralis major rupture`, `Calcific tendinitis: hydroxyapatite deposition in supraspinatus (most) 1–2 cm from the insertion; stages — precalcific, calcific (formative → resting → resorptive: the RESORPTIVE phase is acutely, severely painful), postcalcific. Radiograph in ER/IR; self-limited over months to years. Treat: NSAIDs, subacromial steroid injection, ultrasound-guided lavage/barbotage, ESWT; arthroscopic removal ± acromioplasty for refractory (>6 months); cuff repair only if a large defect remains. Diabetes/thyroid association.
-Pectoralis major rupture: bench press (eccentric load in abduction/ER); sternal head at the humeral insertion most common; ecchymosis, loss of the anterior axillary fold, weak adduction/IR; MRI. Acute repair (within weeks) restores strength; chronic → repair with graft augmentation. Nonop for elderly/musculotendinous junction tears.`],
-['diagnosis', `Clavicle fracture and distal clavicle (Neer) fractures`, `Middle third 80%; nonop (sling) for most; operative (plate or IM) for open, skin tenting, neurovascular injury, floating shoulder, and consider for >2 cm shortening/100% displacement in active adults — COTS RCT: plating reduced nonunion (15% → 2–3%) and improved early function; long-term functional differences small; complications: hardware prominence, supraclavicular nerve numbness, infection, refracture after removal.
-Distal third (Neer): I lateral to the CC ligaments, stable → sling; II fracture medial to the CC ligaments (IIA both ligaments attached to the distal fragment; IIB conoid torn, trapezoid attached) → unstable, nonunion 30%+ → fixation (hook plate — remove after healing; CC suspensory fixation; locking plate); III intra-articular AC → sling, late excision if arthritic; IV pediatric periosteal sleeve; V comminuted with the CC ligaments attached to an inferior fragment.
-Medial clavicle/SC: posterior SC dislocation — dysphagia, dyspnea, venous congestion; CT; reduce with thoracic surgery backup (serendipity view).`],
-['classification', `Proximal humerus fractures: Neer, fixation pearls, and arthroplasty selection`, `Neer: four segments — head, greater tuberosity, lesser tuberosity, shaft; a “part” is displaced >1 cm or angulated >45°. Most (~80%) are minimally displaced → sling, early pendulums. Greater tuberosity displaced >5 mm (3 mm in overhead athletes) → fix (subacromial impingement, cuff dysfunction).
-Blood supply: posterior humeral circumflex (posteromedial calcar) supplies most of the head (Hettrich); anterior humeral circumflex (arcuate artery). Hertel predictors of head ischemia: medial hinge displacement >2 mm, calcar length <8 mm, anatomic neck fracture.
-ORIF (locking plate via deltopectoral): restore head-shaft angle (avoid varus <120°), medial calcar support (inferomedial “kickstand” screws, fibular strut), tuberosity sutures through the cuff, avoid screw penetration (most common complication with settling/AVN → screw cut-out). Intramedullary nails for 2-part surgical neck fractures. Valgus-impacted 4-part has lower AVN.
-Elderly displaced 3–4-part: reverse TSA > hemiarthroplasty (more reliable function regardless of tuberosity healing); hemiarthroplasty depends on tuberosity healing (place tuberosities below the head, use fracture stems). Nonop is reasonable in low-demand elderly (PROFHER trial: no benefit of surgery for displaced fractures in older patients).`],
-['management', `Olecranon and coronoid fractures`, `Olecranon (Mayo): I nondisplaced (cast/ early motion), II displaced, stable ulnohumeral joint (IIA simple, IIB comminuted), III unstable (ulnohumeral instability — often with radial head fracture/Monteggia-type). Tension-band wiring (K-wires or a screw) for simple transverse fractures: hardware prominence/removal is the most common complication (~50–80%); plate fixation for comminuted, oblique, distal to the coronoid, or Monteggia patterns. Elderly osteoporotic/comminuted (<50% of the articular surface, coronoid and collaterals intact) → fragment excision + triceps advancement. Nonop with early motion acceptable in low-demand elderly (Duckworth).
-Coronoid (Regan-Morrey by height: I tip, II <50%, III >50%; O’Driscoll by location: tip, anteromedial facet, basal): the anteromedial facet fracture (varus posteromedial rotatory instability — LUCL tear + AMF fracture) needs a medial buttress plate; tip fractures in a terrible triad → suture lasso/screw to restore the anterior capsule.`],
-['management', `Radial head fractures: Mason, the safe zone, and Essex-Lopresti`, `Mason: I nondisplaced (<2 mm) → early motion (aspirate/inject for pain); II displaced >2 mm or >30% of the head — ORIF if mechanical block, otherwise early motion (many do well nonop); III comminuted whole head → replacement (metal) in the setting of associated injuries (terrible triad, MCL, Essex-Lopresti); excision only for isolated fractures with no ligamentous injury and low demand; IV with elbow dislocation.
-Safe zone for hardware: the ~90° arc that does not articulate with the sigmoid notch — between the radial styloid and Lister’s tubercle with the forearm in neutral (lateral in supination/pronation intra-op “safe zone” marked at neutral). Kocher approach (anconeus/ECU): pronate the forearm to move the PIN away; stay anterior to the LUCL.
-Essex-Lopresti: radial head fracture + interosseous membrane tear + DRUJ disruption (longitudinal forearm instability) — wrist pain, positive ulnar variance; never excise the head; fix or replace the head and stabilize the DRUJ; chronic → ulnar shortening/IOM reconstruction.
-Radial head arthroplasty: avoid overstuffing (lateral ulnohumeral joint gap widening — check the medial joint space); capitellar wear, loosening.`],
-['management', `Terrible triad and simple elbow dislocation management`, `Terrible triad = posterolateral elbow dislocation + radial head fracture + coronoid fracture (LUCL torn from the lateral epicondyle; ± MCL). Standard sequence (lateral approach, Kocher or EDC split): 1) coronoid fixation or anterior capsule reattachment (suture lasso), 2) radial head ORIF or replacement (do not excise), 3) LUCL repair to the isometric point on the lateral epicondyle, 4) test stability through a full arc with the forearm pronated; if unstable in extension <30–45° → repair MCL through a medial approach and/or hinged external fixator. Early protected motion (avoid supination and shoulder abduction that varus-loads the elbow).
-Simple dislocation (posterolateral, no fracture): closed reduction, check stability in extension; if stable → sling ≤5–7 days then active ROM (prolonged immobilization → stiffness); unstable beyond 30° extension → hinged brace or ligament repair. Late: stiffness (most common), HO (head injury), chronic instability/PLRI, recurrent dislocation rare.`]
+['c','Salter-Harris I','Through the physis only.'],
+['c','Salter-Harris II','Physis + metaphyseal (Thurston-Holland) fragment — most common.'],
+['c','Salter-Harris III','Physis + epiphysis (intra-articular) → anatomic reduction.'],
+['c','Salter-Harris IV','Metaphysis through physis into epiphysis → anatomic reduction.'],
+['c','Salter-Harris V','Crush — diagnosed retrospectively; poor prognosis.'],
+['d','Physis with the highest growth-arrest risk','Distal femur (~50% regardless of type).'],
+['d','Physeal layer spared in SH I–II','Germinal (reserve/proliferative) layer.'],
+['c','Gartland I','Nondisplaced → long-arm cast 3 weeks.'],
+['c','Gartland II','Displaced, posterior cortex intact → CRPP (most).'],
+['c','Gartland III','Completely displaced → CRPP.'],
+['c','Gartland IV','Multidirectional instability.'],
+['d','Most common nerve injury in supracondylar fractures','AIN (posterolateral displacement).'],
+['d','Nerve injured with posteromedial supracondylar displacement','Radial nerve.'],
+['d','Nerve injured with flexion-type supracondylar fracture','Ulnar nerve.'],
+['d','Nerve at risk from a medial pin','Ulnar nerve — place with elbow extended / mini-open.'],
+['m','Pulseless pink hand after reduction','Observe closely 24–48 h.'],
+['m','Pulseless white hand after reduction','Immediate vascular exploration (antecubital fossa).'],
+['d','Anterior humeral line should pass through…','Middle third of the capitellum.'],
+['d','Normal Baumann angle','~70–75° (compare contralateral).'],
+['d','Cubitus varus (gunstock) is due to…','Malunion — mostly cosmetic; later lateral condyle fracture/PLRI risk.'],
+['c','Milch I lateral condyle fracture','Lateral to the trochlear groove (SH IV).'],
+['c','Milch II lateral condyle fracture','Into the trochlea (SH II); elbow may dislocate.'],
+['m','Lateral condyle fracture < 2 mm displaced','Cast; weekly radiographs 3 weeks.'],
+['m','Lateral condyle fracture 2–4 mm displaced','CRPP (arthrogram to confirm cartilage hinge).'],
+['m','Lateral condyle fracture > 4 mm displaced','ORIF — avoid posterior dissection (AVN).'],
+['d','Best view for lateral condyle displacement','Internal oblique.'],
+['d','Lateral condyle nonunion sequelae','Cubitus valgus → tardy ulnar nerve palsy.'],
+['d','Lateral spur after lateral condyle fracture','Common and benign.'],
+['d','Medial epicondyle fracture: dislocation association','~50%.'],
+['m','Absolute indication for medial epicondyle surgery','Incarcerated fragment in the joint.'],
+['m','Relative indications for medial epicondyle fixation','> 5 mm displacement, valgus instability in athlete, ulnar nerve dysfunction, open.'],
+['d','Nursemaid elbow pathology','Annular ligament interposed over the radial head.'],
+['m','Nursemaid elbow reduction','Hyperpronation (higher success) or supination-flexion.'],
+['d','Pediatric forearm: acceptable shaft angulation < 10 y','15–20° distal, 10–15° mid-shaft.'],
+['d','Pediatric forearm: acceptable angulation > 10 y','~10°.'],
+['d','Bayonet apposition acceptable when…','< 10 y with < 1 cm shortening.'],
+['m','Physeal distal radius: remanipulation rule','Do not remanipulate after 7–10 days.'],
+['m','Both-bone forearm fixation in older children','Flexible IM nails (radius first; ≤ 2–3 open reductions).'],
+['d','Refracture rate after pediatric forearm fracture','~5%.'],
+['d','Cast index threshold','< 0.8 (good three-point mold).'],
+['m','Missed pediatric Monteggia > 4 weeks','Ulnar osteotomy ± annular ligament reconstruction.'],
+['m','Femoral shaft fracture < 6 months','Pavlik harness (screen for abuse if non-ambulatory).'],
+['m','Femoral shaft fracture 6 months – 5 years','Immediate spica cast.'],
+['d','Spica cast acceptable alignment','~15° varus/valgus, 20–30° sagittal, 1–2 cm shortening.'],
+['m','Femoral shaft fracture 5–11 years, length-stable, < 49 kg','Flexible titanium nails.'],
+['m','Femoral shaft fracture, length-unstable or > 49 kg','Submuscular plate or ex-fix.'],
+['m','Femoral shaft fracture ≥ 11 years','Rigid nail — trochanteric/lateral entry (never piriformis).'],
+['d','Femoral overgrowth after fracture','~1–2 cm in ages 2–10.'],
+['d','Flexible nail diameter rule','Each ~40% of canal diameter.'],
+['d','DDH risk factors','Female, breech, first-born, oligohydramnios, family history, swaddling.'],
+['d','DDH side predominance','Left (60%).'],
+['d','Barlow vs Ortolani','Barlow dislocates a reduced hip; Ortolani reduces a dislocated hip.'],
+['d','DDH signs after 3 months','Limited abduction, asymmetric folds, Galeazzi sign.'],
+['d','Graf alpha angle normal','> 60°.'],
+['d','DDH imaging by age','Ultrasound 6 weeks – 4–6 months; radiographs after 4–6 months.'],
+['d','Acetabular index abnormal','> 25–30°.'],
+['m','DDH 0–6 months','Pavlik harness (hips flexed 90–100°).'],
+['m','Pavlik: when to stop','Not reduced by 3–4 weeks (Pavlik disease — posterior acetabular wear).'],
+['d','Pavlik femoral nerve palsy cause','Over-flexion.'],
+['d','Pavlik AVN cause','Forced abduction.'],
+['m','DDH 6–18 months','Closed reduction + arthrogram + spica (medial dye pool < 5–7 mm).'],
+['m','DDH > 18 months','Open reduction ± femoral shortening (> 2–3 y) ± pelvic osteotomy.'],
+['d','Blocks to DDH reduction','Iliopsoas (hourglass capsule), inverted limbus, pulvinar, ligamentum teres, transverse acetabular ligament.'],
+['m','Teratologic hip dislocation','Open reduction.'],
+['d','Perthes demographics','Boys 4–8 (4–5:1), delayed bone age, secondhand smoke.'],
+['d','Perthes bilateral rate and what symmetric disease suggests','10–15% (asynchronous); symmetric → MED, hypothyroidism, sickle cell.'],
+['c','Waldenström stages','Initial → fragmentation → reossification → remodeled.'],
+['c','Herring lateral pillar A','No loss of height.'],
+['c','Herring lateral pillar B','> 50% height maintained.'],
+['c','Herring lateral pillar C','< 50% height.'],
+['d','Catterall head-at-risk signs','Gage sign, lateral calcification, lateral subluxation, horizontal physis, metaphyseal cysts.'],
+['d','Perthes prognostic factors','Age at onset (< 6 good, > 8 poor), lateral pillar.'],
+['m','Perthes containment indication','Age > 8 with pillar B or B/C (femoral varus or pelvic osteotomy).'],
+['c','Stulberg classification measures…','Final head sphericity/congruence (outcome).'],
+['d','SCFE demographics','Obese adolescents 11–14.'],
+['d','When to work up endocrinopathy in SCFE','Age < 10 or > 16, thin/short, bilateral.'],
+['d','SCFE presenting symptom trap','Knee/thigh pain; obligate ER with hip flexion (Drehmann).'],
+['c','Loder stable vs unstable SCFE','Stable can walk (AVN < 10%); unstable cannot (AVN up to 50%).'],
+['d','Klein line','Fails to intersect the epiphysis on AP in SCFE.'],
+['c','Southwick angle grades','< 30 mild, 30–60 moderate, > 60 severe.'],
+['m','SCFE treatment','In situ single cannulated screw, center-center, perpendicular to physis.'],
+['d','Screw penetration in SCFE causes…','Chondrolysis.'],
+['m','Unstable SCFE timing','Urgent (< 24 h) in situ pinning (± modified Dunn).'],
+['m','Prophylactic contralateral SCFE pinning indications','Endocrinopathy, age < 10, open triradiate, unreliable follow-up.'],
+['d','SCFE bilateral at presentation','~20–40%.'],
+['d','Kocher criteria','Non-weight-bearing, fever > 38.5, ESR > 40, WBC > 12,000 (+ CRP > 2 mg/dL).'],
+['d','Kocher: probability with 4/4 criteria','> 99% (3 → ~93%, 2 → ~40%).'],
+['d','Septic hip aspirate threshold','WBC > 50,000 with PMN > 75%.'],
+['m','Septic hip approach','Anterior (Smith-Petersen); avoid posterior (MFCA).'],
+['d','Septic arthritis organism < 4 years','Kingella kingae (PCR); S. aureus.'],
+['d','Neonatal septic arthritis organisms','Group B strep, S. aureus, gram-negatives.'],
+['d','Septic arthritis organism in adolescents','Neisseria gonorrhoeae.'],
+['d','Septic arthritis after foot puncture wound','Pseudomonas.'],
+['d','MRSA osteomyelitis complication to screen for','DVT / septic emboli (ultrasound).'],
+['d','Joints where the metaphysis is intracapsular','Hip, shoulder, elbow, ankle → osteomyelitis becomes septic arthritis.'],
+['d','Best lab for monitoring pediatric osteomyelitis','CRP.'],
+['d','Radiograph lag in osteomyelitis','10–14 days.'],
+['m','Pediatric osteomyelitis antibiotic duration','IV → oral when improving; ~4–6 weeks total.'],
+['d','Clubfoot deformity components','CAVE: Cavus, Adductus, Varus, Equinus.'],
+['m','Ponseti: first deformity corrected','Cavus (supinate forefoot, elevate 1st ray).'],
+['m','Ponseti: counter-pressure point','Lateral talar head — never the calcaneus; never pronate.'],
+['m','Ponseti: last deformity corrected','Equinus — percutaneous Achilles tenotomy (~90%).'],
+['m','Ponseti brace protocol','Foot abduction brace 23 h/day × 3 months, then nights to age 4.'],
+['d','Main cause of clubfoot recurrence','Brace non-compliance.'],
+['m','Dynamic supination in a 2.5–5-year-old','Tibialis anterior transfer to lateral cuneiform.'],
+['d','Congenital vertical talus key radiograph','Forced plantarflexion lateral — navicular stays dislocated.'],
+['d','Congenital vertical talus associations','Myelomeningocele, arthrogryposis, chromosomal anomalies (50%).'],
+['m','Congenital vertical talus treatment','Reverse Ponseti (Dobbs) + Achilles tenotomy + TN pin.'],
+['d','Calcaneovalgus foot','Positional, flexible, resolves; check hips; posteromedial bowing association.'],
+['d','Most common congenital foot deformity','Metatarsus adductus (resolves by 1–2 years).'],
+['d','Calcaneonavicular coalition: age and view','8–12 y; oblique radiograph (anteater sign).'],
+['d','Talocalcaneal coalition: age and signs','12–16 y; C-sign, talar beaking; CT.'],
+['m','Talocalcaneal coalition resection criteria','< 50% of the posterior facet, no arthritis.'],
+['d','Physiologic flexible flatfoot signs','Arch on toe-standing and Jack test; heel inverts.'],
+['m','Symptomatic flexible flatfoot with tight heel cord','Stretching; calcaneal lengthening (Evans) if refractory.'],
+['d','Physiologic genu varum resolves by…','~18–24 months.'],
+['d','Physiologic genu valgum peaks at…','3–4 years; adult alignment by 7–8.'],
+['d','Metaphyseal-diaphyseal (Drennan) angle predicting Blount','> 16° (11–16 borderline).'],
+['d','Infantile Blount demographics','Obese early walkers < 3 y; often bilateral.'],
+['m','Infantile Blount treatment','Brace stage I–II (< 3 y); proximal tibial valgus osteotomy before age 4.'],
+['d','Adolescent Blount features','> 10 y, obese, unilateral.'],
+['d','Cozen phenomenon','Valgus after proximal tibial metaphyseal fracture (age 2–8) — observe, remodels.'],
+['m','Persistent pathologic genu valgum with growth remaining','Medial distal femoral tension-band plate (guided growth).'],
+['d','Distal femur growth per year','~9 mm (3/8 inch).'],
+['d','Proximal tibia growth per year','~6 mm (1/4 inch).'],
+['d','Age growth stops','Girls ~14, boys ~16.'],
+['m','LLD < 2 cm','Observe / shoe lift.'],
+['m','LLD 2–5 cm','Epiphysiodesis of the long leg (timed) or shortening.'],
+['m','LLD > 5 cm','Lengthening.'],
+['d','Distraction osteogenesis rate','1 mm/day in 0.25 mm increments after 5–7 day latency.'],
+['d','Hemihypertrophy screening','Wilms tumor (Beckwith-Wiedemann).'],
+['d','AIS scoliometer referral threshold','≥ 7°.'],
+['d','AIS progression risk factors','Curve magnitude, Risser 0–1, premenarchal, open triradiate.'],
+['d','AIS red flags requiring MRI','Left thoracic curve, rapid progression, pain, neurologic signs, juvenile onset.'],
+['m','AIS bracing indication','25–45° with Risser 0–2.'],
+['d','BrAIST trial','Bracing reduced progression to ≥ 50° (72% vs 48%); dose-dependent.'],
+['m','AIS surgical threshold','≥ 45–50° (thoracic > 50° progresses ~1°/year in adults).'],
+['d','SMA syndrome after scoliosis surgery','Weight loss/vomiting from duodenal compression after correction.'],
+['d','Worst-prognosis congenital scoliosis pattern','Unilateral unsegmented bar with contralateral hemivertebra.'],
+['d','Congenital scoliosis workup','Renal ultrasound, echocardiogram, spine MRI.'],
+['m','Congenital scoliosis bracing','Ineffective — early surgery for progression.'],
+['d','Klippel-Feil triad','Short neck, low hairline, limited motion (< 50% have all three).'],
+['d','Sprengel deformity association and procedure','Klippel-Feil (30%); Woodward procedure.'],
+['d','Scheuermann radiographic criteria','≥ 3 adjacent vertebrae wedged ≥ 5°, Schmorl nodes, endplate irregularity.'],
+['m','Scheuermann bracing range','55–80° with growth remaining.'],
+['m','Scheuermann surgical threshold','> 70–80° with pain/progression/neurology.'],
+['d','Infantile scoliosis progression sign','Mehta RVAD > 20° or phase 2 rib-head overlap.'],
+['m','Progressive infantile scoliosis treatment','Serial Mehta (derotation) casting.'],
+['d','Juvenile scoliosis intraspinal anomaly rate','~20% → MRI.'],
+['d','Crankshaft phenomenon','Continued anterior growth after posterior-only fusion in the immature spine.'],
+['d','CP hip surveillance measure','Reimers migration percentage.'],
+['m','CP hip MP > 30%','Adductor/psoas release.'],
+['m','CP hip MP > 40–50%','Varus derotation osteotomy ± pelvic osteotomy.'],
+['m','CP scoliosis surgery','PSF to pelvis when > 50°; bracing ineffective.'],
+['m','Equinus in spastic diplegia','Gastrocnemius recession (avoid over-lengthening → crouch).'],
+['m','Stiff-knee gait in CP','Rectus femoris transfer (rectus firing in swing).'],
+['m','Selective dorsal rhizotomy candidate','Ambulatory spastic diplegia.'],
+['m','CP flexed wrist transfer','FCU → ECRB (Green).'],
+['d','Myelomeningocele level for community ambulation','L4 (quads + tibialis anterior) with AFOs.'],
+['d','Myelomeningocele: L3 level function','Quadriceps only — household ambulation with KAFO.'],
+['m','Hip dislocation in high-level myelomeningocele','Do not reduce.'],
+['d','Tethered cord signs','New spasticity, scoliosis progression, back pain, bladder change.'],
+['d','Myelomeningocele allergy','Latex — avoid from birth.'],
+['d','Fractures in myelomeningocele','After immobilization; present warm/swollen — minimize casting.'],
+['d','Duchenne genetics','X-linked; absent dystrophin (Becker reduced).'],
+['d','Duchenne early signs','Gower sign, calf pseudohypertrophy, toe-walking; CK 10–100×.'],
+['m','Duchenne scoliosis surgery timing','Early — Cobb 20–30°, before FVC < 35–40%.'],
+['d','Duchenne anesthesia hazard','Avoid succinylcholine/volatiles — rhabdomyolysis/hyperkalemia.'],
+['d','Spinal muscular atrophy genetics','SMN1 deletion; anterior horn cell loss.'],
+['d','Arthrogryposis (amyoplasia) findings','Rigid symmetric contractures, dislocated hips, clubfeet; teratologic.'],
+['d','Pseudoachondroplasia gene and face','COMP; normal face.'],
+['d','MED genes','COMP, COL9, MATN3 — bilateral symmetric Perthes-like hips.'],
+['d','SED gene and spine hazard','COL2A1; odontoid hypoplasia → C1–2 instability; retinal detachment.'],
+['d','Diastrophic dysplasia gene and signs','SLC26A2; hitchhiker thumb, cauliflower ears, cervical kyphosis, rigid clubfeet.'],
+['d','Cleidocranial dysplasia gene and signs','RUNX2; absent clavicles, delayed fontanelle closure, supernumerary teeth.'],
+['d','Morquio (MPS IV) key features','GALNS; odontoid hypoplasia/atlantoaxial instability; keratan sulfate; normal intelligence.'],
+['d','Larsen syndrome','Filamin B; multiple congenital dislocations; cervical kyphosis.'],
+['d','Osteopetrosis','Dense brittle bone, marrow failure, difficult fixation; carbonic anhydrase II (AR).'],
+['d','NF1 diagnostic skin findings','≥ 6 café-au-lait (coast of California), axillary freckling, Lisch nodules.'],
+['d','NF1 dystrophic scoliosis features','Short sharp curves, rib penciling, vertebral scalloping, dural ectasia.'],
+['m','NF1 dystrophic scoliosis treatment','Early anterior + posterior fusion (high pseudarthrosis).'],
+['d','Anterolateral tibial bowing means…','Congenital pseudarthrosis of the tibia (NF1 ~50%).'],
+['m','Intact anterolateral tibial bow','Full-time clamshell brace — NEVER osteotomize.'],
+['m','Established congenital pseudarthrosis of tibia','Resection, IM rod + graft ± BMP, Ilizarov, vascularized fibula.'],
+['d','Posteromedial tibial bowing','Benign; calcaneovalgus foot; residual LLD 3–4 cm.'],
+['d','Anteromedial tibial bowing','Fibular hemimelia.'],
+['d','Fibular hemimelia features','Ball-and-socket ankle, tarsal coalition, absent lateral rays, ACL deficiency, LLD.'],
+['m','Fibular hemimelia with non-functional foot / large LLD','Syme or Boyd amputation at 10–18 months.'],
+['d','PFFD classification','Aitken A–D.'],
+['d','Tibial hemimelia with absent quadriceps','Knee disarticulation (Brown procedure fails).'],
+['m','Pediatric ACL, Tanner 1–2','Physeal-sparing (iliotibial band / all-epiphyseal).'],
+['m','Pediatric ACL, adolescents with growth remaining','Transphyseal soft-tissue graft, vertical tunnels, no bone plugs/fixation across physis.'],
+['c','Meyers-McKeever I','Nondisplaced tibial spine → cast in near extension.'],
+['c','Meyers-McKeever II','Anterior hinge → attempt closed reduction.'],
+['c','Meyers-McKeever III','Completely displaced → ARIF/ORIF.'],
+['d','Block to tibial spine reduction','Anterior horn of medial meniscus / intermeniscal ligament.'],
+['m','Discoid lateral meniscus treatment','Saucerization ± repair.'],
+['d','Knee OCD most common site','Lateral aspect of the medial femoral condyle (~70%).'],
+['d','MRI signs of unstable OCD','High T2 rim, cysts, fluid under fragment.'],
+['m','Juvenile stable OCD','Activity restriction 3–6 months.'],
+['m','Stable OCD failing nonop','Drilling.'],
+['d','Panner disease vs capitellar OCD','Panner < 10 y, whole capitellum, self-limited; OCD 12–17 y, focal, loose bodies.'],
+['d','Little League elbow','Medial epicondylar apophysitis (valgus overload).'],
+['d','Little League shoulder','Proximal humeral epiphysiolysis (widened physis).'],
+['d','Osgood-Schlatter vs Sinding-Larsen-Johansson','Tibial tubercle vs inferior patellar pole apophysitis.'],
+['m','Ischial tuberosity avulsion fixation threshold','Displacement > 2 cm.'],
+['d','ASIS avulsion muscle','Sartorius.'],
+['d','AIIS avulsion muscle','Rectus femoris.'],
+['d','Lesser trochanter avulsion muscle','Iliopsoas.'],
+['d','Toddler fracture','Nondisplaced spiral distal tibia, 9 months–3 years; cast.'],
+['d','Non-accidental trauma fracture patterns','Metaphyseal corner/bucket-handle, posterior ribs, multiple ages, non-ambulatory femur.'],
+['m','Skeletal survey age','< 2–3 years (repeat at 2 weeks).'],
+['d','Pediatric c-spine: why upper injuries dominate','Large head, lax ligaments, horizontal facets.'],
+['d','Pseudosubluxation location and Swischuk line','C2–3; C2 posterior arch within 2 mm of the C1–C3 spinolaminar line.'],
+['d','Pediatric ADI upper normal','5 mm.'],
+['d','SCIWORA','Cord injury with normal radiographs/CT → MRI; children < 8.'],
+['d','Grisel syndrome','Atlantoaxial rotatory subluxation after upper respiratory infection.'],
+['m','Rotatory subluxation by duration','< 1 week collar; 1–4 weeks traction; chronic → C1–2 fusion.'],
+['d','Down syndrome atlantoaxial instability thresholds','ADI > 5 mm; SAC < 13 mm or symptoms → fusion.'],
+['d','Congenital muscular torticollis associations','SCM mass; DDH in up to 20%.'],
+['d','Distal tibial physis closure order','Central → anteromedial → posterolateral (~18 months).'],
+['d','Juvenile Tillaux fracture','SH III anterolateral epiphysis avulsed by AITFL (12–14 y).'],
+['d','Triplane fracture radiographic appearance','SH III on AP, SH II on lateral.'],
+['m','Tillaux/triplane displacement threshold for fixation','> 2 mm (CT).'],
+['m','Physeal bar resection criteria','< 50% of physis with ≥ 2 years growth remaining.'],
+['d','Growth arrest lines','Park-Harris lines — converging/absent lines signal arrest.'],
+['d','JIA subtype with uveitis risk','Oligoarticular, ANA-positive → slit-lamp screening.'],
+['d','JIA knee effect on growth','Overgrowth → LLD and valgus.'],
+['d','Pediatric proximal humerus: acceptable in 10–13 y','~40–45° angulation, ≥ 50% displacement.'],
+['d','Last physis to close','Medial clavicle (~25 y) — teen "SC dislocation" is a physeal fracture.'],
+['d','Extra-octave fracture','Small finger proximal phalanx SH II — reduce with pencil in web space.'],
+['d','Developmental coxa vara sign','Fairbank triangle (inferior neck fragment).'],
+['m','Coxa vara HEA threshold for osteotomy','> 60° → valgus osteotomy (correct to < 38°).'],
+['d','Femoral anteversion natural history','Resolves by 8–10 y; derotate only if > 50° after 10 with functional problems.'],
+['d','Rickets radiographic signs','Widened, cupped, frayed metaphyses; bowing.'],
 ]);
 
-// ======================= SPINE =======================
-_add('spine', [
-['diagnosis', `Cervical myelopathy: signs, natural history, and surgical approach selection`, `Upper motor neuron signs: hyperreflexia, clonus, Babinski, Hoffmann, inverted radial (brachioradialis) reflex, finger escape sign, grip-and-release <20 in 10 s, Lhermitte, broad-based/unsteady gait, hand clumsiness; bowel/bladder late. Nurick grade (gait), mJOA. Etiology: spondylosis (CSM), OPLL (Asian populations; CT), congenital stenosis (Torg-Pavlov <0.8).
-Natural history: stepwise deterioration; moderate/severe → surgery (decompression improves and halts progression; earlier is better — duration of symptoms predicts outcome).
-Approach: 1–2 (up to 3) levels of anterior pathology/kyphosis → ACDF (or corpectomy for retrovertebral compression/OPLL); multilevel (≥3) with preserved LORDOSIS → laminoplasty (motion-preserving, avoid in kyphosis >13°, axial neck pain, or OPLL >60% canal) or laminectomy + fusion; kyphosis with multilevel disease → combined anterior + posterior. C5 palsy after posterior decompression (~5–8%, usually recovers).`],
-['anatomy', `Cervical radiculopathy: root levels and the rule for which root a disc hits`, `C5: deltoid/biceps, biceps reflex, lateral arm numbness. C6: wrist extension/biceps, brachioradialis reflex, thumb/index. C7: triceps/wrist flexion/finger extension, triceps reflex, middle finger. C8: finger flexion/FDP, ulnar two fingers. T1: interossei (finger abduction/adduction), medial arm.
-In the cervical spine the root exits ABOVE the same-numbered pedicle (C1–C7; C8 exits between C7 and T1), so a C5–6 disc herniation compresses the C6 root, C6–7 (most common level) the C7 root.
-Spurling (extension, rotation, compression) is specific; shoulder abduction relief sign; 75–90% improve nonoperatively (NSAIDs, PT, traction, epidural steroid). Surgery for persistent radicular pain/deficit >6–12 weeks: ACDF, cervical disc arthroplasty (single/two-level soft disc, preserved motion, no significant facet arthrosis — lower adjacent-segment reoperation), or posterior foraminotomy (lateral soft disc/foraminal stenosis; no fusion).`],
-['anatomy', `Lumbar radiculopathy: root levels and which root a paracentral vs far-lateral disc hits`, `L4: tibialis anterior (dorsiflexion), quadriceps (with L3), patellar reflex, medial leg/foot. L5: EHL, gluteus medius (Trendelenburg), tibialis posterior/foot inversion, dorsum of foot/great toe web; no reliable reflex (medial hamstring). S1: gastroc-soleus (plantarflexion/toe walking), peroneals (eversion), Achilles reflex, lateral foot/sole.
-The lumbar root exits BELOW the same-numbered pedicle: a paracentral/posterolateral L4–5 disc herniation compresses the TRAVERSING L5 root; a far-lateral/foraminal L4–5 herniation compresses the EXITING L4 root. L4–5 and L5–S1 are the most common levels.
-90% improve within 6–12 weeks nonoperatively; epidural steroids for short-term relief. SPORT: surgery gave faster relief; as-treated analysis favored surgery through 8 years, intention-to-treat not significantly different. Indications for discectomy: cauda equina (emergent), progressive motor deficit, persistent pain >6 weeks with concordant imaging.`],
-['diagnosis', `Cauda equina syndrome`, `Compression of the lumbosacral roots (large central disc L4–5/L5–S1, tumor, hematoma, abscess, fracture). Features: bilateral sciatica, saddle anesthesia (most common finding), URINARY RETENTION with overflow incontinence (most consistent; check post-void residual — >100–200 mL), decreased rectal tone/fecal incontinence, sexual dysfunction, variable motor weakness. Incomplete (CESI — retention not yet) vs retention (CESR — worse prognosis).
-Emergent MRI and surgical decompression: outcomes best when decompressed within 24–48 h of onset (earliest possible); bladder recovery is least predictable. Wide laminectomy/discectomy rather than a limited approach.`],
-['diagnosis', `Lumbar spinal stenosis: neurogenic vs vascular claudication and the fusion question`, `Neurogenic claudication: leg pain/heaviness with standing and walking, relieved by SITTING or flexion (shopping-cart sign), better walking uphill/cycling; normal pulses; positional. Vascular: relieved by standing still, worse uphill, diminished pulses, skin changes.
-Central stenosis (ligamentum flavum hypertrophy, facet arthropathy, disc bulge; cross-section <100 mm² severe), lateral recess (traversing root, superior facet), foraminal (exiting root — Kambin triangle). Natural history is benign; nonop (PT, epidural steroids for short-term relief). Surgery (laminectomy/decompression) for persistent limitation — SPORT showed benefit through 4–8 years.
-Add fusion when there is instability: degenerative spondylolisthesis (L4–5 most common, women 4:1, sagittal facets) — SLIP trial favored fusion for reoperation/satisfaction, Swedish trial found no difference; fusion also for >50% facet resection, recurrent stenosis with instability, scoliosis with lateral listhesis. Decompression alone is reasonable for stable, low-grade slips without dynamic motion.`],
-['classification', `Spondylolysis and spondylolisthesis: Wiltse, Meyerding, and pediatric management`, `Wiltse: I dysplastic (congenital L5–S1 facet/sacral abnormality — high slip risk, neurologic risk), II isthmic (IIA pars stress fracture — most common in adolescents; IIB elongated pars; IIC acute fracture), III degenerative (L4–5, intact pars, older women), IV traumatic, V pathologic, VI iatrogenic.
-Meyerding: I <25%, II 25–50%, III 50–75%, IV 75–100%, V spondyloptosis. Slip angle >45–50° (kyphotic lumbosacral angle) predicts progression. Isthmic slips cause L5 radiculopathy (foraminal stenosis by fibrocartilage at the pars); degenerative L4–5 slips cause L5 (central/lateral recess) symptoms.
-Pediatric spondylolysis: extension-related back pain in gymnasts/linemen; oblique “Scotty dog collar”, CT (best for the defect), SPECT/MRI (activity); acute → brace/activity restriction 3–6 months (union possible in acute unilateral); chronic painful nonunion → pars repair (Buck screw) if the disc is normal; low-grade symptomatic slip → L5–S1 in situ posterolateral fusion; high-grade (>50%) → fusion even if asymptomatic, ± reduction (risk of L5 palsy with reduction), L4–S1 instrumented, consider interbody/fibular dowel.`],
-['diagnosis', `Ankylosing spondylitis and DISH: spine fracture rules and deformity`, `AS: HLA-B27, sacroiliitis (bilateral, symmetric), syndesmophytes → bamboo spine, uveitis, hip involvement (THA with HO prophylaxis), enthesitis, kyphosis; osteoporotic. Any trauma (even trivial) → highly unstable three-column fractures through the ankylosed segment (cervicothoracic most common) — CT of the ENTIRE spine (MRI for occult/epidural hematoma); immobilize in the patient’s habitual kyphotic position (flat boards cause fracture displacement/neurologic injury); long-segment posterior instrumentation (3 levels above/below). Chin-brow vertical angle guides deformity correction: pedicle subtraction osteotomy (L2–L3 gives ~30–35°); cervicothoracic extension osteotomy (C7–T1) for severe cervical kyphosis. Atlantoaxial subluxation also occurs.
-DISH (Forestier): flowing anterior ossification of ≥4 contiguous vertebrae, preserved disc height, no SI/facet ankylosis, no HLA-B27; older men, diabetics/obese; dysphagia from cervical osteophytes; same fracture-instability precautions; high heterotopic ossification after THA.`],
-['classification', `Thoracolumbar fractures: TLICS, burst fracture management, and Chance fractures`, `Denis three-column model (posterior column = PLC + facets/laminae).
-TLICS: morphology — compression 1, burst 2, translation/rotation 3, distraction 4; PLC — intact 0, indeterminate 2 (MRI edema), disrupted 3 (widened spinous processes/facets, dislocation); neurologic — intact 0, root 2, complete cord/conus 2, incomplete cord/cauda equina 3. Total ≤3 nonop, 4 either, ≥5 surgery.
-Stable burst fracture (neurologically intact, PLC intact): brace vs no brace equivalent (Bailey RCT); kyphosis >25–30°, canal compromise >50%, height loss >50% are traditional but not absolute indications. Neurologic deficit with canal compromise → decompression (posterior with ligamentotaxis/transpedicular, or anterior corpectomy) + stabilization.
-Chance (flexion-distraction, lap-belt): horizontal split through the posterior elements and body; PLC disrupted → bony (through bone) may be braced in hyperextension, ligamentous → posterior fusion; ~50% associated intra-abdominal (bowel/mesentery) injury — seat-belt sign. Fracture-dislocation → surgery.`],
-['classification', `Odontoid fractures: Anderson-D’Alonzo and fixation choices`, `Type I: tip avulsion (alar ligament) — stable; rule out occipitocervical dissociation. Type II: base of the dens at the junction with the body — nonunion risk high (displacement >5–6 mm, angulation >10°, age >50, posterior displacement, comminution, smoking). Type III: through the cancellous C2 body → collar/halo, union ~90%.
-Type II: young/nondisplaced → halo or collar; displaced/high-risk → surgery: anterior odontoid screw (preserves C1–2 rotation; requires fracture line perpendicular to the screw — anterosuperior-to-posteroinferior oblique OK, reverse oblique not; intact transverse ligament; no barrel chest/short neck; recent) or posterior C1–2 fusion (Harms C1 lateral mass–C2 pedicle/pars screws, or transarticular screws — check vertebral artery course). Elderly: halo carries high mortality/morbidity (pneumonia) — collar for nonoperative or posterior fusion; fibrous nonunion in a collar is often acceptable if stable.`],
-['classification', `Atlas (Jefferson) and Hangman’s (C2 traumatic spondylolisthesis) fractures`, `C1 burst: axial load; stability = transverse ligament. Open-mouth view: combined lateral mass overhang >6.9 mm (rule of Spence; ~8.1 mm with magnification) or ADI >3 mm adult (>5 mm child) or MRI ligament disruption = unstable. Transverse ligament intact → collar 8–12 weeks; ruptured mid-substance → C1–2 fusion (halo if bony avulsion of the ligament, which can heal).
-Hangman’s (bilateral C2 pars fractures, hyperextension + axial load) — Levine-Edwards: I <3 mm translation, no angulation → collar; II >3 mm translation, angulated (hyperextension then flexion) → reduction/halo (traction OK); IIA angulation without translation (flexion-distraction) — traction WORSENS it → halo in compression/extension; III with C2–3 facet dislocation → open reduction + posterior fusion. Vertebral artery injury workup with CTA for foramen transversarium involvement/facet dislocations.`],
-['management', `Cervical facet dislocations and subaxial injury (SLIC)`, `Unilateral facet dislocation: ~25% anterior translation, rotation, often root injury; bilateral: ≥50% translation, high cord injury. Flexion-distraction mechanism; check for disc herniation.
-Awake, alert, cooperative patient with a neurologic deficit → immediate closed reduction with Gardner-Wells traction (serial weights, neuro checks; up to ~70% body weight) BEFORE MRI (delaying reduction harms cord); obtunded/uncooperative or failed closed reduction → MRI first (disc herniation in up to 40% — anterior discectomy before reduction if present). After reduction: MRI, then stabilization — ACDF (if disc extruded or anterior column injury) or posterior lateral mass fixation (if facet fractures); combined for both.
-SLIC (subaxial injury classification): morphology (compression 1, burst 2, distraction 3, rotation/translation 4), discoligamentous complex (intact 0, indeterminate 1, disrupted 2), neurology (intact 0, root 1, complete 2, incomplete 3, +1 continuous compression): ≤3 nonop, ≥5 surgery. Vertebral artery injury screening (CTA) for facet dislocations and foraminal fractures.`],
-['diagnosis', `Spinal cord injury syndromes, ASIA grading, spinal vs neurogenic shock, and steroids`, `Central cord (most common): elderly with cervical spondylosis, hyperextension; upper > lower extremity weakness, distal > proximal, hand burning; good recovery of walking, poor hand function; surgery timing debated (early for persistent compression/instability).
-Brown-Séquard (hemisection): ipsilateral motor/proprioception loss, contralateral pain/temperature loss 1–2 levels below — BEST prognosis (~90% ambulate).
-Anterior cord: flexion/vascular (anterior spinal artery); motor and pain/temperature lost, proprioception/vibration preserved — WORST prognosis. Posterior cord rare.
-ASIA: A complete (no sacral sparing — no S4–5 sensation/anal contraction); B sensory incomplete; C motor incomplete, most key muscles <3; D ≥3; E normal. Cannot classify as complete until spinal shock resolves (return of the bulbocavernosus reflex, usually 24–72 h).
-Neurogenic shock: hypotension + bradycardia (loss of sympathetic tone, injuries above T6) → fluids, vasopressors; maintain MAP ≥85 mmHg for 5–7 days. Methylprednisolone: no longer recommended (AANS/CNS; harms outweigh benefit). Early decompression (<24 h) associated with better recovery (STASCIS). Autonomic dysreflexia in chronic injuries above T6 (bladder distension → hypertension, headache).`],
-['diagnosis', `Adult spinal deformity parameters and osteotomies`, `Sagittal balance: SVA (C7 plumb line to posterior-superior S1 corner) >5 cm, pelvic incidence–lumbar lordosis mismatch (PI–LL) >10°, pelvic tilt >20–25° correlate with disability (SRS-Schwab). PI = PT + SS (fixed anatomic constant). Compensation: pelvic retroversion (↑PT), knee flexion, thoracic hypokyphosis.
-Osteotomies: Smith-Petersen/Ponte (posterior column, ~10° per level, needs mobile disc); pedicle subtraction osteotomy (three-column, closing wedge through the pedicles/body, ~30–35°, higher blood loss, for fixed sagittal imbalance/AS); vertebral column resection (>45°, rigid coronal/sagittal, highest neurologic risk).
-Complications: proximal junctional kyphosis (PJK; avoid ending at the apex, over-correction, osteoporosis), pseudarthrosis (thoracolumbar junction, L5–S1 — add interbody/iliac fixation), rod fracture, high medical complication rates (age, frailty). Degenerative scoliosis: decompress ± fusion depending on instability/curve; long fusions to the sacrum need iliac/S2AI screws.`],
-['diagnosis', `Vertebral osteomyelitis/discitis, epidural abscess, and tuberculosis of the spine`, `Pyogenic: hematogenous, S. aureus most; IV drug use, diabetes, immunosuppression, prior procedure; back pain with night pain, fever only ~50%; ESR/CRP elevated (CRP for monitoring), blood cultures; MRI with contrast (disc and both adjacent endplates — disc involvement is the hallmark; T1 low, T2 high, enhancement); CT-guided biopsy BEFORE antibiotics when the patient is stable and cultures negative. Treat 6 weeks IV (oral alternatives; OVIVA) ± brace; surgery for neurologic deficit, abscess failing antibiotics, instability/deformity, failed medical therapy, or diagnosis.
-Epidural abscess: back pain → radiculopathy → weakness → paralysis; MRI; urgent surgical decompression for deficit (outcome depends on pre-op status); medical management only in select patients without deficit.
-Tuberculous (Pott) spondylitis: anterior body destruction with relative DISC PRESERVATION, skips levels via the anterior longitudinal ligament, large calcified paraspinal (psoas) abscesses, gibbus/kyphosis, thoracolumbar; anti-TB therapy 9–18 months; surgery for deficit/instability/deformity (anterior debridement + strut, posterior instrumentation). Brucella (unpasteurized dairy) mimics.`],
-['diagnosis', `Rheumatoid cervical spine: measurements and surgical thresholds`, `Atlantoaxial instability (most common, 50–80%): ADI >3.5 mm on flexion views; PADI (posterior atlantodental interval / space available for the cord) <14 mm predicts neurologic injury → surgery (C1–2 fusion); PADI >14 mm with no myelopathy → observe.
-Basilar invagination/cranial settling (odontoid migrates into the foramen magnum): McGregor line (dens tip >4.5 mm above), Ranawat (<13 mm), Chamberlain, Redlund-Johnell — MRI/CT; cervicomedullary angle <135° → occipitocervical fusion (± transoral odontoidectomy if irreducible).
-Subaxial subluxation: >3.5 mm or >20% (staircase) → posterior fusion. Preoperative lateral flexion-extension radiographs before ANY surgery/intubation (fiberoptic). Rheumatoid pannus behind the dens regresses after fusion. Modern DMARDs have reduced incidence.`],
-['anatomy', `Anterior cervical and lumbar approaches: structures at risk`, `ACDF (Smith-Robinson): between sternocleidomastoid/carotid sheath (lateral) and trachea/esophagus (medial). Left side: recurrent laryngeal nerve has a more consistent course (in the tracheoesophageal groove) but risks the thoracic duct (low levels); right side: more variable RLN (non-recurrent). Structures: RLN (hoarseness), superior laryngeal nerve (C3–4; loss of high-pitched phonation/ aspiration), sympathetic chain on longus colli (Horner — retract under the muscle), esophagus (delayed perforation), vertebral artery (in the foramen transversarium C6→C2; uncovertebral resection >~1.5 cm lateral), dysphagia (most common). C5 palsy (anterior and posterior).
-Anterior lumbar (ALIF): L5–S1 — superior hypogastric (sympathetic) plexus → retrograde ejaculation (blunt dissection, retroperitoneal, avoid electrocautery; rhBMP-2 increased incidence); L4–5 — left common iliac vein/artery, iliolumbar vein (ligate); ureter. Lateral transpsoas (XLIF/LLIF) L4–5 and above: lumbar plexus/femoral nerve (posterior third of the disc — neuromonitoring), genitofemoral nerve (anterior psoas; groin numbness), psoas weakness/thigh numbness common (transient); not for L5–S1 (iliac crest).`],
-['anatomy', `Pedicle screws and posterior instrumentation: anatomy and safety numbers`, `Pedicle dimensions: smallest transverse width at T4–T6 (~4–5 mm) and the thoracic pedicles are most medially angled at T1; largest at L5 (>10 mm); L5 pedicle angle ~30° medial. The lumbar nerve root of the same number passes just INFEROMEDIAL to the pedicle → a medial or inferior breach injures the same-numbered (exiting) root at that level; caudal breach at L4 hits the L4 root. Pullout strength ∝ screw diameter and bone density; longer screws help less; triangulation of bilateral screws increases pullout.
-Triggered EMG: threshold <6–8 mA suggests a medial breach (in lumbar); cortical breach limits. Thoracic (freehand): entry at the junction of the transverse process and superior facet; ‘in-out-in’ acceptable laterally; medial breach <2 mm usually tolerated, >4 mm dangerous.
-Cervical lateral mass screws (Magerl/An): start medial to center, aim superolateral to avoid the vertebral artery (anterior) and nerve root (inferior); C2 pars/pedicle screws and C1–2 transarticular screws need CT for a high-riding vertebral artery. Sacral: S1 bicortical anteromedial; S2AI/iliac screws for long constructs.`],
-['management', `Spinal fusion biology and pseudarthrosis`, `Iliac crest autograft is the gold standard (donor site pain); local bone, allograft (osteoconductive), DBM, ceramics, rhBMP-2 (FDA: ALIF with LT-cage; off-label posterolateral; complications: cervical swelling/airway, ectopic bone, radiculitis, osteolysis, retrograde ejaculation with ALIF). Interbody cages improve fusion rates (compression, larger surface). Rigid instrumentation improves fusion rates.
-Risk factors for pseudarthrosis: smoking (nicotine — quit 4–6 weeks), NSAIDs/ketorolac >2 weeks post-op, steroids, diabetes, malnutrition, multilevel, prior pseudarthrosis, osteoporosis, motion (thoracolumbar junction, L5–S1 without interbody), infection. Diagnosis: persistent pain + CT (bridging bone absent, lucency around screws, cyst), flexion-extension motion >3–5°; nuclear scans less useful.
-ACDF pseudarthrosis: single level 5–10%, higher with multilevel/allograft/no plate; revise posteriorly (higher fusion rate) or repeat anteriorly. Adjacent-segment disease ~3%/year (ACDF), 2–3%/year lumbar.`],
-['management', `Osteoporotic vertebral compression fractures`, `Most common osteoporotic fracture; thoracolumbar junction; many asymptomatic. Rule out pathologic (myeloma/mets — posterior element involvement, soft-tissue mass, age/labs) and burst/PLC injury (CT if retropulsion). Treat: analgesia, early mobilization, bracing (TLSO — no proven benefit in RCTs but often used for comfort), calcitonin short-term for pain, osteoporosis workup and treatment (bisphosphonate/denosumab; teriparatide/romosozumab for severe), fall prevention. Predicts future fractures (5×).
-Vertebroplasty/kyphoplasty: sham-controlled RCTs (INVEST, Buchbinder) showed no benefit for vertebroplasty; VERTOS IV also negative; AAOS recommends against vertebroplasty, kyphoplasty is a limited-evidence option for acute painful fractures (<6 weeks) refractory to medical management. Complications: cement leakage/embolism, adjacent fractures. Progressive kyphosis/neurologic deficit (Kümmell) → decompression/instrumented fusion with cement-augmented screws.`],
-['diagnosis', `Cervical spine in athletes: stingers, transient quadriparesis, and return-to-play`, `Stinger/burner: unilateral arm burning/weakness (C5–6 upper trunk; traction or foraminal compression); resolves in minutes; return to play when asymptomatic with full strength/ROM; recurrent → MRI (foraminal stenosis/disc), consider season-ending. BILATERAL symptoms or leg involvement = cord — not a stinger.
-Transient quadriparesis (cervical cord neuropraxia): bilateral symptoms after axial load/hyperextension, resolving in minutes to hours; associated with congenital stenosis (Torg-Pavlov ratio <0.8, functional stenosis with loss of CSF signal on MRI). Return to play controversial: absolute contraindications include cord injury with residual signal change, functional stenosis, C1–2 instability/fusion, Klippel-Feil involving C2 or multiple levels, os odontoideum, prior multilevel fusion (>2 levels), spear tackler’s spine.
-On-field: helmet and shoulder pads stay on (remove together); transport immobilized. Single-level ACDF with healed fusion → return to contact sports generally allowed.`],
-['anatomy', `Intervertebral disc biology and the biomechanics of loading`, `Annulus fibrosus: type I collagen lamellae in alternating oblique orientations, resists tension/torsion. Nucleus pulposus: type II collagen + aggrecan (high water), notochordal origin, resists compression by hydrostatic pressure; largest avascular structure — nutrition by diffusion through the endplates (smoking/diabetes impair). Aging: loss of proteoglycan/water, fissures, endplate sclerosis, loss of height.
-Nachemson intradiscal pressure: lowest lying supine; standing < sitting < sitting flexed with weight (highest); lifting with flexed spine multiplies load. Facets carry ~20% of axial load (more in extension/ degenerated discs). Disc herniation types: protrusion (base wider than dome), extrusion, sequestration (free fragment — resorbs, best natural history); posterolateral most common (PLL thinnest laterally). Modic changes: type 1 edema/inflammation (associated with pain), 2 fatty, 3 sclerotic.`],
-['management', `Thoracic disc herniation and dural tears`, `Thoracic disc herniation: T8–T12 most (T11–12 most common), often calcified/central; myelopathy, band-like pain; many asymptomatic (incidental on MRI — treat only symptomatic/myelopathic). Never a simple posterior laminectomy (retracting the thoracic cord → paraplegia); use posterolateral (transpedicular/costotransversectomy) for lateral soft discs, or anterior transthoracic/thoracoscopic or lateral extracavitary for central calcified discs.
-Dural tear: most common complication of lumbar spine surgery (~5–10%, higher in revision/stenosis surgery); primary watertight repair (6-0 suture) with fibrin sealant/patch; bed rest 24–48 h (flat) if repaired, longer if not; persistent leak → subarachnoid drain, re-exploration; pseudomeningocele; postural headache; increased infection risk. Unrepaired tears increase risk of nerve root herniation and pseudomeningocele.`],
-['diagnosis', `Sacral fractures and sacral insufficiency`, `Denis zones: I lateral to the foramina (alar) — ~6% neurologic (L5 root over the ala); II transforaminal — ~28% (L5–S1 roots, sciatica); III medial to the foramina/central canal — ~57% (bowel/bladder/sexual dysfunction). Transverse fractures (U/H-shaped “spinopelvic dissociation” — jumpers) → cauda equina symptoms; CT sagittal reconstructions; lumbopelvic (triangular) fixation.
-Fixation: iliosacral screws into S1 (± S2) — safe corridor on lateral (iliac cortical density), inlet (anterior/posterior) and outlet (S1 foramen/superior) views; sacral dysmorphism (elevated upper sacrum, mammillary processes, residual disc S1–2) narrows the corridor; L5 root anterior to the ala at risk with anterior screw exit. Vertical shear posterior injury → screws + anterior fixation.
-Sacral insufficiency fracture: elderly/osteoporotic/post-radiation; “Honda sign” on bone scan/MRI; treat with protected weight-bearing, osteoporosis management; sacroplasty option.`],
-['diagnosis', `Thoracic outlet syndrome and cervical rib`, `Neurogenic (>90%; lower trunk/C8–T1): hand intrinsic weakness/atrophy (Gilliatt-Sumner hand — abductor pollicis brevis), medial forearm numbness; causes: cervical rib/anomalous first rib, fibrous bands, scalene hypertrophy (elevated arm stress test — Roos; Adson less reliable). Venous (Paget-Schroetter: effort thrombosis in athletes — anticoagulate/thrombolysis, first rib resection); arterial (subclavian aneurysm/emboli from cervical rib — most dangerous).
-Workup: cervical rib on radiograph, EMG (medial antebrachial cutaneous SNAP reduced), MRI/CTA/venography. Treat nonop (posture, scalene stretching, botulinum) first; supraclavicular scalenectomy/first rib resection for refractory or vascular TOS. Differential: cubital tunnel, C8 radiculopathy, Pancoast tumor (apical lung mass with Horner).`],
-['diagnosis', `Pediatric back pain red flags and the spinal conditions to know in kids`, `Red flags: age <4, constant/night pain, fever, neurologic signs, abnormal abdominal reflexes, duration >4 weeks, systemic symptoms → radiographs (± bone scan/MRI). Common causes: spondylolysis (extension pain in athletes), Scheuermann, discitis (toddlers refuse to walk/sit; L4–5; MRI; antibiotics), osteoid osteoma/osteoblastoma (painful scoliosis — night pain, NSAID relief), LCH (vertebra plana), tumors (leukemia — check CBC), disc herniation with apophyseal ring fracture (teens), tethered cord.
-Discitis in children: S. aureus/Kingella; often no fever, elevated ESR; MRI; IV then oral antibiotics; biopsy only if atypical/no response. Pediatric disc herniation: often with apophyseal (limbus) fracture; bracing/PT; microdiscectomy for failure (better results than adults).`],
-['management', `Spinal metastasis decision-making: SINS, Tokuhashi, and MESCC`, `Metastatic epidural spinal cord compression (MESCC): back pain → radiculopathy → myelopathy; MRI of the whole spine; high-dose dexamethasone. Patchell RCT: direct surgical decompression + radiation beat radiation alone for ambulation (84% vs 57%) in patients with a single level, >3 months life expectancy, and radioresistant tumors. Radiosensitive tumors (lymphoma, myeloma, seminoma, small cell) → radiation first.
-SINS (spinal instability neoplastic score: location, pain, lesion type, alignment, collapse, posterolateral involvement): 0–6 stable, 7–12 indeterminate, 13–18 unstable → surgical consultation.
-Prognosis: Tokuhashi/Tomita scores (performance status, extraspinal mets, primary type, neurology) guide extent of surgery; separation surgery (circumferential decompression + instrumentation) then stereotactic radiosurgery is the modern model; cement augmentation for painful pathologic compression fractures without cord compression.`]
+// ======================= SHOULDER & ELBOW =======================
+_add('se', [
+['a','Supraspinatus and infraspinatus innervation','Suprascapular nerve.'],
+['a','Teres minor innervation','Axillary nerve.'],
+['a','Subscapularis innervation','Upper and lower subscapular nerves.'],
+['d','Jobe (empty can) test isolates…','Supraspinatus.'],
+['d','Hornblower sign / ER lag isolates…','Infraspinatus / teres minor.'],
+['d','Subscapularis tests','Lift-off, belly-press, bear-hug; increased passive ER.'],
+['d','Goutallier grade predicting poor cuff healing','≥ 3 (> 50% fat).'],
+['d','Tangent sign','Supraspinatus atrophy below the scapular spine line.'],
+['m','Partial cuff tear > 50% thickness','Complete and repair.'],
+['m','Partial cuff tear < 50% thickness','Debride ± acromioplasty.'],
+['m','Irreparable posterosuperior tear, young laborer, no arthritis','Lower trapezius or latissimus transfer / SCR.'],
+['m','Irreparable subscapularis tear','Pectoralis major transfer.'],
+['m','Cuff tear arthropathy with pseudoparalysis','Reverse TSA.'],
+['c','Bigliani type III acromion','Hooked — associated with cuff tears.'],
+['d','Critical shoulder angle associations','> 35° cuff tears; < 30° OA.'],
+['d','Neer vs Hawkins test','Neer: forward flexion. Hawkins: flexion + IR.'],
+['d','CSAW trial','Acromioplasty alone adds little over placebo/rehab.'],
+['d','Os acromiale most common type and age of fusion','Meso-acromion; fuses by ~25 y.'],
+['m','Painful large os acromiale','ORIF + graft (not excision).'],
+['a','Primary restraint at 90° abduction + ER','Anterior band of the IGHL.'],
+['a','Primary restraint at 45° abduction','MGHL.'],
+['a','Restraint to inferior translation in adduction','SGHL / coracohumeral ligament.'],
+['d','Bankart lesion','Anteroinferior labral detachment (~90% of traumatic dislocations).'],
+['d','Hill-Sachs lesion location','Posterolateral humeral head.'],
+['d','HAGL lesion treatment','Open repair (humeral avulsion of glenohumeral ligament).'],
+['d','ALPSA lesion','Medialized, healed labrum.'],
+['d','Recurrence after first dislocation, age < 20','80–90%.'],
+['d','Injury to suspect after first dislocation > 40 y','Rotator cuff tear (up to 40%); axillary nerve.'],
+['d','ISIS score risk factors','Age < 20, competitive/contact sport, hyperlaxity, Hill-Sachs on AP, glenoid bone loss.'],
+['d','Glenoid bone loss threshold for Latarjet','> 20–25% (or off-track Hill-Sachs).'],
+['d','Off-track Hill-Sachs','Hill-Sachs interval > glenoid track → engages.'],
+['m','Off-track lesion with < 20% glenoid loss','Bankart repair + remplissage.'],
+['d','Latarjet triple effect','Bone block, conjoint tendon sling, capsular repair with CA ligament.'],
+['d','Latarjet nerve complications','Musculocutaneous and axillary.'],
+['d','Kim lesion','Posterior labral lesion (posterior instability).'],
+['d','Light-bulb sign','Locked posterior dislocation on AP — get an axillary view.'],
+['m','Reverse Hill-Sachs 20–40%','McLaughlin (subscapularis) or modified (lesser tuberosity) transfer.'],
+['m','Reverse Hill-Sachs > 40–50%','Arthroplasty.'],
+['d','MDI exam sign','Sulcus sign.'],
+['m','MDI treatment','≥ 6 months rehab; then plication/inferior capsular shift; never thermal capsulorrhaphy.'],
+['c','SLAP type I','Fraying, anchor intact.'],
+['c','SLAP type II','Detached biceps anchor — most common.'],
+['c','SLAP type III','Bucket-handle labrum, anchor intact.'],
+['c','SLAP type IV','Bucket-handle extending into the biceps.'],
+['d','O\'Brien test','Active compression — SLAP.'],
+['d','GIRD definition','IR loss > 20–25° or total arc deficit vs contralateral.'],
+['d','Peel-back mechanism','Biceps anchor peels in late cocking (throwers).'],
+['m','SLAP in patient > 35–40 or laborer','Biceps tenodesis rather than repair.'],
+['m','First treatment for GIRD','Sleeper/cross-body stretches.'],
+['d','Bennett lesion','Posteroinferior glenoid ossification in throwers.'],
+['a','Long head of biceps origin','Supraglenoid tubercle / superior labrum.'],
+['d','Distal biceps rupture exam','Hook test; reverse Popeye.'],
+['d','Loss with nonoperative distal biceps rupture','~30–40% supination strength, ~30% flexion endurance.'],
+['d','Single-incision distal biceps repair complications','LABCN neuropraxia (most common), PIN.'],
+['d','Two-incision distal biceps repair complication','Heterotopic ossification / radioulnar synostosis.'],
+['d','Adhesive capsulitis associations','Diabetes, thyroid disease.'],
+['d','Adhesive capsulitis hallmark','Global loss of active AND passive motion with normal radiographs.'],
+['d','Structure contracted in loss of ER in adduction','Coracohumeral ligament / rotator interval.'],
+['m','Adhesive capsulitis: best early treatment','Intra-articular corticosteroid injection + therapy.'],
+['m','Refractory adhesive capsulitis','MUA and/or arthroscopic capsular release.'],
+['a','Conoid ligament','Posteromedial; primary restraint to superior clavicle displacement.'],
+['a','Trapezoid ligament','Anterolateral; resists AC compression.'],
+['a','AC ligaments resist…','Anteroposterior translation.'],
+['c','Rockwood II','AC torn, CC intact (< 25% elevation).'],
+['c','Rockwood III','AC + CC torn, 25–100% displacement — mostly nonop.'],
+['c','Rockwood IV','Clavicle posterior into trapezius (axillary view) → surgery.'],
+['c','Rockwood V','> 100% (CC distance > 300%) → surgery.'],
+['c','Rockwood VI','Inferior (subcoracoid) → surgery.'],
+['m','Distal clavicle excision limit','≤ 8–10 mm (> 1 cm → instability).'],
+['d','Medial scapular winging nerve','Long thoracic (serratus anterior); worse with wall push-up.'],
+['d','Lateral scapular winging nerve','Spinal accessory (trapezius).'],
+['m','Chronic serratus palsy transfer','Pectoralis major (sternal head) with fascia lata.'],
+['m','Chronic trapezius palsy procedure','Eden-Lange (levator scapulae + rhomboids).'],
+['d','Suprascapular notch compression deficit','Supraspinatus AND infraspinatus.'],
+['d','Spinoglenoid notch compression deficit','Infraspinatus only (paralabral cyst).'],
+['d','Quadrilateral space contents','Axillary nerve + posterior humeral circumflex artery.'],
+['d','Quadrilateral space syndrome finding','Teres minor atrophy.'],
+['a','Axillary nerve distance below the lateral acromion','~5–7 cm.'],
+['c','Walch B2 glenoid','Posterior subluxation with biconcave posterior wear.'],
+['c','Walch C glenoid','Dysplastic retroversion > 25°.'],
+['m','Glenoid retroversion > 25–30° or subluxation > 70%','Reverse TSA.'],
+['d','Anatomic TSA requirement','Intact, functional rotator cuff.'],
+['d','Most common long-term failure of anatomic TSA','Glenoid loosening (rocking-horse).'],
+['d','Eccentric reaming limit for retroversion','~10–15°.'],
+['d','Reverse TSA indications','Cuff arthropathy, irreparable tear with pseudoparalysis, elderly 3–4-part fracture, failed arthroplasty.'],
+['d','Reverse TSA prerequisite','Functioning deltoid (axillary nerve).'],
+['d','Grammont biomechanics','Medialized, distalized center of rotation → longer deltoid moment arm.'],
+['d','Scapular notching prevention','Inferior baseplate placement, inferior tilt, lateralization.'],
+['d','Most common early rTSA complication needing reoperation','Instability.'],
+['m','Horn-blower sign at rTSA','Add latissimus ± teres major transfer.'],
+['d','Shoulder PJI organism and culture time','Cutibacterium acnes; hold cultures 14 days.'],
+['c','Hamada grade 1 vs 2','AHI > 6 mm vs ≤ 5 mm.'],
+['c','Hamada grade 5','Humeral head collapse.'],
+['d','Milwaukee shoulder','Hydroxyapatite crystal destructive arthropathy, elderly women, bloody effusion.'],
+['d','Functional elbow arc','30–130° flexion; 50°/50° pronation-supination.'],
+['m','Ulnar nerve at elbow contracture release','Decompress/transpose when preop flexion < 100° or ulnar symptoms.'],
+['d','Best indication for total elbow arthroplasty','Rheumatoid arthritis.'],
+['d','TEA lifting restriction','~5 lb repetitive / 10 lb single.'],
+['d','TEA complications','Infection, loosening, triceps insufficiency, ulnar neuropathy.'],
+['a','Primary restraint to posterolateral rotatory instability','LUCL.'],
+['d','PLRI tests','Lateral pivot-shift, chair push-up, tabletop relocation.'],
+['d','Horii circle order','LUCL → anterior/posterior capsule → MCL (posterior band last).'],
+['m','Simple elbow dislocation','Reduce, splint ≤ 1 week, early motion in a hinged brace.'],
+['a','Primary valgus restraint 30–120°','Anterior bundle (anterior band) of the MCL.'],
+['d','Secondary valgus stabilizer','Radial head — never excise with an MCL injury.'],
+['d','MCL tests in throwers','Moving valgus stress, milking maneuver.'],
+['d','Valgus extension overload','Posteromedial olecranon osteophytes; remove ≤ 3 mm.'],
+['d','Lateral epicondylitis pathology','Angiofibroblastic hyperplasia of ECRB (tendinosis).'],
+['d','Steroid injection for lateral epicondylitis: outcome','Short-term relief; worse at 1 year.'],
+['a','Landmark to protect the LUCL in ECRB release','Stay anterior to the equator of the capitellum.'],
+['d','Radial tunnel syndrome','PIN compression with PAIN only; tender 3–4 cm distal to epicondyle; EMG normal.'],
+['d','PIN syndrome','Motor loss, no sensory loss; wrist extends with radial deviation.'],
+['a','Most common PIN compression site','Arcade of Frohse.'],
+['a','PIN compression sites, proximal → distal','Fibrous bands, leash of Henry, ECRB edge, arcade of Frohse, distal supinator.'],
+['d','AIN syndrome sign','Cannot make an "OK" sign; no sensory loss.'],
+['a','AIN compression sites','Deep head of pronator teres, FDS arch, Gantzer muscle.'],
+['d','Pronator syndrome distinguishing feature','Palmar cutaneous numbness; no night symptoms.'],
+['d','Parsonage-Turner','Acute severe shoulder pain then patchy weakness; observe, EMG.'],
+['a','Deltopectoral interval and marker','Deltoid (axillary) / pec major; cephalic vein.'],
+['a','Musculocutaneous nerve entry','5–8 cm distal to the coracoid into the conjoint tendon.'],
+['a','"Three sisters"','Anterior humeral circumflex artery + two venae comitantes at the inferior subscapularis.'],
+['a','Posterior shoulder approach interval','Infraspinatus (suprascapular) / teres minor (axillary).'],
+['a','Deltoid split limit','5 cm below the acromion (axillary nerve).'],
+['d','Most painful phase of calcific tendinitis','Resorptive phase.'],
+['m','Calcific tendinitis treatments','NSAIDs, injection, ultrasound-guided barbotage, ESWT; surgery after 6 months.'],
+['d','Pectoralis major rupture mechanism and finding','Bench press; loss of anterior axillary fold; repair acutely.'],
+['d','COTS clavicle trial','Plating cut nonunion (15% → 2–3%) and improved early function.'],
+['m','Clavicle operative indications','Open, skin tenting, neurovascular injury, floating shoulder; consider > 2 cm shortening.'],
+['c','Neer type II distal clavicle','Fracture medial to CC ligaments — unstable, high nonunion → fixation.'],
+['c','Neer type IIB distal clavicle','Conoid torn, trapezoid attached.'],
+['d','Posterior SC dislocation workup','CT; reduce with thoracic surgery available.'],
+['d','Neer "part" definition','Displaced > 1 cm or angulated > 45°.'],
+['d','Greater tuberosity displacement for fixation','> 5 mm (3 mm in overhead athletes).'],
+['a','Main blood supply to the humeral head','Posterior humeral circumflex artery (posteromedial).'],
+['d','Hertel predictors of head ischemia','Medial hinge displacement > 2 mm, calcar length < 8 mm, anatomic neck.'],
+['d','Most common proximal humerus locking-plate complication','Screw penetration/cut-out (varus settling).'],
+['m','Proximal humerus medial support technique','Inferomedial calcar screws / fibular strut.'],
+['m','Elderly displaced 3–4-part fracture','Reverse TSA (or nonop — PROFHER).'],
+['d','PROFHER trial','No benefit of surgery for displaced proximal humerus fractures in older patients.'],
+['c','Mayo olecranon type I','Nondisplaced.'],
+['c','Mayo olecranon type II','Displaced, stable joint (A simple, B comminuted).'],
+['c','Mayo olecranon type III','Unstable ulnohumeral joint.'],
+['m','Simple transverse olecranon fracture','Tension-band wiring.'],
+['d','Most common olecranon fixation complication','Prominent hardware.'],
+['m','Elderly comminuted olecranon (< 50% joint)','Fragment excision + triceps advancement.'],
+['c','Regan-Morrey coronoid types','I tip; II < 50%; III > 50%.'],
+['d','Anteromedial facet coronoid fracture pattern','Varus posteromedial rotatory instability (LUCL tear) → buttress plate.'],
+['c','Mason I','Nondisplaced (< 2 mm) → early motion.'],
+['c','Mason II','Displaced > 2 mm or > 30% → ORIF if mechanical block.'],
+['c','Mason III','Comminuted whole head → replacement (with associated injuries).'],
+['a','Radial head hardware safe zone','90° arc between radial styloid and Lister tubercle (forearm neutral).'],
+['a','Kocher approach nerve protection','Pronate to move the PIN away.'],
+['d','Essex-Lopresti injury','Radial head fracture + interosseous membrane + DRUJ — never excise the head.'],
+['d','Overstuffed radial head arthroplasty sign','Widened lateral ulnohumeral gap.'],
+['d','Terrible triad components','Dislocation + radial head fracture + coronoid fracture.'],
+['m','Terrible triad fixation order','Coronoid/capsule → radial head → LUCL → ± MCL/hinged ex-fix.'],
+['d','Elbow stiffness: most common complication of…','Distal humerus and terrible triad injuries.'],
+['c','Bado I Monteggia','Anterior radial head dislocation — most common in children.'],
+['c','Bado II Monteggia','Posterior — most common in adults; associated radial head fracture/LUCL.'],
+['c','Bado III Monteggia','Lateral (children).'],
+['c','Bado IV Monteggia','Both-bone fracture + anterior dislocation.'],
+['m','Adult Monteggia treatment','Anatomic ulnar ORIF — radial head reduces; if not, malreduction or interposed annular ligament.'],
+['d','Galeazzi fracture','Distal-third radius + DRUJ disruption ("fracture of necessity").'],
+['m','Unstable DRUJ after Galeazzi fixation','Splint in supination; pin if grossly unstable.'],
+['d','Irreducible DRUJ block','ECU tendon.'],
 ]);
+
 // ======================= SPORTS MEDICINE =======================
 _add('sports', [
-['anatomy', `ACL: anatomy, exam, graft choice, and tunnel-position errors`, `Bundles: anteromedial (tight in flexion, anterior translation) and posterolateral (tight in extension, rotational stability); origin posteromedial aspect of the lateral femoral condyle → tibia between the spines, anterior to the PCL. Middle geniculate artery.
-Lachman most sensitive; pivot shift most specific (rotatory instability); KT-1000. Segond fracture (avulsion of the anterolateral capsule/ALL from the lateral tibial plateau) is pathognomonic. Female risk: valgus landing, quadriceps dominance, narrow notch, hormonal, less hip/core strength — prevention programs work.
-Graft: BTB autograft — bone-to-bone healing, anterior knee/kneeling pain, patellar fracture; hamstring — less donor morbidity, slower incorporation, slight flexion weakness; quadriceps tendon rising; ALLOGRAFT in patients <25 → 3–4× failure (MOON) → use autograft in the young. Posterior tibial slope >12° and high-grade pivot → consider lateral extra-articular tenodesis (STABILITY trial reduced failure in high-risk <25 y).
-Tunnel errors: femoral tunnel too ANTERIOR (most common) → graft tight in flexion → loss of flexion/ stretch-out; too posterior → tight in extension; tibial tunnel too anterior → roof impingement → loss of extension, cyclops lesion; vertical (transtibial 12 o’clock) femoral tunnel → persistent pivot shift despite negative Lachman → anteromedial portal/outside-in drilling for anatomic 10/2 o’clock position.`],
-['diagnosis', `PCL injuries: exam grading and when to reconstruct`, `PCL is the strongest knee ligament; origin anterolateral aspect of the medial femoral condyle (broad) → tibial sulcus 1–1.5 cm below the joint line posteriorly; anterolateral bundle (larger, tight in flexion) and posteromedial (tight in extension); meniscofemoral ligaments (Humphrey anterior, Wrisberg posterior).
-Mechanism: dashboard (pretibial blow with flexed knee), hyperflexion (fall on the plantarflexed foot), hyperextension. Posterior drawer at 90°: grade I 1–5 mm, II 6–10 mm (tibia flush with femoral condyles), III >10 mm (tibia behind condyles — suspect PLC/combined injury). Posterior sag, quadriceps active test, reverse pivot shift; dial test at 30° and 90°.
-Isolated grade I–II → nonoperative (quadriceps rehab, extension brace with posterior support); good results. Grade III, combined (PLC, ACL, MCL), bony avulsions (fix acutely), chronic symptomatic → reconstruct (transtibial with the “killer turn” at the tibial tunnel vs tibial inlay — popliteal artery ~1 cm behind; double-bundle for combined). Chronic PCL deficiency → medial compartment and patellofemoral arthritis (increased contact pressures).`],
-['diagnosis', `Posterolateral corner injuries`, `Components: LCL (varus at 30°), popliteus tendon, popliteofibular ligament (± arcuate, fabellofibular). Mechanism: varus/hyperextension blow to the anteromedial knee; common peroneal nerve injury 15–30% (foot drop). Arcuate sign = avulsion of the fibular styloid.
-Exam: varus laxity at 30° (isolated LCL) and at 0° (combined with cruciates); dial test — >10–15° increased ER at 30° only = isolated PLC, at 30° AND 90° = PLC + PCL; external rotation recurvatum test; posterolateral drawer; reverse pivot shift; varus thrust in gait.
-Grade III PLC must be repaired/reconstructed (within 2–3 weeks if repair; reconstruction — anatomic LaPrade with two grafts, or Larson fibular sling — is more reliable), otherwise ACL/PCL grafts fail from unaddressed varus/ER laxity. Chronic PLC with varus alignment → high tibial osteotomy FIRST (or combined), then reconstruct if still unstable.`],
-['diagnosis', `MCL injuries and the medial-side structures`, `Layers of the medial knee (Warren & Marshall): I sartorius fascia; II superficial MCL (primary valgus restraint at 30°, femoral origin proximal-posterior to the medial epicondyle, tibial insertion 6 cm below the joint line deep to the pes); III deep MCL (meniscofemoral/meniscotibial) and capsule, posterior oblique ligament (POL — valgus restraint in extension/posteromedial rotation). Pes anserinus: sartorius, gracilis, semitendinosus (“Say Grace before Tea”); saphenous nerve at risk.
-Grades: I (1–5 mm opening, firm end), II (6–10 mm), III (>10 mm, no endpoint at 30°; check at 0° for combined injuries). Almost all heal nonoperatively (hinged brace, early ROM, weight-bearing), including grade III.
-Surgery: tibial-sided avulsion with the stump displaced superficial to the pes (Stener-like — will not heal), intra-articular entrapment, chronic valgus instability (reconstruction with anatomic sMCL + POL), multiligament injuries. Pellegrini-Stieda: calcification at the femoral origin after chronic injury.`],
-['diagnosis', `Meniscus: vascularity, tear patterns, repair indications, and root tears`, `Blood supply from the perimeniscal capillary plexus: peripheral 10–30% (red-red zone) heals; red-white intermediate; white-white avascular. Circumferential type I collagen resists hoop stress; radial tears and root tears abolish hoop function (equivalent to total meniscectomy). Medial: C-shaped, less mobile, posterior horn tears with chronic ACL deficiency; lateral: more mobile, more coverage, acute tears with ACL injury; lateral meniscectomy causes faster OA.
-Repair indications: vertical longitudinal/bucket-handle tears 1–4 cm in the red-red/red-white zone, young patients, concurrent ACL reconstruction (higher healing from marrow elements), root tears (transtibial pull-out or anchor) in knees without advanced OA (Kellgren-Lawrence <3) — root tears cause extrusion and rapid cartilage loss. Ramp lesions (posteromedial meniscocapsular junction, up to 20% with ACL tears — inspect via the posteromedial portal, repair all-inside/suture hook).
-Degenerative tears: physical therapy first; arthroscopic partial meniscectomy not superior to sham/PT (FIDELITY, METEOR); reserve for mechanical locking. Inside-out medial repair risks the saphenous nerve; lateral risks the peroneal nerve (posterolateral incision, retract between the LCL and biceps). Meniscal allograft transplant: young, prior meniscectomy, pain, stable aligned knee, minimal OA. Discoid lateral meniscus: saucerize.`],
-['management', `Articular cartilage lesions of the knee: grading and matched procedures`, `Outerbridge/ICRS grading: 0 normal, 1 softening, 2 partial thickness fissures <50%, 3 >50% depth to subchondral bone, 4 exposed bone. MRI (fat-suppressed PD/T2 mapping) underestimates.
-Treat the environment first: malalignment (osteotomy), instability (ligament reconstruction), meniscal deficiency (transplant); no “kissing” lesions, no inflammatory arthritis, BMI <35.
-Microfracture/marrow stimulation: lesions <2–4 cm², fibrocartilage (type I collagen) — good early results deteriorating by 2–5 years; awl holes 3–4 mm apart, remove the calcified layer, preserve the subchondral plate. Osteochondral autograft transfer (OATS/mosaicplasty): <2–2.5 cm², hyaline cartilage; donor-site morbidity (trochlea margins). Autologous chondrocyte implantation (MACI): >2–4 cm², two-stage, hyaline-like; contraindicated with bone loss >6–8 mm. Osteochondral allograft: large lesions, bone loss, revision, fresh (viability best <28 days); good for uncontained/OCD/AVN. Patellofemoral lesions do worst; add tibial tubercle anteromedialization for lateral/distal patellar lesions.`],
-['diagnosis', `Patellar instability: risk factors, MPFL, and when to add bony procedures`, `First-time lateral dislocation: hemarthrosis, medial tenderness (MPFL at the adductor tubercle/medial epicondyle), osteochondral fracture of the medial patellar facet or lateral femoral condyle (~25%) → fix large fragments/remove loose bodies; otherwise nonop (brace, quads/VMO, hip abductor strengthening). Recurrence ~15–50%, highest in young with dysplasia.
-Risk factors: trochlear dysplasia (crossing sign, supratrochlear spur/bump, double contour — Dejour A–D; the most important), patella alta (Caton-Deschamps >1.2–1.3, Insall-Salvati >1.2), lateralized tibial tubercle (TT-TG >20 mm on CT/MRI), patellar tilt >20°, genu valgum, femoral anteversion/external tibial torsion, generalized laxity (Beighton), young age.
-MPFL: primary soft-tissue restraint to lateral translation in 0–30° flexion (~50–60%); reconstruction (gracilis/allograft; femoral tunnel at Schöttle’s point — malposition proximal → tight in flexion/medial overload; fix at 30–60° flexion with the patella centered; do not overtension) for recurrent instability without major bony pathology. Add tibial tubercle osteotomy (Fulkerson anteromedialization) for TT-TG >20 mm (also unloads lateral/distal chondral lesions — contraindicated for proximal/medial patellar lesions), distalization for alta (CD >1.3), trochleoplasty for severe dysplasia (Dejour B/D) in mature patients, distal femoral osteotomy for valgus. Isolated lateral release is NOT a treatment for instability (medial instability risk) — only for tilt/lateral compression syndrome.`],
-['management', `Anterior knee pain: patellar tendinopathy, patellofemoral pain, ITB, bursae, Baker cyst`, `Patellar tendinopathy (jumper’s knee): inferior pole, tendinosis; eccentric decline-squat program is the mainstay; avoid corticosteroid injection (rupture); PRP mixed; surgery for refractory (debridement).
-Patellofemoral pain syndrome: diffuse anterior pain, theater sign; nonop — quadriceps (VMO) and hip abductor/external rotator strengthening, taping; imaging usually normal; surgery rarely.
-Iliotibial band syndrome: lateral knee pain in runners/cyclists at 30° flexion (band crosses the lateral epicondyle); Ober test; stretching, foam rolling, injection; release rarely. Pes anserine bursitis: medial proximal tibia in older/obese/diabetic; injection. Prepatellar bursitis (housemaid’s knee): kneeling; septic (S. aureus) vs aseptic → aspirate; excision for chronic. Baker (popliteal) cyst: semimembranosus–medial gastrocnemius bursa communicating with the joint via a valve; adults — treat the intra-articular cause (meniscus/OA); children — observe (resolve); rupture mimics DVT.`],
-['diagnosis', `Hip and groin pain in athletes: snapping hip, athletic pubalgia, hamstring avulsion, apophyseal avulsions`, `Snapping hip: external (IT band/gluteus maximus over the greater trochanter — palpable, stretch/inject, Z-plasty rarely), internal (iliopsoas over the iliopectineal eminence/femoral head — audible, extension from flexion-abduction-ER; release fractional lengthening at the lesser trochanter or central compartment), intra-articular (labral tear, loose body).
-Athletic pubalgia (“sports hernia”): chronic groin pain in cutting sports, tenderness at the pubic tubercle/adductor origin/rectus insertion, pain with resisted sit-ups/adduction, no true hernia; MRI (rectus-adductor aponeurotic plate); rehab 6–12 weeks, then pelvic floor repair ± adductor release. Often coexists with FAI. Osteitis pubis: symphyseal pain/erosions; rest. Adductor strains: eccentric rehab.
-Proximal hamstring avulsion (waterskiing, hip flexion with knee extension): ecchymosis, sitting pain, sciatic irritation; ≥2 tendons with retraction >2 cm → early repair (better than chronic). Adolescent pelvic apophyseal avulsions: ischial tuberosity (hamstrings), ASIS (sartorius), AIIS (rectus femoris — later subspine impingement), lesser trochanter (iliopsoas), iliac crest (abdominals) — mostly nonop; fix ischial avulsions displaced >2 cm.`],
-['management', `Concussion and return-to-play`, `Diagnosis is clinical (SCAT tool; symptoms, cognition, balance); loss of consciousness NOT required; imaging only for red flags (focal deficit, worsening headache, vomiting, seizure, prolonged LOC). Remove from play the same day — no same-day return. Relative rest 24–48 h (not prolonged rest) then graduated stepwise return (each step ≥24 h; symptom-free at rest and with exertion before contact; ~6 steps); cognitive/academic return first. Repeat concussions → longer recovery, lower threshold; consider retirement after multiple/ prolonged symptoms.
-Second-impact syndrome: catastrophic cerebral edema with a second injury before recovery (adolescents). Post-concussion syndrome: symptoms >4–6 weeks. Baseline neuropsychological testing (ImPACT) aids but does not replace clinical judgment. Helmets reduce skull fractures, not concussion.`],
-['management', `Heat illness, exertional collapse, and sudden cardiac death in athletes`, `Exertional heat stroke: core (RECTAL) temperature >40 °C with CNS dysfunction → immediate cold-water immersion on site to <39 °C before transport (“cool first, transport second”); mortality tracks time above 40.5 °C. Heat exhaustion: normal mentation, treat with cooling/fluids. Exertional rhabdomyolysis: CK >5× normal, dark urine → IV fluids.
-Exercise-associated hyponatremia (Na <135): overdrinking hypotonic fluids in long events; confusion/seizures → hypertonic (3%) saline, NOT more fluids; weigh athletes.
-Sickle cell trait: exertional sickling collapse (early in intense exercise, cramping without rigidity, rhabdomyolysis) → stop, oxygen, cooling; screen athletes; graded conditioning.
-Sudden cardiac death: hypertrophic cardiomyopathy is the most common cause in US young athletes, then coronary artery anomalies; commotio cordis (chest blow during repolarization); Marfan (aortic dissection); myocarditis; ECG screening debated; AEDs on site. Asthma: exercise-induced bronchospasm — pre-exercise β-agonist.`],
-['diagnosis', `Stress fractures: high-risk vs low-risk sites and the female athlete triad / RED-S`, `High-risk (tension side or poor blood supply — nonunion/progression → aggressive treatment, often surgery): femoral neck TENSION side (superior; screws), anterior tibial cortex (“dreaded black line” — IM nail if refractory), medial malleolus, tarsal navicular (NWB cast 6–8 weeks or screws), proximal 5th metatarsal (Jones — screw), sesamoids, patella, talus, pars (spondylolysis). Compression-side femoral neck (inferior) <50% width → protected weight-bearing; >50% → screws.
-Low-risk (activity modification, gradual return): posteromedial tibia, fibula, femoral shaft, calcaneus, 2nd–4th metatarsal shafts, pubic rami, ribs.
-Diagnosis: MRI (edema) most sensitive/specific; bone scan sensitive; radiographs late. Risk: female athlete triad/RED-S (low energy availability ± eating disorder → menstrual dysfunction → low bone density; treat by restoring energy intake — not estrogen/OCPs as first-line), vitamin D deficiency, training errors, low BMI, prior stress fracture, cavus foot (5th MT), leg-length discrepancy.`],
-['diagnosis', `Chronic exertional compartment syndrome and popliteal artery entrapment`, `CECS: exercise-induced aching/tightness and numbness after a predictable duration, resolving with rest; anterior (most common — deep peroneal distribution numbness of the 1st web space) and lateral compartments; bilateral in most. Pedowitz criteria (compartment pressures): pre-exercise ≥15 mmHg, 1 minute post ≥30 mmHg, 5 minutes post ≥20 mmHg. Treat: activity modification/gait retraining (forefoot running), then fasciotomy of involved compartments (~80–90% success for anterior/lateral, worse for deep posterior); superficial peroneal nerve at risk anterolaterally.
-Popliteal artery entrapment: young athlete with calf claudication; anomalous medial head of gastrocnemius or fibrous band compressing the artery — pulses disappear with active plantarflexion/passive dorsiflexion; MRA/ angiography with provocative maneuvers; surgical release/reconstruction. Medial tibial stress syndrome (shin splints): diffuse posteromedial tibial pain, periostitis; rest, orthoses.`],
-['diagnosis', `Performance-enhancing drugs and supplements`, `Anabolic-androgenic steroids: ↑LDL, ↓HDL, hypertension, hepatotoxicity (peliosis, adenomas), testicular atrophy/infertility, gynecomastia, aggression, premature physeal closure in adolescents, tendon ruptures. Growth hormone: acromegaly features, insulin resistance, carpal tunnel, arthralgia; limited performance benefit. Erythropoietin/blood doping: ↑hematocrit → thrombosis, stroke, death. Androstenedione/DHEA: converted to testosterone; banned. Creatine (legal): ↑ phosphocreatine → short-burst power, water retention/weight gain, cramping — no proven renal harm in healthy adults. Caffeine (legal, threshold in some organizations). β-blockers banned in aiming sports; diuretics as masking agents; stimulants (amphetamines, ephedra — cardiac death). Nutrition: carbohydrate loading; protein 1.2–2 g/kg for strength athletes.`],
-['diagnosis', `Muscle strains, contusions, and myositis ossificans`, `Strains occur at the myotendinous junction during ECCENTRIC contraction; hamstrings (biceps femoris long head most), rectus femoris, gastrocnemius (medial head — “tennis leg”), adductor longus; two-joint muscles with more type II fibers. Grade I–III; MRI for retraction/complete tears (proximal hamstring avulsion → repair). Rehab: early controlled motion, eccentric/lengthening exercises (Nordic curls reduce recurrence); recurrence high with early return. NSAIDs early may impair healing (short course OK).
-Contusion (quadriceps): immobilize in 120° knee flexion for 24 h, then early ROM — reduces myositis ossificans; avoid massage/heat early. Myositis ossificans (2–4 weeks, calcification on radiographs; zonal maturation, cold bone scan at maturity) → let mature 6–12 months before any excision (rarely needed); differentiate from osteosarcoma. Delayed-onset muscle soreness: eccentric exercise, 24–72 h, no treatment needed; compartment syndrome with severe contusion.`],
-['diagnosis', `The throwing shoulder and elbow: pathophysiology and management sequence`, `Late-cocking/acceleration: extreme abduction-ER → posterior capsular thickening (GIRD — total arc shift), anterior capsular laxity (“microinstability”), posterosuperior internal impingement (articular-sided partial supraspinatus/infraspinatus tear against the posterosuperior labrum), SLAP II via peel-back, Bennett lesion, scapular dyskinesis (SICK scapula), long-head biceps pathology.
-Treat first with posterior capsular stretching (sleeper, cross-body), scapular stabilization, cuff strengthening, throwing mechanics/pitch counts. Surgery (SLAP repair vs biceps tenodesis in older; partial cuff debridement or repair if >50%; avoid capsular tightening) has modest return-to-prior-level rates.
-Elbow: MCL insufficiency (valgus overload), valgus extension overload (posteromedial olecranon osteophytes), ulnar neuritis, flexor-pronator strain, olecranon stress fracture, radiocapitellar OCD in adolescents. Tommy John reconstruction return ~80–85% at 12–18 months.`],
-['management', `Ankle/foot problems in athletes: high ankle sprain, os trigonum, FHL, sinus tarsi`, `High (syndesmotic) sprain: external rotation on a dorsiflexed foot; tenderness over the AITFL, squeeze and external rotation tests; longer recovery than lateral sprains; stress radiographs/MRI; stable → boot then rehab; unstable (widened clear space) → fixation (suture button). Return to play delayed 2–3× a lateral sprain.
-Posterior ankle impingement (dancers/soccer): os trigonum/Stieda process compressed in plantarflexion; FHL tenosynovitis (posteromedial pain with hallux motion, triggering); rest/injection then excision/release (posterior arthroscopy — sural nerve laterally, neurovascular bundle medially). Anterior impingement (footballer’s ankle): anterior tibial/talar osteophytes → arthroscopic debridement.
-Sinus tarsi syndrome: lateral hindfoot pain after inversion injuries, instability feeling; injection diagnostic. Lisfranc sprains in athletes: missed injuries → CT/weight-bearing views; ligamentous instability → fixation/fusion. Peroneal subluxation, cuboid syndrome, and stress fractures in the differential.`],
-['diagnosis', `Exercise physiology and training principles tested on the OITE`, `Aerobic (endurance) training: ↑ mitochondria, capillary density, oxidative enzymes, stroke volume and VO2max (the best measure of aerobic capacity, plateaus with training/genetics), ↓ resting heart rate; predominantly type I fiber adaptation (fiber type conversion I↔II is minimal; IIB→IIA occurs). Strength training: early gains from neural adaptation (recruitment), then hypertrophy (type II); no hyperplasia.
-Energy systems: ATP-PCr (0–10 s), anaerobic glycolysis (10 s–2 min, lactate), aerobic (>2 min; carbohydrate then fat). Lactate threshold rises with training. Carbohydrate loading increases muscle glycogen; hydration with 6–8% carbohydrate solutions for events >1 h.
-Detraining: VO2max falls within 2–4 weeks. Overtraining: fatigue, performance decline, sleep/mood changes, elevated resting HR → rest. Stretching: static stretching immediately before explosive activity reduces power; warm-up dynamic. Plyometrics: stretch-shortening cycle.`],
-['diagnosis', `Preparticipation evaluation and sports clearance rules`, `History is the most important component (cardiac symptoms, family history of sudden death <50, murmurs, prior concussions). Disqualifying/needs workup: hypertrophic cardiomyopathy, Marfan with aortic root dilation (no contact/strenuous), long QT, myocarditis (no sport ≥3–6 months), uncontrolled hypertension (stage 2 — restrict until controlled), single kidney (contact sports controversial — individualized with protection), single testicle/eye (protection; individualized), splenomegaly (mononucleosis — no contact until spleen normal, usually ≥3–4 weeks), active fever/diarrhea, Down syndrome with atlantoaxial instability (no diving/contact), seizure disorder (no climbing/swimming unsupervised; contact OK if controlled), HIV/hepatitis (not disqualifying — universal precautions; bleeding athlete removed until covered).
-Return to play after infectious mononucleosis: ≥3 weeks and no splenomegaly. Sickle cell trait: no disqualification, conditioning modifications. Cervical spine criteria: see spine deck.`],
-['diagnosis', `Hip arthroscopy and labral pathology in athletes`, `Labral tears: anterosuperior most common (FAI, dysplasia, trauma, capsular laxity in dancers/hockey); anterior groin pain, mechanical symptoms, positive FADIR; MR arthrogram; intra-articular anesthetic injection confirms the source. Ligamentum teres tears, loose bodies, synovial chondromatosis, chondral flaps are also treated arthroscopically.
-Arthroscopy: supine or lateral with traction (limit ≤2 h, ~50 lb) — pudendal/perineal neuropraxia from the post (well-padded, lateralized), LFCN from the anterior portal, sciatic from prolonged traction/posterolateral portal; iatrogenic labral/chondral injury; capsular management (repair to avoid instability, especially with dysplasia/laxity); fluid extravasation; heterotopic ossification (NSAID prophylaxis); avoid over-resection of the femoral neck (>30% → fracture) or acetabular rim (iatrogenic dysplasia).
-Poor prognosis: Tönnis ≥2 OA, joint space <2 mm, dysplasia (LCEA <20° → PAO), age >45–50, prior surgery. Femoral neck stress fractures and AVN in the differential for athletes.`]
+['a','ACL anteromedial bundle','Tight in flexion; anterior translation.'],
+['a','ACL posterolateral bundle','Tight in extension; rotational stability.'],
+['a','ACL blood supply','Middle geniculate artery.'],
+['d','Most sensitive ACL test','Lachman.'],
+['d','Most specific ACL test','Pivot shift.'],
+['d','Segond fracture','Anterolateral tibial avulsion — pathognomonic for ACL tear.'],
+['d','Female ACL risk factors','Valgus landing, quadriceps dominance, narrow notch, hormonal.'],
+['d','Allograft ACL in patients < 25','3–4× failure (MOON) → use autograft.'],
+['d','BTB autograft drawbacks','Anterior knee/kneeling pain, patellar fracture.'],
+['d','Tibial slope raising ACL failure','> 12°.'],
+['d','STABILITY trial','Lateral extra-articular tenodesis reduced failure in high-risk < 25 y.'],
+['d','Most common ACL tunnel error and effect','Femoral tunnel too anterior → tight in flexion, loss of flexion.'],
+['d','Tibial tunnel too anterior','Roof impingement → loss of extension, cyclops lesion.'],
+['d','Vertical femoral tunnel','Persistent pivot shift despite negative Lachman.'],
+['d','Meniscus tear timing with ACL','Lateral acute; medial chronic.'],
+['d','Strongest knee ligament','PCL.'],
+['a','PCL anterolateral bundle','Larger; tight in flexion.'],
+['a','Meniscofemoral ligaments','Humphrey (anterior), Wrisberg (posterior).'],
+['d','Posterior drawer grade III','> 10 mm; tibia behind condyles → suspect PLC.'],
+['m','Isolated PCL grade I–II','Nonoperative; quadriceps rehab; extension brace.'],
+['m','PCL reconstruction indications','Grade III, combined injuries, bony avulsions (fix acutely), chronic symptomatic.'],
+['d','"Killer turn"','Acute graft angle at the transtibial PCL tunnel (inlay avoids it).'],
+['d','Chronic PCL deficiency arthritis pattern','Medial compartment and patellofemoral.'],
+['a','PLC components','LCL, popliteus tendon, popliteofibular ligament.'],
+['d','Dial test: increase at 30° only','Isolated PLC.'],
+['d','Dial test: increase at 30° and 90°','PLC + PCL.'],
+['d','Arcuate sign','Fibular styloid avulsion (PLC).'],
+['d','PLC peroneal nerve injury rate','15–30%.'],
+['m','Why PLC must be reconstructed with cruciates','Unaddressed varus/ER laxity → graft failure.'],
+['m','Chronic PLC with varus alignment','HTO first.'],
+['a','Superficial MCL','Primary valgus restraint at 30°; inserts ~6 cm below joint line.'],
+['a','Posterior oblique ligament','Valgus restraint in extension / posteromedial rotation.'],
+['a','Pes anserinus tendons','Sartorius, gracilis, semitendinosus.'],
+['d','MCL grade III','> 10 mm opening, no endpoint at 30°.'],
+['m','Grade III MCL tear','Nonoperative (hinged brace, early ROM) in most.'],
+['m','MCL surgical indications','Stener-like tibial avulsion superficial to pes, entrapment, chronic instability, multiligament.'],
+['d','Pellegrini-Stieda','Calcification at the MCL femoral origin (chronic).'],
+['d','Meniscal vascular zones','Peripheral 10–30% red-red heals; white-white avascular.'],
+['d','Meniscal collagen and function','Circumferential type I; hoop stress.'],
+['d','Effect of a meniscal root tear','Extrusion; loss of hoop function ≈ total meniscectomy.'],
+['m','Root tear repair candidate','No advanced OA (KL < 3); transtibial pull-out.'],
+['m','Ideal meniscal repair tear','Vertical longitudinal, 1–4 cm, red-red/red-white, young, with ACL reconstruction.'],
+['d','Ramp lesion','Posteromedial meniscocapsular tear with ACL injury (up to 20%) — check posteromedial portal.'],
+['a','Inside-out medial repair nerve risk','Saphenous nerve.'],
+['a','Inside-out lateral repair nerve risk','Peroneal nerve (retract between LCL and biceps).'],
+['d','FIDELITY / METEOR trials','Partial meniscectomy no better than sham/PT for degenerative tears.'],
+['d','Which meniscectomy causes faster OA','Lateral.'],
+['m','Meniscal allograft candidate','Young, prior meniscectomy, pain, stable aligned knee, minimal OA.'],
+['c','Outerbridge grade 3','> 50% depth to subchondral bone.'],
+['c','Outerbridge grade 4','Exposed subchondral bone.'],
+['m','Microfracture lesion size and product','< 2–4 cm²; fibrocartilage (type I collagen) that deteriorates by 2–5 years.'],
+['m','OATS lesion size limit','< 2–2.5 cm².'],
+['m','MACI/ACI lesion size','> 2–4 cm²; contraindicated with bone loss > 6–8 mm.'],
+['m','Osteochondral allograft indication','Large lesions with bone loss; revision; fresh graft < 28 days.'],
+['d','Cartilage repair contraindications','Kissing lesions, inflammatory arthritis, uncorrected malalignment/instability.'],
+['d','Most important patellar instability risk factor','Trochlear dysplasia (crossing sign).'],
+['d','TT-TG abnormal threshold','> 20 mm.'],
+['d','Patella alta by Caton-Deschamps','> 1.2–1.3.'],
+['a','MPFL role','Primary restraint to lateral translation at 0–30° (~50–60%).'],
+['m','First-time patellar dislocation','Nonoperative unless osteochondral fragment.'],
+['d','Osteochondral fracture sites after patellar dislocation','Medial patellar facet, lateral femoral condyle.'],
+['d','MPFL femoral tunnel too proximal','Tight in flexion / medial overload (Schöttle point).'],
+['m','Fulkerson anteromedialization indications','TT-TG > 20 mm; lateral/distal patellar chondral lesions.'],
+['d','Contraindication to anteromedialization','Proximal/medial patellar lesions.'],
+['m','Trochleoplasty indication','Severe dysplasia (Dejour B/D), skeletally mature.'],
+['d','Isolated lateral release for instability','Not indicated — risks medial instability.'],
+['m','Patellar tendinopathy mainstay','Eccentric decline-squat program; no steroid injection.'],
+['d','ITB syndrome location and test','Lateral epicondyle at 30° flexion; Ober test.'],
+['d','Baker cyst location','Semimembranosus–medial gastrocnemius bursa.'],
+['m','Baker cyst treatment in adults','Treat the intra-articular cause.'],
+['d','External snapping hip','ITB/gluteus maximus over the greater trochanter.'],
+['d','Internal snapping hip','Iliopsoas over the iliopectineal eminence/femoral head.'],
+['d','Athletic pubalgia','Pubic tubercle/adductor/rectus pain; no true hernia; aponeurotic plate injury.'],
+['m','Proximal hamstring avulsion surgical indication','≥ 2 tendons retracted > 2 cm — early repair.'],
+['m','Concussion same-day return','Never.'],
+['m','Concussion return-to-play protocol','Relative rest 24–48 h, then stepwise (≥ 24 h per step, ~6 steps).'],
+['d','Second-impact syndrome','Catastrophic cerebral edema with a second injury before recovery.'],
+['d','Concussion imaging indications','Focal deficit, worsening headache, vomiting, seizure, prolonged LOC.'],
+['d','Exertional heat stroke definition','Rectal temp > 40 °C + CNS dysfunction.'],
+['m','Heat stroke treatment','Cold-water immersion on site — cool first, transport second.'],
+['d','Exercise-associated hyponatremia treatment','Hypertonic (3%) saline — not more fluids.'],
+['d','Sickle cell trait exertional collapse','Early cramping without rigidity, rhabdomyolysis → stop, oxygen, cool.'],
+['d','Most common cause of sudden cardiac death in young US athletes','Hypertrophic cardiomyopathy (then coronary anomalies).'],
+['d','Commotio cordis','Chest blow during repolarization → arrhythmia.'],
+['d','High-risk stress fracture sites','Femoral neck tension side, anterior tibia, medial malleolus, navicular, 5th MT, sesamoids, patella, talus.'],
+['m','Tension-side femoral neck stress fracture','Screw fixation.'],
+['m','Compression-side femoral neck stress fracture < 50% width','Protected weight-bearing.'],
+['d','"Dreaded black line"','Anterior tibial cortex stress fracture — IM nail if refractory.'],
+['d','Female athlete triad / RED-S treatment','Restore energy availability (not OCPs first).'],
+['d','Low-risk stress fracture sites','Posteromedial tibia, fibula, femoral shaft, calcaneus, 2nd–4th MT.'],
+['d','Pedowitz criteria for CECS','Pre ≥ 15, 1 min post ≥ 30, 5 min post ≥ 20 mmHg.'],
+['d','Most common CECS compartment','Anterior (1st web space numbness).'],
+['a','Nerve at risk in anterolateral leg fasciotomy','Superficial peroneal.'],
+['d','Popliteal artery entrapment','Calf claudication in young athlete; pulses lost with plantarflexion; anomalous gastrocnemius.'],
+['d','Anabolic steroid effects','↑ LDL, ↓ HDL, hepatic tumors, testicular atrophy, physeal closure, tendon rupture.'],
+['d','Creatine effects','↑ short-burst power, water retention, cramping; no renal harm in healthy adults.'],
+['d','EPO/blood doping risk','Polycythemia → thrombosis, stroke.'],
+['d','Drug banned in aiming sports','β-blockers.'],
+['d','Site of muscle strain','Myotendinous junction, eccentric contraction.'],
+['d','Most commonly strained hamstring','Biceps femoris long head.'],
+['m','Quadriceps contusion acute management','Knee flexion 120° for 24 h, then early ROM.'],
+['d','Nordic hamstring curls reduce…','Hamstring strain recurrence.'],
+['d','Internal impingement','Posterosuperior cuff articular-side tear vs posterior labrum in abduction-ER.'],
+['d','Tommy John return rate','~80–85% at 12–18 months.'],
+['d','High ankle sprain tests','Squeeze test, external rotation test.'],
+['d','Sinus tarsi syndrome','Lateral hindfoot pain after inversion injuries; diagnostic injection.'],
+['d','Best measure of aerobic capacity','VO2max (plateaus with training/genetics).'],
+['d','Early strength gains come from…','Neural adaptation (recruitment), then hypertrophy.'],
+['d','ATP-PCr system duration','0–10 s.'],
+['d','Static stretching before explosive activity','Reduces power — use dynamic warm-up.'],
+['d','Return to play after mononucleosis','≥ 3 weeks and no splenomegaly.'],
+['d','Myocarditis and sport','No sport ≥ 3–6 months.'],
+['d','Hip arthroscopy traction complications','Pudendal neuropraxia (limit ≤ 2 h), LFCN from anterior portal.'],
+['d','Excess femoral neck resection risk','> 30% → fracture.'],
+['d','Most common labral tear location','Anterosuperior.'],
 ]);
 
 // ======================= TRAUMA =======================
 _add('trauma', [
-['classification', `Gustilo-Anderson open fracture classification and antibiotics`, `Assigned at debridement, not in the ED. I: wound <1 cm, clean, low energy. II: 1–10 cm, moderate soft-tissue injury without extensive stripping. IIIA: >10 cm or high-energy/segmental/gunshot/farm injury with adequate soft-tissue coverage. IIIB: periosteal stripping/bone exposure requiring flap coverage (rotational or free). IIIC: arterial injury requiring repair (regardless of wound size).
-Antibiotics within 1 hour of injury is the intervention most associated with reduced infection: cefazolin (I–II); add gram-negative coverage (aminoglycoside, or ceftriaxone/piperacillin-tazobactam per institution) for III; add penicillin for farm/soil/fecal contamination (Clostridium); freshwater — fluoroquinolone/ceftazidime; duration 24–72 h. Tetanus. Debridement within 24 h (urgent, not necessarily <6 h); definitive coverage as early as possible (ideally <7 days; infection rises after). Early flap coverage and negative-pressure dressings as a bridge. Infection rates: I 0–2%, II 2–10%, IIIA ~7%, IIIB 10–50%, IIIC 25–50%; IIIB/C tibia with MESS ≥7 — amputation considered (LEAP: outcomes equivalent to salvage, plantar sensation loss is not an indication).`],
-['classification', `Tscherne classification of closed fracture soft-tissue injury`, `C0: negligible soft-tissue injury, simple fracture (indirect). C1: superficial abrasion or contusion from fragment pressure, mild/moderate fracture. C2: deep contaminated abrasion or localized skin/muscle contusion, severe fracture, impending compartment syndrome. C3: extensive contusion/crush, subcutaneous degloving (Morel-Lavallée), compartment syndrome, vascular injury, severe fracture (e.g., high-energy plateau/pilon).
-Drives timing (staged with ex-fix), incision placement, and warns about wound complications. Morel-Lavallée lesions (fluid collections over the greater trochanter/thigh) should be drained/debrided before definitive surgery if in the field.`],
-['management', `Compartment syndrome of the leg and forearm: fasciotomy technique`, `Leg (4 compartments): two-incision technique — anterolateral incision midway between the fibula and tibial crest releases the anterior and lateral compartments (superficial peroneal nerve pierces the lateral compartment fascia ~10–12 cm above the ankle); posteromedial incision 1–2 cm posterior to the posteromedial tibial border releases the superficial and DEEP posterior compartments (the deep posterior is most often missed — release the soleus origin from the tibia; saphenous vein/nerve at risk). Single-incision perifibular alternative (avoid fibulectomy). Leave open, delayed closure/skin graft; do not release too late if muscle is already necrotic >3–4 days (infection, myoglobinuria).
-Forearm (3: volar/mobile wad/dorsal): volar Henry-type curvilinear incision extending into the carpal tunnel (release lacertus fibrosus, FDS/FDP fascia, and the deep compartment — FPL/FDP/PQ); dorsal incision if pressures remain high. Hand: 10 compartments (dorsal interossei via two dorsal incisions, thenar/hypothenar, carpal tunnel). Foot: see foot deck.
-Thresholds: ΔP (diastolic − compartment) ≤30 mmHg; clinical diagnosis in the awake patient; serial exams; sedated/obtunded → measure. Complications: Volkmann contracture, sensory loss, infection, amputation.`],
-['classification', `Young-Burgess pelvic ring injuries and hemorrhage control`, `Anteroposterior compression: APC I — symphyseal widening <2.5 cm, SI ligaments intact; APC II — >2.5 cm, anterior SI, sacrotuberous, sacrospinous ligaments torn, posterior SI intact (rotationally unstable, vertically stable; “open book”); APC III — complete SI disruption (rotationally and vertically unstable; highest transfusion requirement and mortality).
-Lateral compression: LC I — sacral compression (impaction) + ipsilateral rami (stable; most common; elderly falls); LC II — iliac wing crescent fracture (rotationally unstable); LC III — ipsilateral LC + contralateral APC (“windswept”). Vertical shear: vertical displacement of the hemipelvis (Malgaigne), L5 transverse process fractures — unstable. Tile A stable, B rotationally unstable, C vertically unstable.
-Hemodynamic instability: pelvic binder centered on the greater trochanters (APC/VS; may worsen LC displacement — still applied acutely), resuscitation/MTP, then angioembolization (arterial — superior gluteal, internal pudendal; ~10–15% of bleeding) or preperitoneal pelvic packing (venous plexus and bone — most bleeding is venous), ex-fix/C-clamp; REBOA in extremis. Open pelvic fractures: diverting colostomy for perineal/rectal wounds.`],
-['diagnosis', `Pelvic ring associated injuries and the corona mortis`, `Genitourinary: blood at the meatus, high-riding prostate, hematuria, scrotal hematoma → retrograde urethrogram BEFORE Foley catheter (urethral injury ~10–15% in men); bladder rupture (extraperitoneal → catheter drainage, intraperitoneal → repair).
-Neurologic: L5 root over the sacral ala (iliosacral screw/ sacral fracture), S1 (transforaminal), lumbosacral plexus in VS injuries; sciatic nerve with posterior acetabular injuries.
-Vascular: superior gluteal artery (posterior iliac fractures, angioembolization), corona mortis (“crown of death” — anastomosis between the obturator and external iliac/inferior epigastric vessels crossing the superior pubic ramus ~6 cm from the symphysis, at risk during ilioinguinal/Stoppa approaches and ramus plating), internal pudendal.
-Other: bowel/rectal injuries (open fractures), Morel-Lavallée, DVT/PE (high risk — prophylaxis/IVC filter selectively), chronic pain/sexual dysfunction, associated spine fractures (VS). Denis sacral zones: I alar, II foraminal, III central — neurologic risk rising.`],
-['classification', `Letournel acetabular fracture classification and radiographic views`, `Elementary (5): posterior wall (most common overall), posterior column, anterior wall, anterior column, transverse. Associated (5): posterior column + posterior wall, transverse + posterior wall (second most common), T-shaped, anterior column/wall + posterior hemitransverse, both-column (floating acetabulum — no articular fragment remains attached to the intact ilium; spur sign on obturator oblique; secondary congruence may allow nonop).
-Judet views: obturator oblique (pelvis rotated 45° toward the injured side) shows the anterior column and POSTERIOR wall; iliac oblique (rotated away) shows the posterior column and ANTERIOR wall. Landmarks: iliopectineal (anterior column) and ilioischial (posterior column) lines, teardrop, roof. CT with 3D reconstructions is standard.
-Roof-arc angles (Matta) on AP/obturator/iliac views <45° → fracture involves the weight-bearing dome → surgery; CT subchondral ring 10 mm equivalent. Posterior wall: >40–50% of wall → unstable; 20–50% → examination under anesthesia (dynamic stress) to decide.`],
-['management', `Acetabular fracture surgical approaches and complications`, `Kocher-Langenbeck (posterior): posterior wall/column, transverse + posterior wall, some T-types; prone or lateral; sciatic nerve (keep the knee flexed, hip extended), MFCA (protect short external rotators — quadratus femoris), superior gluteal neurovascular bundle at the greater sciatic notch; heterotopic ossification highest (gluteus minimus debridement, indomethacin/XRT).
-Ilioinguinal (anterior): anterior wall/column, anterior column + posterior hemitransverse, both-column; three windows — lateral (iliac fossa: LFCN, iliacus), middle (iliopsoas and femoral nerve), medial (external iliac vessels, lymphatics, spermatic cord/round ligament); corona mortis; hernia, LFCN numbness, vascular injury.
-Anterior intrapelvic (modified Stoppa/AIP) ± lateral window: quadrilateral plate/medial displacement in elderly; obturator nerve, corona mortis, bladder. Extended iliofemoral: both columns, delayed cases; highest HO/abductor morbidity.
-Outcome predictor: quality of reduction (>2 mm residual displacement → post-traumatic OA); also femoral head damage, posterior wall comminution/marginal impaction, dislocation delay >12 h, age >40. Elderly with roof impaction (gull sign) → consider acute THA with fixation (“fix and replace”). AVN of the head ~5–10%; DVT prophylaxis (prevalence high).`],
-['management', `Damage-control orthopaedics vs early total care`, `Early total care (definitive fixation <24 h) benefits stable patients (femoral shaft: fewer pulmonary complications, shorter ICU/hospital). Damage-control (temporary ex-fix, splinting, then definitive surgery days later) for the physiologically unstable or borderline: hemodynamic instability, coagulopathy (platelets <90k), hypothermia (<33 °C), severe head injury (ICP), bilateral lung contusion/severe chest injury, ISS >40 (or >20 with chest injury), lactate >2.5 mmol/L, base deficit >8, pH <7.25, resuscitation requirements >10 units, anticipated OR >6 h.
-Resuscitation end points: lactate <2.5 (normalizing trend), base deficit <5–8, urine output >0.5–1 mL/kg/h, normal coagulation, temperature; avoid definitive surgery during the peak inflammatory “second hit” window (days 2–4) — convert ex-fix to nail within 2 weeks (pin-tract infection risk after). Massive transfusion protocol 1:1:1 (plasma:platelets:RBC); TXA within 3 h of injury (CRASH-2); permissive hypotension until hemorrhage controlled (not with head injury).
-Shock classes: III (30–40% loss) is the first with hypotension; blood loss estimates: pelvis 1.5–3 L, femur 1–1.5 L, tibia 0.5–1 L, humerus 0.5 L.`],
-['management', `Humeral shaft fractures: nonoperative criteria, surgical indications, radial nerve`, `Nonoperative (functional Sarmiento brace after 1–2 weeks of coaptation splint) succeeds in >90%; acceptable: <20° anterior angulation, <30° varus/valgus, <15° rotation, <3 cm shortening. Union 8–12 weeks; risk factors for nonunion — proximal third, transverse, obesity, distraction, alcohol.
-Operative indications: open fracture, vascular injury, floating elbow, polytrauma/bilateral (mobilization), pathologic, brachial plexus injury (cannot brace), intra-articular extension, failure of nonop (inability to maintain alignment/ obesity, large breasts), segmental. Plate fixation (anterolateral brachialis-splitting approach: musculocutaneous medial, radial lateral; posterior triceps-splitting/ paratricipital for distal third — radial nerve crosses the posterior humerus ~14 cm proximal to the lateral epicondyle and ~20 cm proximal to the medial epicondyle) or IM nail (shoulder pain, similar union).
-Radial nerve palsy (~10%; Holstein-Lewis distal-third spiral): most are neurapraxia → observe 3–4 months (EMG at 6–12 weeks), splint; explore for open fractures, vascular injury, or palsy after manipulation/fixation persisting; secondary palsy after closed reduction — observation is still standard; nerve exploration when no recovery by 4–6 months (transfers/tendon transfers later).`],
-['management', `Distal humerus fractures in adults: ORIF principles and TEA`, `AO type C (bicolumnar intra-articular) predominates. Approach: olecranon chevron osteotomy (best articular exposure; apex distal, 2–3 cm from the tip; fix with plate/tension band — nonunion/hardware issues), paratricipital (Alonso-Llames) for extra-articular, triceps-sparing/ Bryan-Morrey (TEA), triceps split. Identify/protect the ulnar nerve; transposition selectively (symptoms/hardware contact).
-Fixation: two plates, either orthogonal (90–90: medial + posterolateral) or parallel (medial + lateral) — both acceptable; O’Driscoll principles: every screw through a plate, long screws engaging the opposite column, as many distal fragment screws as possible, plates compressing both columns; articular reconstruction first; capitellar/coronal shear fractures (Dubberley) with headless screws from anterior to posterior. Early motion.
-Elderly (>65–70), osteoporotic, comminuted, low demand, rheumatoid → total elbow arthroplasty (linked semiconstrained; no olecranon osteotomy; leave condyles unfixed) — better early function than ORIF in RCTs, with lifelong 5–10 lb restriction. Complications: stiffness (most common — HO prophylaxis controversial), ulnar neuropathy, nonunion (supracondylar), hardware failure, infection. Hemiarthroplasty an option in select cases.`],
-['classification', `Monteggia and Galeazzi injuries`, `Monteggia: proximal ulna fracture + radial head dislocation. Bado: I anterior (most common in children, ~60%; apex-anterior ulna); II posterior (most common in ADULTS; associated radial head fracture, LUCL injury, worse prognosis); III lateral (children, metaphyseal ulna); IV with radius shaft fracture. PIN injury (especially type II/III) — usually resolves. Adults: anatomic ulnar ORIF (restore ulnar length and proximal dorsal angulation) → radial head reduces; if it does not, look for malreduction (most common) or interposed annular ligament/capsule (open reduction). Children: closed reduction (including plastic deformation) and cast in flexion/supination; missed >4 weeks → ulnar osteotomy ± annular ligament reconstruction (Bell-Tawse).
-Galeazzi: distal-third radial shaft fracture + DRUJ disruption (“fracture of necessity” — needs ORIF in adults); volar Henry approach; after radial fixation assess DRUJ — stable → early motion; unstable in supination only → splint in supination 4–6 weeks; grossly unstable → pin the DRUJ (± ulnar styloid fixation/TFCC repair); irreducible DRUJ → interposed ECU tendon (or EDM). Radius fractures within 7.5 cm of the wrist joint have the highest DRUJ instability. AIN palsy possible.`],
-['management', `Both-bone forearm fractures and approach anatomy`, `Adults: ORIF with 3.5 mm compression plates, ≥6 cortices (3 bicortical screws) each side of each fracture; restore the radial bow (maximal bow location/magnitude correlates with forearm rotation and grip); early motion. IM nails for select/ open; nonop only for isolated ulnar shaft (“nightstick”) with <10° angulation and <50% displacement.
-Approaches: radius — volar Henry (BR/FCR interval; radial artery under BR; supinate to expose the proximal radius and protect the PIN, which lies within the supinator; superficial radial nerve under BR) or dorsal Thompson (ECRB/EDC; PIN in the supinator — pronate to move it away). Ulna: subcutaneous border between ECU and FCU (dorsal cutaneous ulnar nerve distally). Two separate incisions to reduce synostosis.
-Complications: synostosis (single incision, bone graft in the interosseous space, head injury, delayed surgery, same-level fractures), infection, nonunion (~2%), PIN/SRN injury, compartment syndrome, refracture after plate removal (~10–20%; do not remove before 12–18 months, protect 6 weeks after). Open fractures type I–II can be plated acutely.`],
-['management', `Tibial shaft fractures: nailing pearls, alignment, and complications`, `Reamed statically locked IM nail is standard for closed and open (I–IIIB) shaft fractures (SPRINT: reamed better in closed fractures). Acceptable nonop alignment (long-leg cast then functional brace): <5° varus/valgus, <10° anterior/posterior angulation, <10° rotation, <1 cm shortening, >50% cortical apposition.
-Proximal-third fractures deform into VALGUS and PROCURVATUM (apex anterior) with nailing → lateral start point, semi-extended/suprapatellar or lateral parapatellar positioning, blocking (Poller) screws (posterior and lateral in the proximal fragment), unicortical plate/ex-fix as reduction aid. Distal-third → valgus/varus; use blocking screws, fix the fibula, ≥2 distal interlocks.
-Complications: anterior knee pain (~50%, patellar tendon-splitting approach; may improve after nail removal), compartment syndrome (highest with tibial shaft fractures; can occur after nailing), malunion, nonunion (open, distraction, smoking — exchange reamed nailing ± dynamization), infection (IIIB), deep peroneal nerve/ anterior tibial artery injury with anterior-to-posterior distal locking. Segmental/severe soft tissue → ring fixator. Amputation vs salvage: see open fractures.`],
-['diagnosis', `Nonunion: definitions, types, and treatment principles`, `Delayed union 3–6 months; nonunion = no healing at 9 months with no progress over 3 months (FDA) or surgeon judgment. Types: hypertrophic (elephant foot/horse hoof — good biology, inadequate stability → improve mechanics: compression plating, exchange nailing); atrophic (poor biology — bone graft, biologics, address infection/nutrition/smoking/NSAIDs/vitamin D); oligotrophic; infected (Cierny-Mader host classification) → debridement, cultures, antibiotics, stabilization, staged reconstruction; synovial pseudarthrosis.
-Workup: CBC, ESR/CRP, vitamin D, thyroid/PTH if indicated; CT to confirm; nuclear/aspiration for infection. Tibial nonunion: exchange reamed nailing (larger nail, dynamization for axially stable), plate with graft, Ilizarov (infected, deformity, bone loss — bone transport 1 mm/day; latency 5–7 days; distraction histogenesis). Segmental defects: Masquelet induced-membrane technique (cement spacer 6–8 weeks then cancellous autograft; membrane produces VEGF/BMP-2), vascularized fibula (>6–8 cm), bone transport, amputation. Adjuncts: rhBMP-7 (OP-1) humanitarian for tibial nonunion, BMAC, LIPUS (limited evidence).`],
-['diagnosis', `Chronic osteomyelitis: Cierny-Mader classification and treatment`, `Anatomic type: I medullary (hematogenous, IM nail infection), II superficial (contiguous, ulcer), III localized (full-thickness cortical sequestrum, bone remains stable after debridement), IV diffuse (through-and-through, unstable after debridement). Host: A normal, B compromised (Bs systemic — diabetes, immunosuppression, malnutrition; Bl local — scar, radiation, venous stasis; Bls both), C treatment worse than the disease (suppression/no surgery).
-Radiographs: sequestrum (dead cortical bone), involucrum (new bone), cloaca (draining channel); MRI/CT; ESR/CRP; bone biopsy/cultures (sinus tract cultures unreliable). Treatment: thorough debridement of all necrotic bone to bleeding (“paprika sign”), deep cultures, dead-space management (antibiotic beads/cement, local flaps, bone transport, Masquelet), stabilization (ex-fix), soft-tissue coverage, culture-directed antibiotics ~6 weeks (IV then oral — OVIVA). Squamous cell carcinoma (Marjolin) in chronic sinuses.`],
-['diagnosis', `Necrotizing fasciitis, gas gangrene, and septic arthritis in adults`, `Necrotizing soft-tissue infection: pain out of proportion, rapidly spreading erythema, bullae, crepitus, skin necrosis, systemic toxicity; type I polymicrobial (diabetics, perineal — Fournier), type II Group A Streptococcus (young, healthy; toxic shock), type III Clostridium/ Vibrio (seawater). LRINEC score (CRP, WBC, Hb, Na, creatinine, glucose) supports diagnosis; imaging must not delay surgery. Treat: emergent radical debridement with repeat looks every 24 h, broad antibiotics (vancomycin + piperacillin-tazobactam + clindamycin for toxin suppression), fluids/ICU; mortality 20–30%.
-Gas gangrene (Clostridium perfringens): crepitus, gas on radiographs, bronze skin, hemolysis → debridement/amputation, penicillin + clindamycin, hyperbaric oxygen adjunct.
-Adult septic arthritis: S. aureus most common; gonococcal in young sexually active (migratory polyarthralgia, tenosynovitis, dermatitis); synovial WBC >50,000 with >75–90% PMNs (lower in prosthetic/immunocompromised); crystals do not exclude infection; treat with arthroscopic/open irrigation and debridement + antibiotics; Lyme (knee, Borrelia; doxycycline).`],
-['management', `Mangled extremity: scores, LEAP, and amputation levels`, `MESS (skeletal/soft-tissue injury, limb ischemia, shock, age) ≥7 was proposed to predict amputation, but sensitivity/specificity are poor in prospective studies (LEAP) — no score reliably predicts; decision is clinical. LEAP: limb salvage vs amputation — equivalent SIP outcomes at 2 and 7 years; salvage had more rehospitalizations/ complications; absent plantar sensation at presentation recovered in most salvaged limbs (not an indication for amputation); predictors of poor outcome are socioeconomic (education, insurance, smoking, litigation). Absolute indications: warm ischemia >6–8 h with muscle necrosis, crush with unreconstructable soft tissue, life-threatening hemodynamics.
-Amputation principles: preserve length and joints (below-knee > through-knee > above-knee for energy expenditure — BKA ~10–40% ↑, AKA ~60–100% ↑), transtibial ideal 12–15 cm below the joint line, myodesis, posterior flap; Syme for foot trauma (heel pad); Chopart/Lisfranc need Achilles lengthening/tendon balancing (equinus). Complications: phantom pain, neuroma (targeted muscle reinnervation), heterotopic ossification (blast), wound problems. Early amputation and prosthetic fitting improve function.`],
-['diagnosis', `Vascular injury in extremity trauma: hard signs, ABI, and repair timing`, `Hard signs → immediate operative exploration (no imaging delay): pulsatile bleeding, expanding hematoma, absent distal pulses, bruit/thrill, signs of ischemia (6 Ps). Soft signs: history of bleeding, proximity, stable non-pulsatile hematoma, neurologic deficit, diminished pulses → ABI; ABI <0.9 → CT angiography.
-High-risk injuries: knee dislocation (popliteal), supracondylar humerus in children (brachial), distal femur/ proximal tibia fractures, penetrating trauma near vessels, elbow dislocation.
-Sequence with fracture: temporary intravascular shunt → skeletal stabilization (ex-fix) → definitive vascular repair (vein graft) → fasciotomy (prophylactic 4-compartment fasciotomy after >4–6 h ischemia/ reperfusion). Warm ischemia >6 h → irreversible muscle damage; reperfusion injury (hyperkalemia, myoglobinuria — hydrate/alkalinize). Anticoagulation post-repair; pulse checks. Compartment syndrome and delayed thrombosis are the major pitfalls.`],
-['diagnosis', `Gunshot wounds and blast injuries: management by energy`, `Low-velocity (<2000 ft/s; handguns): local wound care, oral antibiotics (24–48 h), tetanus; treat fractures as closed injuries (nail femoral/tibial fractures); no formal debridement of the tract needed. High-velocity (rifles, shotguns at close range): extensive cavitation/soft-tissue injury → treat as Gustilo III (formal debridement, IV antibiotics, delayed closure, ex-fix/ staged).
-Intra-articular bullets/fragments → remove (lead synovitis, systemic lead toxicity with synovial fluid exposure, mechanical damage); bullets in the bowel/ bone with gastrointestinal contamination → broader antibiotics; spinal GSW — steroids not indicated; transabdominal GSW to the spine → antibiotics for 7–14 days if bowel involved; stable spine usually. Neuro/vascular assessment; compartment monitoring. Blast: multidimensional (primary blast, fragments, burns, crush); heterotopic ossification common in residual limbs; unpredictable tissue viability → serial debridements.`],
-['diagnosis', `IM nail, plate, and screw biomechanics tested on the OITE`, `Screws: pullout strength ∝ outer (major) diameter, thread depth, length engaged in bone (and bone density); core diameter determines bending/ fatigue strength; pitch; cortical (fine) vs cancellous (coarse) threads; lag technique — glide (over-drill) the near cortex so the screw compresses the far fragment; self-tapping; unicortical locking screws act as fixed-angle posts.
-Plates: bending stiffness ∝ thickness cubed (t³); compression (DCP — eccentric holes), bridging (relative stability, comminution; longer plate with fewer screws — plate span ratio >2–3, screw density <0.5), buttress/antiglide (vertical shear), neutralization, tension band (place on the tension side — lateral femur, olecranon, patella). Locked plates: fixed-angle, no compression to bone needed, osteoporotic/metaphyseal, periprosthetic; working length governs strain (too stiff → nonunion at the near cortex — far-cortical locking/ leaving holes open near the fracture increases flexibility).
-IM nails: load-sharing; bending stiffness ∝ radius^4 (r⁴), torsional stiffness ∝ r⁴ for solid (slotted nails much weaker in torsion); reaming allows a larger nail and increases cortical contact/ endosteal blood supply recovers in weeks (periosteal supply increases); working length (distance between proximal and distal fixation points) — shorter working length = stiffer construct; static vs dynamic locking; blocking screws narrow the effective canal. External fixators: stiffness increased by larger pin diameter (most important — pin ≤1/3 bone diameter), pins closer to the fracture and far apart within fragments, bars closer to bone, multiple bars/ planes.`],
-['management', `Periprosthetic and geriatric fracture medicine: hip fracture protocol essentials`, `Timing: surgery within 24–48 h reduces mortality/complications; delay for reversible medical issues only (anticoagulation reversal — warfarin with vitamin K/ PCC; DOAC hold, hold clopidogrel not required; aspirin continue). Fascia iliaca/ femoral nerve block reduces delirium/opioid use; regional vs general anesthesia — no mortality difference (REGAIN). Delirium prevention (orientation, avoid benzodiazepines/anticholinergics, sleep hygiene, hearing aids). Immediate full weight-bearing constructs. Pressure injury prevention.
-Co-management (geriatrician) and fracture liaison services reduce complications and second fractures. Osteoporosis: DXA, vitamin D/calcium, start bisphosphonate (after fracture healing 2–12 weeks; zoledronate reduces mortality — HORIZON) or denosumab/teriparatide; FRAX. Fall assessment. Nutritional supplementation (albumin). VTE prophylaxis (LMWH/ aspirin) up to 35 days; cemented hemiarthroplasty for femoral neck; 1-year mortality 20–30%; ~50% never regain prior mobility.`],
-['diagnosis', `Scapula fractures, floating shoulder, and scapulothoracic dissociation`, `Scapular body/spine fractures: nonop (sling, early motion) for the vast majority; associated injuries in 80–90% (rib fractures/pneumothorax, pulmonary contusion, brachial plexus, clavicle). Operative indications (relative): glenoid articular step >4–5 mm/ >25% of the surface with subluxation (Ideberg classification), glenoid neck displacement >1 cm or angulation >40°, glenopolar angle <20–22°, double disruption of the superior shoulder suspensory complex (“floating shoulder” — glenoid neck + clavicle fracture; fix the clavicle ± neck if displaced), open fractures, coracoid/acromion displaced. Posterior (Judet) approach: infraspinatus/teres minor interval; suprascapular nerve at the spinoglenoid notch.
-Scapulothoracic dissociation: high-energy traction — lateral scapular displacement on chest radiograph (>1 cm vs contralateral), clavicle fracture/AC/SC disruption, subclavian/axillary artery injury (angiography), brachial plexus avulsion (flail arm) — “internal forequarter amputation”; treat vascular injury, stabilize bones; poor prognosis for the plexus (early amputation considered for flail insensate limb).`]
+['c','Gustilo I','Wound < 1 cm, clean, low energy.'],
+['c','Gustilo II','1–10 cm, moderate soft-tissue injury.'],
+['c','Gustilo IIIA','> 10 cm or high energy; adequate coverage.'],
+['c','Gustilo IIIB','Periosteal stripping requiring flap.'],
+['c','Gustilo IIIC','Arterial injury requiring repair.'],
+['d','When Gustilo grade is assigned','At debridement.'],
+['m','Most important factor reducing open fracture infection','Antibiotics within 1 hour.'],
+['m','Open fracture antibiotics: type I–II','Cefazolin.'],
+['m','Open fracture antibiotics: type III','Add gram-negative coverage.'],
+['m','Farm/soil contamination antibiotic','Add penicillin (Clostridium).'],
+['m','Open fracture debridement timing','Within 24 hours.'],
+['m','Open fracture soft-tissue coverage timing','As early as possible, ideally < 7 days.'],
+['d','Gustilo IIIB infection rate','10–50%.'],
+['c','Tscherne C3','Extensive crush, degloving, compartment syndrome, vascular injury.'],
+['d','Morel-Lavallée lesion','Closed degloving — drain/debride before definitive surgery.'],
+['a','Anterolateral leg fasciotomy releases…','Anterior and lateral compartments.'],
+['a','Posteromedial leg fasciotomy releases…','Superficial and deep posterior compartments.'],
+['d','Leg compartment most often missed','Deep posterior (release soleus from tibia).'],
+['a','Superficial peroneal nerve pierces fascia at…','~10–12 cm above the ankle.'],
+['m','Forearm fasciotomy','Volar Henry-type incision into carpal tunnel ± dorsal incision.'],
+['a','Hand compartments','Ten.'],
+['d','Late fasciotomy risk','> 3–4 days with necrotic muscle → infection, myoglobinuria.'],
+['c','APC I','Symphysis < 2.5 cm; SI intact.'],
+['c','APC II','Symphysis > 2.5 cm; anterior SI, sacrotuberous, sacrospinous torn; posterior SI intact.'],
+['c','APC III','Complete SI disruption — highest transfusion requirement.'],
+['c','LC I','Sacral compression + ipsilateral rami (stable; most common).'],
+['c','LC II','Iliac wing crescent fracture.'],
+['c','LC III','Windswept — ipsilateral LC + contralateral APC.'],
+['c','Vertical shear','Vertical hemipelvis displacement; L5 transverse process fracture.'],
+['m','Pelvic binder placement','Centered over the greater trochanters.'],
+['d','Source of most pelvic bleeding','Venous plexus and bone.'],
+['m','Arterial pelvic bleeding treatment','Angioembolization (superior gluteal, internal pudendal).'],
+['m','Open pelvic fracture with perineal/rectal wound','Diverting colostomy.'],
+['d','Urethral injury signs','Blood at meatus, high-riding prostate → retrograde urethrogram before Foley.'],
+['m','Extraperitoneal vs intraperitoneal bladder rupture','Extraperitoneal catheter drainage; intraperitoneal repair.'],
+['a','Corona mortis','Obturator–external iliac/inferior epigastric anastomosis over the superior ramus.'],
+['a','Nerve at risk with iliosacral screws / sacral ala','L5 root.'],
+['c','Denis zone I sacral fracture','Lateral to foramina; ~6% neurologic.'],
+['c','Denis zone II sacral fracture','Transforaminal; ~28% neurologic (L5/S1).'],
+['c','Denis zone III sacral fracture','Central canal; ~57% — bowel/bladder.'],
+['d','Most common acetabular fracture','Posterior wall.'],
+['d','Second most common acetabular fracture','Transverse + posterior wall.'],
+['c','Letournel elementary fractures','Posterior wall, posterior column, anterior wall, anterior column, transverse.'],
+['d','Both-column fracture hallmark','Spur sign on obturator oblique; no articular fragment attached to the ilium.'],
+['a','Obturator oblique view shows…','Anterior column and posterior wall.'],
+['a','Iliac oblique view shows…','Posterior column and anterior wall.'],
+['d','Roof-arc angle threshold for surgery','< 45° (Matta).'],
+['d','Posterior wall size and stability','> 40–50% unstable; 20–50% → stress exam under anesthesia.'],
+['a','Kocher-Langenbeck approach targets','Posterior wall/column, transverse + posterior wall.'],
+['a','Kocher-Langenbeck nerve protection','Sciatic — knee flexed, hip extended.'],
+['d','Approach with highest HO rate','Extended iliofemoral (then Kocher-Langenbeck).'],
+['a','Ilioinguinal middle window contents','Iliopsoas and femoral nerve.'],
+['a','Ilioinguinal medial window contents','External iliac vessels, lymphatics, spermatic cord.'],
+['a','Stoppa/AIP approach structures at risk','Obturator nerve, corona mortis, bladder.'],
+['d','Strongest predictor of acetabular outcome','Quality of reduction (> 2 mm → OA).'],
+['d','Gull sign','Roof impaction in elderly acetabular fractures → consider fix-and-replace.'],
+['d','Damage-control orthopaedics triggers','Lactate > 2.5, base deficit > 8, pH < 7.25, hypothermia < 33 °C, coagulopathy, severe head/chest injury.'],
+['d','"Second hit" window to avoid','Days 2–4.'],
+['m','Ex-fix to nail conversion window','Within ~2 weeks.'],
+['d','Massive transfusion ratio','1:1:1 plasma:platelets:RBC.'],
+['m','TXA in trauma timing','Within 3 hours (CRASH-2).'],
+['d','Shock class first showing hypotension','Class III (30–40% blood loss).'],
+['d','Blood loss estimates: pelvis / femur / tibia','1.5–3 L / 1–1.5 L / 0.5–1 L.'],
+['d','Humeral shaft acceptable alignment (brace)','< 20° anterior, < 30° varus/valgus, < 15° rotation, < 3 cm shortening.'],
+['m','Humeral shaft nonoperative device','Functional (Sarmiento) brace; union > 90%.'],
+['m','Humeral shaft operative indications','Open, vascular injury, floating elbow, polytrauma/bilateral, pathologic, plexus injury, failed brace.'],
+['d','Holstein-Lewis fracture','Distal-third spiral humerus with radial nerve palsy.'],
+['m','Radial nerve palsy with closed humeral shaft fracture','Observe 3–4 months (EMG 6–12 weeks); most neurapraxia.'],
+['a','Radial nerve crossing the posterior humerus','~14 cm proximal to lateral epicondyle; ~20 cm proximal to medial epicondyle.'],
+['a','Anterolateral humeral approach nerves','Musculocutaneous medial, radial lateral (brachialis split).'],
+['d','Humeral shaft nonunion risk factors','Proximal third, transverse, obesity, distraction, alcohol.'],
+['a','Best articular exposure of the distal humerus','Olecranon chevron osteotomy.'],
+['m','Distal humerus plate configurations','Orthogonal (90–90) or parallel — both acceptable.'],
+['m','O\'Driscoll distal humerus principles','Every screw through a plate, long screws engaging the opposite column, compress both columns.'],
+['d','Capitellar shear fracture fixation','Headless screws anterior-to-posterior.'],
+['m','Elderly comminuted distal humerus alternative','Total elbow arthroplasty (linked); no olecranon osteotomy.'],
+['d','Most common distal humerus complication','Stiffness.'],
+['m','Both-bone forearm fixation standard','3.5 mm plates, ≥ 6 cortices each side.'],
+['d','What the radial bow correlates with','Forearm rotation and grip.'],
+['a','Henry approach interval','BR / FCR — supinate to protect the PIN.'],
+['a','Thompson approach interval','ECRB / EDC — pronate to move the PIN.'],
+['d','Synostosis risk factors','Single incision, graft in interosseous space, head injury, same-level fractures.'],
+['m','Forearm plate removal rule','Not before 12–18 months; refracture 10–20%.'],
+['m','Isolated nightstick fracture nonop criteria','< 10° angulation, < 50% displacement.'],
+['d','Tibial shaft acceptable nonoperative alignment','< 5° varus/valgus, < 10° AP, < 10° rotation, < 1 cm shortening, > 50% apposition.'],
+['d','SPRINT trial','Reamed nailing better for closed tibial fractures.'],
+['d','Proximal-third tibia nailing deformity','Valgus and procurvatum (apex anterior).'],
+['m','Preventing proximal tibial malalignment','Lateral start point, semi-extended/suprapatellar, blocking screws.'],
+['d','Blocking screw placement for proximal tibia','Posterior and lateral in the proximal fragment.'],
+['d','Most common complaint after tibial nailing','Anterior knee pain (~50%).'],
+['a','Structure at risk with anterior-to-posterior distal tibial locking','Deep peroneal nerve / anterior tibial artery.'],
+['d','Delayed union vs nonunion definitions','3–6 months; no healing at 9 months with no progress over 3 months.'],
+['d','Hypertrophic nonunion cause and fix','Inadequate stability → improve mechanics.'],
+['d','Atrophic nonunion cause and fix','Poor biology → bone graft/biologics; check infection, nutrition, smoking.'],
+['m','Tibial nonunion after nailing','Exchange reamed nailing (larger nail) ± dynamization.'],
+['m','Masquelet technique','Cement spacer 6–8 weeks → induced membrane → cancellous autograft.'],
+['m','Bone transport rate','1 mm/day after 5–7 day latency.'],
+['m','Vascularized fibula defect size','> 6–8 cm.'],
+['c','Cierny-Mader anatomic types','I medullary, II superficial, III localized, IV diffuse.'],
+['c','Cierny-Mader host B','Compromised (Bs systemic, Bl local).'],
+['c','Cierny-Mader host C','Treatment worse than the disease.'],
+['d','Sequestrum vs involucrum','Dead cortical bone vs new bone around it.'],
+['d','Sinus tract cultures','Unreliable — use deep bone cultures.'],
+['d','Paprika sign','Punctate bleeding from viable bone at debridement.'],
+['d','Marjolin ulcer','Squamous cell carcinoma in a chronic osteomyelitis sinus.'],
+['d','Necrotizing fasciitis type II organism','Group A Streptococcus.'],
+['d','LRINEC score components','CRP, WBC, Hb, Na, creatinine, glucose.'],
+['m','Necrotizing fasciitis antibiotics','Vancomycin + piperacillin-tazobactam + clindamycin (toxin suppression).'],
+['m','Gas gangrene treatment','Debridement/amputation, penicillin + clindamycin, hyperbaric oxygen adjunct.'],
+['d','Adult septic arthritis aspirate threshold','WBC > 50,000, PMN > 75–90%.'],
+['d','Gonococcal arthritis features','Migratory polyarthralgia, tenosynovitis, dermatitis.'],
+['d','MESS score threshold','≥ 7 proposed for amputation — poor predictive value.'],
+['d','LEAP study conclusions','Salvage vs amputation equivalent at 2 and 7 years; plantar sensation loss not an indication.'],
+['d','Energy cost of amputation','BKA ~10–40% ↑; AKA ~60–100% ↑.'],
+['d','Ideal transtibial residual length','12–15 cm below the joint line.'],
+['m','Chopart/Lisfranc amputations require…','Achilles lengthening/tendon balancing (equinus).'],
+['m','Neuroma prevention/treatment','Targeted muscle reinnervation.'],
+['d','Hard signs of vascular injury','Pulsatile bleeding, expanding hematoma, absent pulses, bruit, ischemia.'],
+['m','Sequence for fracture with vascular injury','Shunt → ex-fix → vascular repair → fasciotomy.'],
+['m','Prophylactic fasciotomy after ischemia','> 4–6 hours of ischemia/reperfusion.'],
+['d','Warm ischemia limit for muscle','~6 hours.'],
+['m','Low-velocity gunshot fracture','Local wound care, brief antibiotics, treat as closed.'],
+['m','High-velocity gunshot fracture','Treat as Gustilo III — formal debridement.'],
+['m','Intra-articular bullet','Remove (lead synovitis, toxicity).'],
+['m','Transabdominal GSW to the spine','Antibiotics 7–14 days if bowel involved; steroids not indicated.'],
+['d','Screw pullout strength depends on…','Outer diameter, thread depth, length engaged, bone density.'],
+['d','Screw fatigue/bending strength depends on…','Core (minor) diameter.'],
+['d','Lag screw technique','Overdrill the near cortex.'],
+['d','Plate bending stiffness ∝','Thickness cubed.'],
+['d','Bridge plating rules','Plate span ratio > 2–3; screw density < 0.5.'],
+['d','Tension band plate placement','On the tension side (lateral femur).'],
+['d','Locked plate advantages','Fixed-angle; no compression needed; osteoporotic/metaphyseal/periprosthetic bone.'],
+['d','Over-stiff locked construct risk','Nonunion at the near cortex — increase working length.'],
+['d','IM nail bending stiffness ∝','Radius to the 4th power.'],
+['d','Nail working length effect','Shorter working length → stiffer construct.'],
+['d','Slotted nails are weak in…','Torsion.'],
+['d','Reaming effect on blood supply','Endosteal supply recovers in weeks; periosteal supply increases.'],
+['d','Most important ex-fix stiffness factor','Pin diameter (≤ 1/3 bone diameter).'],
+['d','Other ex-fix stiffness factors','Pins near fracture and far apart, bars close to bone, multiple bars/planes.'],
+['m','Hip fracture: anticoagulation reversal','Warfarin with vitamin K/PCC; hold DOAC; continue aspirin.'],
+['m','Hip fracture regional block','Fascia iliaca / femoral nerve block — less delirium.'],
+['d','REGAIN trial','Regional vs general anesthesia: no mortality/ambulation difference.'],
+['m','Zoledronate after hip fracture','Reduces refracture and mortality (HORIZON).'],
+['m','Osteoporosis treatment start after fracture','2–12 weeks after (once healing under way).'],
+['d','Scapula fracture associated injuries','80–90%: rib/pneumothorax, pulmonary contusion, plexus, clavicle.'],
+['d','Glenoid neck fixation thresholds','Displacement > 1 cm or angulation > 40°.'],
+['d','Floating shoulder','Glenoid neck + clavicle fracture — fix the clavicle ± neck.'],
+['d','Scapulothoracic dissociation radiograph','Lateral scapular displacement > 1 cm vs contralateral.'],
+['d','Scapulothoracic dissociation injuries','Subclavian/axillary artery, brachial plexus (flail arm).'],
+['m','Distal clavicle Neer II fixation option needing removal','Hook plate.'],
 ]);
 
-// ======================= SPINE — from Miller's Review 7e, ch. 8 (p. 655 only so far) =======================
+// ======================= SPINE (general + Miller's Review 7e ch. 8) =======================
 _add('spine', [
-['diagnosis', `Bulbocavernosus reflex: how it is elicited and what its absence means after spinal cord injury`, `Squeeze the glans penis or clitoris (or tug a Foley catheter) while feeling for anal sphincter contraction.
-Present = normal (or spinal shock has resolved). Absent in the first 24–48 h after a cord injury = spinal shock is still present, so the injury cannot yet be graded as complete.
-Return of the reflex marks the end of spinal shock; a complete injury declared after that point carries a poor prognosis for recovery.`],
-['diagnosis', `Spine history: which symptom pattern points to which diagnosis?`, `Night pain → tumor. Fever or unexplained weight loss → infection or tumor. Localized pain → tumor/infection. Mechanical (activity-related) pain → instability or discogenic disease. Radicular pain → disc herniation or stenosis. Acute event → trauma.
-Also ask about occupation (prolonged sitting, repetitive lifting), smoking (accelerates disc degeneration), and psychiatric history — an “inverted-V” pattern on the MMPI (elevated hysteria and hypochondriasis with depression) predicts poor outcome after lumbar disc surgery.`],
-['diagnosis', `Gait and inspection clues on the spine exam`, `Wide-based gait → myelopathy. Forward-leaning/flexed posture while walking → lumbar stenosis. Antalgic gait → pain. Sciatic (list) scoliosis → disc herniation with root irritation. Localized posterior swelling → trauma; acute gibbus → fracture/infection (TB).
-Look for atrophy, hair patches or dimples over the spine (dysraphism), and always examine the hips and shoulders and distal pulses — hip/shoulder disease and vascular claudication mimic spine pathology.`],
-['diagnosis', `Waddell signs of non-organic pathology`, `Five categories; three or more suggest a non-organic component (not malingering per se): 1) superficial/non-anatomic tenderness, 2) simulation tests (axial loading of the skull or trunk rotation reproducing low back pain), 3) distraction (positive straight-leg raise supine that disappears when seated), 4) regional non-anatomic weakness or sensory loss, 5) over-reaction.
-Used alongside pain drawings and psychological screening when deciding on lumbar surgery.`]
-]);
-
-// ======================= SPINE — Miller's Review 7e, Chapter 8 (full chapter) =======================
-// Original Q/A written from the chapter's content. Section order follows the book.
-_add('spine', [
-// ---- Introduction / imaging / labs ----
-['diagnosis', `When are plain radiographs indicated for back pain, and what are their limitations?`, `Without trauma or red flags: only if symptoms persist beyond 4–6 weeks. Red flags (fever, weight loss, night pain, trauma, neurologic deficit) → image immediately.
-Get upright films (show alignment and subtle instability better than supine); flexion-extension views for suspected instability.
-Low specificity: by age 65, ~95% of men and ~70% of women have degenerative changes.`],
-['diagnosis', `MRI in spine disorders: best uses, and the false-positive numbers to quote`, `Best for disc herniation, stenosis, soft tissue, tumor, infection, and intrinsic cord change (myelomalacia = focal T2 bright signal in a thinned cord).
-MRI WITH gadolinium is the study for recurrent herniation vs scar (scar enhances, disc does not).
-False positives: ~25% of asymptomatic people over 40 have a cervical HNP or foraminal stenosis; ~90% of asymptomatic 75-year-olds show lumbar degeneration/bulging. Always correlate with history and exam.`],
-['diagnosis', `CT myelogram and bone scan in spine workup — when is each the right test?`, `CT (fine cuts ± myelographic dye): bony anatomy after prior surgery, fusion assessment, and reformatting in patients with sagittal/coronal deformity to define stenosis; use when MRI is contraindicated.
-Bone scan: metastatic disease and protracted/night pain — but can be NEGATIVE in multiple myeloma (use skeletal survey) and misses up to 25% of metastases.`],
-['diagnosis', `Motor grading scale (0–5)`, `0 no contraction; 1 flicker without movement; 2 movement with gravity eliminated; 3 movement against gravity; 4 against gravity plus some resistance; 5 full strength against resistance.
-Functional motor level after cord injury = most distal level with grade ≥4 (with intact sensation).`],
-['diagnosis', `EMG/NCS in spine: what each measures and the key caveat`, `EMG: electrical activity of muscle at rest and with contraction — detects muscle, nerve, or neuromuscular junction disease. NCS: how well and how fast peripheral nerves conduct — identifies peripheral nerve injury.
-Together they separate peripheral entrapment from radiculopathy and detect systemic disease (e.g., ALS). Include paraspinal muscles when looking for root pathology.
-High false-negative rate → never override a concordant history, exam, and imaging.`],
-['diagnosis', `Differential diagnosis by pain pattern: leg vs back pain, and flexion vs extension`, `Leg-pain predominant: HNP (worse with flexion/sitting), spinal stenosis (worse with extension/walking, better sitting).
-Back-pain predominant: discogenic (worse with flexion), spondylolisthesis or facet arthropathy (worse with extension), tumor, infection, metabolic disease, spondyloarthropathy.
-Constitutional symptoms → tumor or infection; positive tension sign → HNP; abnormal ESR/labs → infection, tumor, metabolic; bone scan positive → tumor, infection, spondyloarthropathy.`],
-['diagnosis', `Cervical root findings by level (C4–T1)`, `C4 (C3–4 disc): scapular muscles, lateral neck/shoulder sensation, no reflex.
-C5 (C4–5): deltoid, biceps; lateral arm; biceps reflex.
-C6 (C5–6, most common level): wrist extensors, biceps, supination; radial forearm, thumb and index; brachioradialis reflex.
-C7 (C6–7): triceps, wrist flexors, pronation; middle finger; triceps reflex.
-C8 (C7–T1): finger flexors, interossei; ulnar hand, ring and small fingers; no reflex.
-T1 (T1–2): interossei; ulnar forearm; no reflex.`],
-['diagnosis', `Lumbar root findings by level (L2–S4)`, `L2–L3 (L1–3 discs): hip flexors; anterior thigh; no reflex.
-L4 (L3–4): quadriceps and tibialis anterior; medial calf; knee jerk.
-L5 (L4–5): EHL and EDL; lateral calf and dorsal foot; no reflex.
-S1 (L5–S1): gastrocnemius-soleus; posterior calf and plantar foot; ankle jerk.
-S2–4: bowel/bladder; perianal sensation; cremasteric/anal wink.
-A left Trendelenburg gait (gluteus medius) points to an L5 root → left paracentral L4–5 herniation.`],
-// ---- Cervical spine ----
-['diagnosis', `Cervical spondylosis: the four clinical entities, epidemiology, and the five articulations`, `Chronic disc degeneration + facet arthropathy → discogenic neck pain, radiculopathy, myelopathy, or myeloradiculopathy.
-Peaks at 40–50 years, men > women; C5–6 most involved, then C6–7. Risk factors: frequent lifting, smoking, excessive driving.
-Kirkaldy-Willis cascade applied to the neck: the disc plus four other joints — two uncovertebral joints (of Luschka) and two facet joints. Disc collapse → loss of lordosis and anterior chondro-osseous spurs → facet/uncovertebral loading → foraminal spondylosis → root and/or cord compression.`],
-['diagnosis', `“Soft” vs “hard” cervical disc herniation`, `Soft: nucleus pulposus herniation without osteophyte; usually posterolateral between the posterior edge of the uncinate process and the lateral edge of the PLL → acute radiculopathy. Large central soft herniation or a spondylotic bar in a congenitally narrow canal → myelopathy. Anterior herniation rarely causes dysphagia.
-Hard: herniation with an associated disco-osteophytic spur; same symptom spectrum (root and/or cord), rarely dysphagia from anterior osteophytes.`],
-['diagnosis', `Cervical canal diameter thresholds and the Pavlov (Torg) ratio`, `Measured on the lateral radiograph from the posterior vertebral body to the spinolaminar line. Normal ≥14 mm; relative stenosis 10–13 mm; absolute stenosis <10 mm; concern below 14 mm.
-Pavlov/Torg ratio = canal width ÷ vertebral body width; normal 1.0; <0.8 abnormal and a possible risk factor for later neurologic involvement (debated; poor positive predictive value, not a screening tool).
-Dynamic compression: extension pinches the cord between the disc/spondylotic bar anteriorly and infolded ligamentum flavum/hypertrophic facets posteriorly; flexion slightly enlarges the canal.`],
-['anatomy', `The five lines of the lateral cervical radiograph and the prevertebral soft-tissue limits`, `1 prevertebral soft-tissue line, 2 anterior vertebral line, 3 posterior vertebral line, 4 spinolaminar line, 5 spinous process line — all should be smooth and continuous.
-Prevertebral soft tissue: ≤6 mm at C2, ≤20 mm at C6.
-A trauma lateral must show the C7–T1 junction or it is inadequate (CT is replacing it; sagittal CT detects ~85% of cervical fractures but can miss an axial-plane type II odontoid fracture).`],
-['management', `Discogenic (axial) neck pain: presentation, imaging, treatment`, `Insidious neck pain worsened by motion, no neurologic signs; occipital headache is common but not required. Exam benign: normal motor/sensory/reflexes, ROM limited by pain, no instability.
-Radiographs normal or disc-space narrowing; MRI shows a T2 “dark disc” ± annular tear/high-intensity zone.
-Treatment is nonoperative: anti-inflammatories, symptomatic care, and education that it is self-limiting.`],
-['anatomy', `Cervical root numbering rule and the C7–T1 exception`, `Cervical roots exit ABOVE their same-numbered vertebra (C5 exits at the C4–5 foramen), so the caudal root at a level is the one compressed: C5–6 herniation → C6 root; C6–7 → C7.
-Because there are eight cervical roots and seven vertebrae, the C7–T1 disc compresses the C8 root.
-Overlapping findings are common because of intersegmental sensory connections.`],
-['diagnosis', `Cervical radiculopathy: exam signs and treatment ladder`, `Neck pain first, then dermatomal arm pain/paresthesia; weakness uncommon but myotomal when present; reflexes normal or reduced.
-Spurling: rotation + lateral bend toward the side + axial compression reproduces radicular pain. Shoulder abduction (relief) sign: hand on head relieves pain → cervical origin.
-Nonoperative: NSAIDs, epidural injection, isometric exercises, traction, brief collar. Surgery for progressive motor weakness or persistent disabling pain: ACDF (± plate; plating raises fusion rates in multilevel discectomy and protects multilevel corpectomy struts), ACCF if compression is behind the body, or posterior keyhole laminoforaminotomy for lateral soft disc/facet-driven posterior compression (no fusion).`],
-['diagnosis', `Cervical myelopathy: symptoms, natural history percentages, and UMN signs`, `Symptoms are subtle: finger clumsiness, worsening handwriting, loss of fine motor control; wide-based ataxic gait, leg heaviness, cannot tandem walk; urinary retention/urgency. Lower-extremity weakness (corticospinal) carries a worse prognosis.
-Natural history: stepwise deterioration with plateaus (65–80%, most common); slow progressive decline (20–25%); rapid decline over days–weeks (3–5%).
-Signs: myelopathy hand and finger-escape sign (small finger drifts into abduction), hyperreflexia, Hoffmann, clonus, Babinski, inverted radial reflex (finger flexion when tapping brachioradialis), funicular pain ± Lhermitte. UMN signs are not always present; upper limbs may show LMN (radicular) signs with distal myelopathy.`],
-['management', `Choosing the approach for cervical myelopathy: anterior vs posterior vs combined`, `Anterior (ACDF, ACCF, or hybrid): works for either lordotic OR kyphotic alignment; directly removes anterior pathology.
-Posterior (laminectomy + fusion, or laminoplasty): relies on the cord drifting backward — CONTRAINDICATED with fixed kyphosis. Laminoplasty is for multilevel spondylosis, congenital stenosis, and OPLL; laminectomy alone has a high rate of post-laminectomy kyphosis.
-Circumferential: multilevel corpectomy with strut reconstruction (a highly unstable spine).
-Board pearl: kyphosis that corrects on extension still favors anterior or combined surgery; a stand-alone laminectomy with foraminotomies gives poor long-term results.`],
-['management', `ACDF complications and what to do about an asymptomatic-of-arm-pain fibrous nonunion`, `Recurrent laryngeal nerve injury (hoarseness), dysphagia, airway obstruction, nonunion, adjacent-segment disease.
-ACDF pseudarthrosis with resolved radicular pain and only mild neck pain → nonoperative care (therapy, analgesics). Symptomatic nonunion → POSTERIOR fusion (higher union rate than repeat anterior surgery).`],
-['classification', `Ranawat classification of neurologic impairment in rheumatoid cervical spine`, `I: subjective paresthesia and pain.
-II: subjective weakness with upper-motor-neuron findings.
-III: objective weakness with UMN findings — IIIA ambulatory, IIIB nonambulatory.
-Surgery is less successful in IIIB but should still be considered. Always obtain flexion/extension films in RA before elective surgery.`],
-['diagnosis', `Rheumatoid cervical spine: sequence of instability and the headache mechanism`, `Site: occipito-atlanto-axial region. Order of appearance: atlantoaxial subluxation (AAS, 50–80%) → atlantoaxial (basilar) invagination (40%) → subaxial subluxation (20%). Instability occurs in up to 90% with long-standing polyarticular disease; less common now with DMARDs.
-Presenting complaint: axial neck pain, stiffness, and OCCIPITAL headache — C1–2 joint erosion compresses the greater occipital branch of C2; pain at the skull base is relieved by manual traction. Neurologic loss is gradual and easily blamed on peripheral joint disease.`],
-['diagnosis', `Atlantoaxial subluxation in RA: measurements and surgical thresholds`, `Pannus at the dens–C1 synovial joints destroys the transverse ligament and/or dens → C1 slides forward on C2 (anterior most common; posterior/lateral possible).
-Patient-controlled flexion-extension films: anterior ADI motion >3.5 mm suggests instability (common in RA, not itself an indication).
-Operate for intractable pain, progressive neurology/myelopathy, or mechanical thresholds: AADI >9–10 mm, PADI (space available for cord) <14 mm — PADI is the more sensitive predictor of cord injury and <14 mm usually mandates surgery.`],
-['management', `C1–C2 fixation options: Gallie, Brooks, Magerl, Harms — biomechanics and hazards`, `Modified Gallie: one sublaminar wire, graft over C2 spine against C1 arch — good in flexion/extension, POOR in rotation. Brooks: two wedge grafts, two sublaminar wires — better flexion/extension, still poor rotation. Both largely historical.
-Transarticular screws (Magerl): best flexion/extension/rotation; requires a REDUCED C1–2 joint and preoperative CT for vertebral artery position; higher vertebral artery and C2 nerve injury risk; eliminated the halo needed with wiring alone.
-C1 lateral mass–C2 pedicle/pars screws (Harms): biomechanically strongest, does NOT require reduction, lower artery/C2 nerve risk; use a short straight C2 pars screw if the artery is aberrant.
-Anterior pannus usually regresses after posterior fusion, so odontoidectomy is a secondary procedure.`],
-['diagnosis', `Basilar (atlantoaxial) invagination in RA: lines, the cervicomedullary angle, and treatment`, `Cranial migration of the dens from occiput–C1–2 erosion, often with fixed AAS. Landmarks (McGregor, Chamberlain, McRae, Wackenheim) are hard to see on eroded bone — the Ranawat line is the most reproducible.
-MRI cervicomedullary angle (line along the anterior cord vs the medulla): normal 135–175°; <135° signals impending neurologic injury (brainstem draped over the dens). Bulbar symptoms in severe cases.
-Treatment: occiput–C2 fusion with gentle traction to pull the dens out of the foramen magnum; transoral/retropharyngeal dens resection only for persistent brainstem compression.`],
-['diagnosis', `Subaxial subluxation in RA: instability markers and fusion strategy`, `Pannus in the uncovertebral and facet joints → subluxation, often at multiple levels, usually alongside upper cervical disease.
-Markers: subluxation >4 mm or >20% of body width = cord at risk; cervical height index (body height ÷ width) <2.0 approaches 100% sensitivity/specificity for neurologic compromise.
-Operate for intractable pain, progressive myelopathy, or >4 mm: posterior fusion ± decompression down to the lowest unstable level, including the occiput/C1–2 if AAI/AAS exist; add anterior fusion to restore sagittal alignment or improve multilevel fusion rates. Surgery may not reverse established deficits but halts them.`],
-['diagnosis', `Ankylosing spondylitis cervical spine: the fracture rule and imaging`, `An AS patient with neck pain — with or without trauma — has a fracture until proven otherwise; plain films often miss it, so obtain CT (and MRI, which also shows the epidural hematomas these patients are prone to). Missed fractures through ossified discs/marginal syndesmophytes ("bamboo spine") lead to pseudarthrosis, progressive kyphosis, and neurologic catastrophe.
-Traction and halo as primary treatment are poorly tolerated and used less; fix internally as securely as possible to avoid halo immobilization.`],
-['management', `Chin-on-chest deformity in AS: workup and the C7–T1 osteotomy`, `Loss of horizontal gaze; measure the chin-brow vertical angle. Look for hip flexion contractures and lumbar flexion deformity — correct hips and lumbar spine FIRST (may eliminate the need for neck surgery). Intubation and airway management are difficult in the ankylosed neck.
-Cervicothoracic pedicle subtraction osteotomy at C7–T1: the vertebral artery has not yet entered the spine at C7; the C8 root is at greatest risk — examine it postoperatively. A large anterior gap after osteoclasis may need a staged anterior C7–T1 strut. Postoperative halo cast/vest may still be required.`],
-['classification', `OPLL: demographics, four radiographic types, and approach selection`, `Ectopic endochondral ossification of the PLL: cervical > thoracic > lumbar; East Asian (especially Japanese) predominance but seen in all populations; men 2:1; associated with AS and DISH. Most are asymptomatic — no prophylactic surgery.
-Types: continuous (spanning several vertebrae), segmental (one or several separate lesions), mixed, localized/circumscribed (at the disc level). Easily mistaken for multilevel disc herniation on MRI — CT defines it.
-Posterior (laminoplasty, laminectomy-fusion) needs neutral or lordotic alignment (indirect decompression; laminoplasty contraindicated in kyphosis). Anterior (ACDF/ACCF/hybrid, or the "anterior floating" technique that thins and frees the OPLL rather than removing it) addresses the lesion directly but carries higher dural tear rates because OPLL is often fused to dura.`],
-['diagnosis', `Burners/stingers vs transient quadriplegia in athletes`, `Stinger: unilateral burning dysesthesia and weakness from upper brachial plexus stretch (neck bent away from a depressed shoulder) or foraminal compression (extension toward the painful side). Rule out fracture/HNP; steroids are not indicated (peripheral nerve lesion). Bilateral or leg symptoms mean the cord, not the plexus.
-Transient quadriplegia: bilateral burning paresthesias with weakness/paralysis after axial load (spearing), hyperflexion, or hyperextension; C3–4 most often. Risk factors: stenosis (Torg <0.8), instability, HNP, congenital fusion (Klippel-Feil). No proven link to later permanent injury; but concurrent instability, HNP, degenerative change, or symptoms lasting >36 hours → no contact sports.`],
-// ---- Thoracic spine ----
-['diagnosis', `Thoracic disc herniation: how common, where, and how it presents`, `Radiographic degeneration is common but symptomatic herniation is rare (~1% of surgical HNPs). 75% occur at T8–T12; T11–12 is the single most common level. Underlying Scheuermann disease predisposes.
-Presentation: back or chest pain, band-like chest/abdominal dysesthesia, leg pain, or myelopathy (leg hyperreflexia/weakness with NORMAL upper extremities; bowel/bladder/sexual dysfunction). Exam is subtle. Radiographs may show narrowing, calcification, or lipping; CT myelogram or MRI confirms (high MRI false-positive rate — correlate clinically).`],
-['management', `Thoracic HNP: surgical indications and why laminectomy is contraindicated`, `Most thoracic radiculopathy is treated nonoperatively (immobilization, analgesics, nerve blocks). Operate for progressive myelopathy (gait instability, ataxia, bowel/bladder change) or rare unremitting radicular pain.
-Central/midline herniation → anterior transthoracic discectomy (± hemicorpectomy) and fusion; lateral herniation → posterior transpedicular or lateral extracavitary approach (can also reach central discs, technically harder; fuse depending on facet resection); thoracoscopic discectomy possible.
-Laminectomy alone is contraindicated — it cannot reach the disc without retracting the cord and carries a high rate of neurologic injury.`],
-// ---- Lumbar spine ----
-['diagnosis', `Lumbar degenerative cascade and the "backache disc"`, `L4–5 is the most commonly involved disc, followed closely by L5–S1. Kirkaldy-Willis: the disc and its two facets are interdependent — disc collapse → loss of lordosis and anterior spurs → facet loading and foraminal spondylosis → segmental instability (degenerative spondylolisthesis) once disc and facets are incompetent.
-Clinical outputs: discogenic back pain, herniation, spondylolisthesis, stenosis.`],
-['management', `Discogenic low back pain: diagnosis, discography rules, natural history, and surgical options`, `Back pain > leg pain, no tension signs, few exam findings; radiographs show narrowing without instability; MRI dark disc ± high-intensity zone.
-Discography (controversial): needle injection must reproduce the patient's usual (concordant) pain; include at least one non-painful control level and all MRI-abnormal levels; needle annular tears may accelerate degeneration.
-Natural history: >50% recover in 1 week, 90% within 1–3 months — NSAIDs, therapy, education. Surgery is a last resort with no reliably effective option: interbody fusion (anterior, lateral, posterior, or transforaminal with cages/femoral ring allograft); total disc arthroplasty for single-level L4–5 or L5–S1 disease without spondylolisthesis after 6 months of failed care (equivalent to ALIF at 2 years; long-term/revision concerns). Intradiscal electrothermy has been abandoned (relief <1 year).`],
-['anatomy', `Which root does a lumbar herniation hit? Paracentral vs far-lateral vs central`, `Posterolateral/paracentral (most common — the PLL is weakest there): traversing lower root (L5 at L4–5).
-Far-lateral (beyond the foramen): exiting upper root (L4 at L4–5) — needs a paramedian muscle-splitting (Wiltse) approach.
-Central: usually back pain only, but an acute large central herniation can cause cauda equina syndrome.
-Older patients herniate less (desiccated nucleus).`],
-['diagnosis', `Lumbar HNP: history and the tension-sign toolkit`, `History: back pain first, then leg pain worse with SITTING and better standing/lying, radiating below the knee in a dermatome; red flags typically absent.
-Supine straight-leg raise (30–70°): sensitive for L4/L5/S1, not specific. Seated SLR: less sensitive. Contralateral (crossed) SLR: the MOST SPECIFIC test — points to an axillary herniation. Laségue: relief with knee flexion at the same hip flexion. Femoral tension (prone knee flexion with hip extended): L2–L4 roots.
-Imaging: upright and flexion-extension radiographs if surgery is contemplated; MRI (gadolinium for recurrence); CT myelogram if MRI impossible or after prior surgery.`],
-['management', `Lumbar discectomy: who benefits, technique choices, and when to add fusion`, `Best candidates: concordant imaging, neurologic findings, positive tension signs, predominantly leg pain, no adverse psychosocial factors. Half of sciatica resolves in 1 month; investigate if no improvement at 6 weeks. Workers’ compensation patients have worse symptoms, function, and satisfaction.
-Open, limited-open, microscopic, and endoscopic approaches are equally effective; hemilaminotomy + discectomy is standard; total laminectomy for large central discs; Wiltse approach for far-lateral. Keep the abdomen free (reduces IVC and epidural venous pressure).
-Fusion is NOT part of a routine discectomy — add it only for pre-existing instability (spondylolisthesis, abnormal translation/angulation on flexion-extension) or iatrogenic instability (>50% of both facets, 100% of one facet, or excessive pars resection).
-SPORT (2-year): no significant difference in primary outcomes by intention-to-treat, trends favoring surgery, and significant secondary gains (sciatica bothersomeness, self-rated improvement).`],
-['diagnosis', `Lumbar spinal stenosis: anatomic classification, definitions, and tandem stenosis`, `Central: thecal sac compression — canal posterior to the PLL, anterior to ligamentum flavum/laminae, bordered laterally by the medial superior articular process. Absolute stenosis <100 mm² cross-section or <10 mm AP on CT; soft tissue (flavum, capsule, bulging disc) contributes up to 40%. More common in men (smaller L3–5 canal), older patients.
-Lateral recess (subarticular/entry zone): bounded by the superior facet posteriorly, thecal sac medially, pedicle laterally, posterolateral body anteriorly; hypertrophic superior facet compresses the TRAVERSING root (L5 at L4–5).
-Foraminal: bounded by adjacent pedicles, facet/flavum posteriorly, body/disc anteriorly (normal height 20–30 mm, width 8–10 mm); intraforaminal disc or superior facet tip compresses the EXITING root (L4 at L4–5); worst at L4–5/L5–S1 where foramina shrink as roots enlarge.
-Tandem stenosis = cervical + lumbar stenosis (claudication + radiculopathy + myelopathy). Causes: congenital (achondroplasia), degenerative (most), spondylolisthesis, trauma, iatrogenic, Paget, AS, acromegaly, fluorosis.`],
-['diagnosis', `Neurogenic vs vascular claudication — the treadmill and bicycle findings`, `Neurogenic: pain starts proximal (buttock/thigh) and moves distal; relieved only by sitting or bending, NOT by standing; symptoms appear later walking uphill; bicycling does not provoke it; lying flat may exacerbate. Normal pulses. Few neurologic findings (<50%); limited extension is the main sign; tension signs rarely positive. Standing treadmill test >90% sensitive.
-Vascular: distal-to-proximal calf pain, sooner on uphill walking, relieved by standing rest, provoked by bicycling, relieved lying flat; abnormal vascular exam.`],
-['management', `Central stenosis: nonoperative options, surgical technique, fusion indications, and SPORT`, `Nonoperative: rest, Williams flexion exercises, NSAIDs, weight loss; epidural steroids give short-term relief with variable trial results; transforaminal blocks when roots are identifiable.
-Surgery for persistent unacceptable quality of life, progressive weakness, or (rarely) bowel/bladder dysfunction: laminectomy + partial medial facetectomy — usually stable without fusion. Residual foraminal stenosis is the common cause of persistent radicular pain afterward.
-Fuse for: removal of a whole facet (surgical instability), pars defects with disc disease, symptomatic radiographic instability, degenerative or isthmic spondylolisthesis, degenerative scoliosis.
-SPORT 4-year: operative group significantly better on SF-36 pain/function and Oswestry; both groups improved from baseline. Alendronate reduces fusion rates in animal models — hold it postoperatively.`],
-['diagnosis', `Spondylolysis: who, where, imaging, and treatment goals`, `Fatigue fracture of the pars from repetitive hyperextension (gymnasts, football linemen; hereditary predisposition); one of the most common causes of back pain in children/adolescents; pain worse with extension, better with flexion.
-Imaging: lateral radiograph shows 80%; obliques (“collar on the Scottie dog”) add 15%; CT, bone scan, SPECT for subtle lesions — increased SPECT uptake = acute lesion with healing potential.
-Treatment aims at symptom relief, not fracture healing: activity restriction, flexion exercises, bracing; nonunion common. Unilateral defects almost never slip.`],
-['classification', `Six types of spondylolisthesis (Wiltse/Newman/MacNab)`, `I dysplastic — childhood; congenital dysplasia of the S1 superior facet; neural arch intact so higher risk of slip progression and cauda equina dysfunction.
-II isthmic — 5–50 years; MOST COMMON; pars elongation/fracture at L5–S1.
-III degenerative — >40 years; facet arthrosis → subluxation at L4–5.
-IV traumatic — acute fracture other than the pars.
-V pathologic — incompetent bone (tumor, infection).
-VI postsurgical — excessive resection of arches/facets.`],
-['classification', `Meyerding grading and the lumbopelvic measurements that predict behavior`, `Grade I 0–25%, II 25–50%, III 50–75%, IV >75%, V >100% (spondyloptosis) — slip as a fraction of S1 width.
-Slip angle: normally <0° (lordotic L5–S1 disc); >10° is a progression risk factor. Sacral inclination normally >30°. Pelvic incidence: normal 50–55°; isthmic spondylolisthesis patients 70–80° (higher PI → higher sacral slope → more lordosis needed), but PI does not predict progression.
-Progression slows with age; in adults the L5–S1 disc narrows and the fibrocartilaginous pars mass (Gill nodule) compresses the exiting L5 root.`],
-['management', `Pediatric/adolescent spondylolisthesis: presentation, progression risks, and treatment by grade`, `Presents with back pain, hamstring tightness, palpable step-off, pelvic waddle; severe slips → L5 radiculopathy, cauda equina, lumbosacral kyphosis, heart-shaped buttocks. Slips usually begin at age 4–6; L5–S1, typically grade II; whites, boys, hyperextension athletes; >50% in some Inuit populations. Associations: spina bifida occulta, thoracic hyperkyphosis, Scheuermann.
-Progression risks: young age, female, slip angle >10°, high grade, dysplastic features (domed/inclined sacrum >30°, trapezoid L5, sagittal S1 facets).
-Grade I: return to all sports once asymptomatic. Asymptomatic grade II: no gymnastics/football. Surgery for progression, weakness, or intractable pain: low grade → in situ L5–S1 posterolateral fusion (Wiltse approach); pars repair (Buck screw, Bradford wiring) for <10% slip with defect at L4 or above. High grade (≥50%, III–V) → prophylactic fusion even if asymptomatic, usually L4–S1 in situ (L5 sits too far forward to bridge L5–S1 alone); decompress only for clear radicular pain/weakness; Gaines L5 vertebrectomy for spondyloptosis.`],
-['management', `Reduction of high-grade spondylolisthesis: the trade-off`, `Reduction carries a 20–30% rate of L5 root injury (mostly transient) — use cautiously with neuromonitoring and several days of postoperative neurologic checks.
-Indications: unacceptable cosmesis, and lumbosacral kyphosis so severe that an L4–sacrum fusion mass would sit under tension. In situ fusion of a high-grade slip leaves compensatory hyperlordosis above it and long-term problems, so partial reduction is gaining acceptance. Interbody support (fibular dowel, cages) may raise fusion rates, restore foraminal height/lordosis, and avoid extending to L4.`],
-['diagnosis', `Degenerative spondylolisthesis: risk profile, mechanism of root compression, treatment`, `L4–5; 4–5× more common in women >40, African Americans, diabetics; sacralized L5 and sagittally oriented facets predispose.
-Central stenosis → neurogenic claudication (leg heaviness/cramping, better with flexion — positive shopping-cart sign). Lateral recess stenosis → traversing L5 root pinched between the subluxated inferior facet of L4 and the posterosuperior L5 body.
-Treatment: stenosis-type nonoperative care; surgery = decompression + posterolateral fusion ± instrumentation. SPORT 4-year: operative significantly better in pain and function. Degenerative spondylolisthesis at the laminectomy level is THE indication for adding fusion.`],
-['management', `Adult isthmic spondylolisthesis`, `Familial; high pelvic incidence; L5–S1. Extension-aggravated back pain (posterior element loading) and L5 exiting-root radiculopathy from the Gill nodule — contrast with an L5–S1 disc herniation, which causes S1 symptoms.
-Nonoperative: hamstring stretching, core strengthening, flexion exercises, NSAIDs.
-Surgery: foraminal decompression; in situ posterolateral L5–S1 fusion for grade I–II, L4–S1 for III–V; reduction risks L5 palsy; interbody fusion may improve fusion rate, foraminal height, and lordosis and avoid fusing to L4 in high-grade slips.`],
-['diagnosis', `Cauda equina syndrome: causes, exam, and timing`, `Large extruded disc, surgical trauma, or hematoma — suspect it in any patient with postoperative urinary retention.
-Bilateral buttock/leg pain, bowel or bladder dysfunction (usually retention), saddle anesthesia, variable leg weakness/sensory loss. Rectal exam for tone, perianal sensation (key for immediate diagnosis), and voluntary contraction.
-Urgent MRI and decompression as early as possible; best outcomes reported with decompression within 48 hours, though prognosis remains guarded.`],
-['diagnosis', `Complications of lumbar disc surgery: recurrence, vascular injury, dural tear, discitis`, `Recurrent symptoms after a 6–12-month pain-free interval → recurrent herniation, herniation at another level, or unrecognized lateral stenosis (may be the most common). Gadolinium MRI separates recurrent disc from epidural fibrosis (scar forms ~3 months, responds poorly to re-exploration).
-Vascular injury: instruments through the anterior annulus/ALL → pulsatile bleeding: close rapidly, resuscitate, reposition, transabdominal repair; mortality >50%; late pseudoaneurysm/AV fistula.
-Dural tear 1–4% (up to 47% in revisions): primary repair ± fibrin sealant; postoperative CSF leak → bed rest and subarachnoid drain; a well-repaired tear does not change outcome. Nerve root injury (anomalous roots), iatrogenic instability, pseudarthrosis.
-Wound infection ~1% (higher in diabetics). Postoperative discitis: severe back pain 3–6 weeks after surgery with high ESR → gadolinium MRI, needle biopsy, then antibiotics; surgery rarely needed.`]
-]);
-
-_add('spine', [
-// ---- Adult deformity ----
-['diagnosis', `Adult scoliosis: classification, progression rules, and cardiopulmonary thresholds`, `Scoliosis in patients >20 years; more symptomatic than in adolescents. Types: idiopathic (progressed adolescent curve), de novo, neuromuscular, degenerative (disc disease/osteoporosis), post-traumatic, iatrogenic.
-Progression unlikely below 30°; RIGHT THORACIC curves >50° progress most (~1°/year), then right lumbar; pregnancy does not cause progression. Symptoms progressing toward the convexity = poor prognosis; stenosis sits in the concavity.
-Pulmonary function alters with thoracic curves >60–65°; mortality risk with curves >90°. 50-year natural history: untreated adults remain productive, with mild exertional dyspnea, back pain, and cosmetic complaints.`],
-['management', `Adult scoliosis surgery: indications, distal fusion level debate, and complications`, `Indications: young adults (<30) with curves >50–60°; older patients with refractory pain, progression, cardiopulmonary compromise, or refractory stenosis. Sagittal imbalance is the strongest predictor of disability — preserve sagittal alignment.
-Techniques: selective posterior fusion for flexible thoracic curves; anterior release + posterior instrumentation for rigid (>70°) or lumbar curves; anterior interbody support for long fusions including L5–S1.
-Stopping at L5 → L5–S1 degeneration and progressive sagittal imbalance. Fusing to the sacrum → more stable but higher pseudarthrosis and gait disturbance; add iliac fixation for lumbosacral fusions >3 levels.
-Complications: pseudarthrosis 15% with posterior-only fusion (highest at the thoracolumbar junction and L5–S1), infection up to 5%, UTI, implant problems, neurologic deficit; complication rate up to 25% in older patients.`],
-['diagnosis', `Adult kyphosis: causes and treatment principles`, `Causes: old Scheuermann disease, post-traumatic (missed PLC injury, laminectomy without fusion, failed fusion), ankylosing spondylitis, metabolic bone disease (multiple osteoporotic compression fractures — treat with exercise, bracing, and medical management), postlaminectomy.
-Symptomatic idiopathic/congenital kyphosis failing nonoperative care → posterior compression instrumentation and fusion of the whole kyphotic segment; add anterior fusion if the curve does not correct to ≤55° on hyperextension lateral films.
-Postlaminectomy kyphosis follows wide laminectomy — 90% risk in children (prophylactic fusion with fixation when extensive decompression is needed); pedicle screw fusion is best for adult lumbar reconstruction.`],
-['management', `Spinal osteotomies: correction per level and technique pearls`, `Smith-Petersen (SPO): 5–10° per level; resect facets, inferior lamina, spinous process, ligamentum flavum (chevron); closes through a mobile disc. In AS/DISH it requires osteoclasis (opening the disc anteriorly) — a spine-lengthening maneuver now avoided because of great-vessel injury and loss of anterior support.
-Pedicle subtraction osteotomy (PSO): ~30°; wide laminectomy, bilateral facetectomy, transverse processes freed, pedicles resected to the posterior body, body decancellated through the pedicles, lateral-wall wedges removed; do NOT breach the anterior cortex (parallel collapse, under-correction); temporary rods prevent translation; check dura and roots for buckling after closure. Lumbar (traditionally L3) osteotomies are below the cord and safer; C7–T1 for the neck.
-Vertebral body resection (VBR): 30–40°; posterior steps as PSO then body removed en bloc or piecemeal.
-AS complications: nonunion, loss of correction, neurologic (C8 root), aortic injury.`],
-['management', `Osteoporotic compression fractures and cement augmentation`, `Bisphosphonates cut new vertebral fractures ~65% at 1 year and 40% at 3 years. MRI is sensitive for an underlying malignancy causing the osteopenia. Open surgical correction has a high complication rate.
-Vertebroplasty: low-volume, high-pressure, low-viscosity PMMA. Kyphoplasty: high-volume, low-pressure, higher-viscosity cement, proposed for deformity correction (controversial).
-To respond, the fracture must still be healing — STIR-bright on MRI; a painful but healed fracture will not improve. Benefit questioned by recent studies. Complications: hypotension with cement, canal extravasation with neural compression, pulmonary cement embolism (debated).`],
-// ---- Sacropelvis ----
-['diagnosis', `Sacroiliac dysfunction, coccygodynia, and sacral insufficiency fracture`, `SI joint: Gaenslen test (lying on the affected side, unsupported), FABER, direct compression; diagnostic/therapeutic injections, trochanteric cinch orthosis; fusion is not indicated unless infected.
-Coccygodynia: women, post-partum/minor trauma/idiopathic, point tenderness; films may show fracture or angulation but are often normal; self-limited over 1–2 years — donut cushion, NSAIDs, stretching, injection; surgery has high failure/complication rates; MRI/CT if refractory.
-Sacral insufficiency fracture: osteopenic elderly, often no trauma, low back/groin pain; technetium bone scan H-shaped (Honda) uptake is diagnostic, or CT; rest, analgesia, walking aids, and an osteoporosis workup.`],
-// ---- Spinal tumors ----
-['diagnosis', `Spine tumors by location: vertebral body vs posterior elements, and radiographic clues`, `Vertebral body: histiocytosis X, giant cell tumor, chordoma, osteosarcoma, hemangioma, metastasis, marrow-cell tumors (myeloma, lymphoma). Posterior elements: aneurysmal bone cyst, osteoblastoma, osteoid osteoma.
-Most tumors are lytic and invisible on plain films until >30% of the body is destroyed. Clues: absent pedicle (winking owl sign on AP), cortical erosion/expansion, collapse. MRI is the test of choice (malignant: low T1, high T2; gadolinium increases sensitivity); malignancy is more frequent lumbar > thoracic > cervical and in the body; CT for bony involvement/stability; CT-guided needle biopsy when the primary is unknown.`],
-['management', `Spinal metastasis: red flags, workup, and surgical indications`, `Most common spine malignancy; seeds the body first, then pedicles. Sources: breast, lung, thyroid, renal, GI, prostate; lymphoma and myeloma. Red flags: cancer history, unexplained weight loss, night pain, age >50.
-Workup: radiographs of the whole spine, gadolinium MRI of suspect levels (sometimes the entire neuraxis), CT chest/abdomen/pelvis for the primary, bone scan (negative in up to 25%), percutaneous biopsy. A solitary lesion in a patient with a remote cancer history still needs a biopsy before treatment.
-Nonoperative for radio-/chemo-/hormone-sensitive tumors; epidural cord compression does best with radiation PLUS direct surgical decompression. Surgical indications: progressive deficit unresponsive to radiation, persistent pain despite radiation, need for open biopsy, mechanical instability, radioresistant tumor — weighed against life expectancy. Preoperative embolization for renal and thyroid. Vertebroplasty for myeloma/breast without instability or deficit; anterior decompression/stabilization for deficit or instability; posterior or circumferential for multilevel, two-column, or translational instability.
-Approach rule: upper cervical → posterior; posterior-element tumors → posterior; most lower cervical/thoracic/lumbar body tumors → anterior; multilevel or en bloc spondylectomy → combined.`],
-['diagnosis', `Osteoid osteoma and osteoblastoma in the spine`, `Osteoid osteoma <2 cm; osteoblastoma ≥2 cm. Common in the spine; child with painful scoliosis (lesion at the apex of the CONVEXITY); pain relieved by aspirin/NSAIDs. Osteoblastoma: posterior elements, older patients, neurologic involvement in >50%.
-Imaging: bone scan localizes the level; thin-cut CT guides excision; MRI is sensitive but the surrounding hyperemia mimics an aggressive lesion.
-Scoliosis resolves if the lesion is resected within 18 months in a child <11. No scoliosis → NSAIDs first, surgery if that fails: en bloc vs marginal/intralesional excision, CT-guided radiofrequency ablation (controversial in the spine), fusion if the resection destabilizes. Multifocal osteoblastoma of the posterior elements → en bloc excision (no radiation).`],
-['diagnosis', `Aneurysmal bone cyst, hemangioma, eosinophilic granuloma, and giant cell tumor of the spine`, `ABC: 2nd decade, posterior elements (may extend anteriorly), may be secondary to a more aggressive tumor; marginal/wide excision or curettage + graft; radiation only if inaccessible.
-Hemangioma: common and asymptomatic; symptomatic patients >40 after small fractures; “jailhouse striations” on films, “spikes of bone” on CT; vertebra NOT enlarged (Paget expands it); observe, radiation for persistent pain, anterior resection/fusion only for collapse with neural compression (massive bleeding).
-Eosinophilic granuloma: children <10, thoracic; vertebra plana (Calvé); biopsy unless classic; self-limited; bracing prevents kyphosis; low-dose radiation for deficits; chemo for systemic disease; ≥50% height reconstitution expected.
-Giant cell tumor: 4th–5th decades, expansile body destruction; excision + graft, high recurrence; AVOID radiation (malignant degeneration).`],
-['diagnosis', `Plasmacytoma/myeloma, chordoma, and the other primary spine tumors`, `Myeloma/plasmacytoma: osteopenic lytic lesions, COLD bone scan (skeletal survey), pathologic fracture pain, high calcium, low hematocrit, abnormal protein studies; radiation 3000–4000 cGy ± chemo; surgery for instability or refractory neurology.
-Chordoma: slow-growing midline lytic lesion of the anterior sacrum or skull base (cervical next); presacral mass with abdominal complaints; physaliferous cells; radioresistant → surgical excision with sacral root sacrifice — preserving all roots on ONE side keeps bowel/bladder function; high recurrence, cure rare, survival 10–15 years; lumbopelvic reconstruction needed.
-Osteochondroma: posterior elements, cervical spine; excise (rule out sarcoma). Neurofibroma: enlarged foramina on obliques; fibrosarcomatous degeneration presents as new deficit.
-Osteosarcoma/Ewing/chondrosarcoma: rare in the spine, poor prognosis, chemo + radiation ± aggressive excision; may actually be metastases. Lymphoma: ivory vertebra, systemic disease, radiation/chemo, surgery only for pathologic fracture. Polyostotic fibrous dysplasia: ≥60% have spinal (posterior element) lesions; strongly linked to scoliosis → screen.`],
-// ---- Infections and inflammatory ----
-['diagnosis', `Osteodiscitis (disc space infection): who, findings, and management`, `Hematogenous infection primarily of the disc in children (mean age 7); S. aureus most common, gram-negatives in older patients; may follow a spinal injection.
-Child refuses to walk/stand/sit, back pain, restricted motion; ESR/CRP up, WBC high-normal. Radiographs lag 10 days–3 weeks: loss of lumbar lordosis is the EARLIEST sign, then disc narrowing and endplate erosion. Gadolinium MRI is the test of choice; bone scan helpful.
-Medical treatment: percutaneous biopsy (hold antibiotics until obtained if possible), targeted antibiotics, follow CRP. Surgery only for systemic illness, epidural abscess, failed medical therapy, no diagnosis, or inability to biopsy.`],
-['diagnosis', `Pyogenic vertebral osteomyelitis`, `Hematogenous S. aureus (50–75%); older debilitated patients, IV drug users, immunocompromise (transplant, RA, diabetes, HIV with CD4 <200 — fungal spondylitis in these hosts). Diagnosis is typically delayed 6–12 weeks.
-Most common symptom: BACK PAIN (unremitting, any level), not fever; tenderness, spasm, loss of motion. Neurologic deficit in 40% of older patients, cephalic infections, diabetics/RA, and delayed diagnoses.
-Radiographs: osteopenia, lost psoas shadow, endplate erosion, DISC DESTRUCTION (disc preserved in metastasis). Bone scan sensitive; MRI sensitive and specific (gadolinium improves it) — the most accurate test. Tissue diagnosis (blood culture or aspirate) is mandatory.
-6–12 weeks IV antibiotics ± brace. Open biopsy if no diagnosis; anterior debridement + strut graft for abscess, neurologic decline, extensive destruction, or deformity; posterior surgery cannot debride but may add stabilization; isolated laminectomy is avoided.`],
-['diagnosis', `Epidural abscess`, `Purulent collection, usually posterior in the thoracic/lumbar spine. Back pain first, then neurologic deficit and fever; diagnosis delayed in half; patients are sicker than those with osteomyelitis/discitis; risks: IV drug use, diabetes, multiple comorbidities; ESR/CRP higher than in discitis.
-MRI with gadolinium: pus and CSF are both bright on T2, but gadolinium enhances pus on T1 while CSF stays dark.
-Management is urgent and surgical: laminectomy for a posterior abscess; anterior + posterior decompression if there is coexisting vertebral osteomyelitis.`],
-['diagnosis', `Spinal tuberculosis (Pott disease): the four differences from pyogenic infection`, `Most common extrapulmonary TB site; seen with HIV (CD4 50–200). 1) Starts in the vertebral body METAPHYSIS and spreads beneath the anterior longitudinal ligament; 2) large anterior (paraspinal/psoas) abscesses (~50%); 3) DISCS PRESERVED early — anterior body destruction with intact disc; 4) severe kyphosis/gibbus more common. Skip lesions 15%. Two-thirds have abnormal chest films; 20% PPD-negative/anergic. Late: sinuses, Pott paraplegia (abscess, sequestra, rarely meningomyelitis).
-Chemotherapy is the mainstay. Surgery for deficit, instability, progressive kyphosis, failed drugs, or avascular caseous disease: radical anterior debridement + uninstrumented autogenous strut (Hong Kong procedure) — less kyphosis, faster healing, fewer sinuses; anti-TB drugs mandatory afterward (starting 10 days before surgery when possible).`],
-['diagnosis', `DISH vs ankylosing spondylitis vs destructive spondyloarthropathy`, `DISH (Forestier): nonmarginal, flowing “undulating” syndesmophytes at ≥3 successive levels, usually thoracic, right-sided; older patients, diabetes, gout; prevalence up to 28% at autopsy; associated with chronic low back pain, extraspinal ossification, and heterotopic ossification after THA; SI joints spared.
-AS: 95% HLA-B27 (but only 2% of B27 carriers get AS — not a diagnostic test); young men, 3rd–4th decade, back and hip pain; SI joint obliteration (ILIAC side first) and MARGINAL syndesmophytes → bamboo spine; fixed kyphosis; assess hips and chin-brow angle; lumbar extension osteotomy with compression instrumentation, C7–T1 osteotomy (can be done under local anesthesia). Associated: anterior uveitis, restrictive lung disease/fibrosis, aortic regurgitation/stenosis, ileitis/colitis.
-Destructive spondyloarthropathy: hemodialysis patients — three adjacent vertebrae and two discs with subluxation and narrowing; looks like infection but is crystal/amyloid deposition.`],
-// ---- Trauma: evaluation and cord injury ----
-['management', `Spine trauma primary survey: imaging minimums and the CT/MRI roles`, `ATLS: A (airway with c-spine protection), B, C, D (disability/neurologic), E (exposure). Minimum films: AP chest, AP pelvis, lateral cervical spine INCLUDING C7–T1.
-CT is replacing the lateral radiograph; sagittal reconstructions detect ~85% of cervical fractures, good for C1 and bone in the canal, may miss an axial-plane type II dens fracture.
-MRI: posterior ligamentous complex integrity, disc herniation, canal compromise, cord injury/edema; increasingly used for clearance (controversial).
-Secondary survey: document the lowest functional level and look for SACRAL SPARING (posterior column function = incomplete injury). ASIA neurologic level = most cephalad level with normal bilateral motor and sensory function. Multilevel injuries in 10–20% — image the whole spine; restart the primary survey if the patient deteriorates.`],
-['diagnosis', `Hemorrhagic vs neurogenic shock in spine trauma`, `Hemorrhagic/hypovolemic: hypotension WITH tachycardia; the most common cause of hypotension even in patients with spinal fractures → aggressive fluids and hemorrhage control.
-Neurogenic: hypotension WITH relative bradycardia — sympathetic disruption (cervical/upper thoracic cord injury) drops systemic vascular resistance; unopposed vagal tone slows the heart. Volume first (they often coexist — Swan-Ganz helps), then vasopressors fairly quickly to restore vascular resistance.`],
-['management', `Immobilization and skull-pin devices: backboards, halo, Gardner-Wells`, `Backboard is for TRANSPORT ONLY — decubitus ulcers after 30–60 minutes; logroll and remove early. Cervical collar with in-line traction.
-Halo vest: controls the upper cervical spine (O–C2) well, subaxial less so, and axial distraction poorly; poorly tolerated by the elderly. Anterior pin safe zone: above the eyebrow in the middle-to-lateral third (avoids the supraorbital nerve). Adults 4 pins at 6–8 in-lb; children 8–10 pins at 2 in-lb. Complications: loosening, pin infection, pressure sores, nerve injury, dural penetration.
-Gardner-Wells tongs: acute realignment of displaced fractures; pins in line with the external auditory meatus ~1 cm above the pinna.`],
-['management', `High-dose methylprednisolone after cord injury: protocol and contraindications (and current status)`, `Status: unclear and controversial, questioned efficacy, abandoned by many centers — a treatment option at best, NOT standard of care.
-NASCIS protocol (cord injuries only, not root injuries): 30 mg/kg bolus over 15 minutes, then 5.4 mg/kg/h; if started within 3 hours give 24 hours, if 3–8 hours give 48 hours; add GI prophylaxis.
-Contraindications: penetrating wounds (gunshot), injury >8 hours old (48 hours in the text), peripheral nerve/root/plexus/cauda equina injuries, pregnancy, age <13, infection, uncontrolled diabetes.`],
-['classification', `ASIA impairment scale and Frankel grades`, `ASIA A: no motor (0/5) and complete sensory loss. B: no motor, incomplete sensory. C: motor <3/5, incomplete sensory. D: motor >3/5, incomplete sensory. E: normal.
-Frankel A complete paralysis; B sensory only; C motor grades 1–2; D useful motor 3–4; E normal.
-Complete injury: no function below a level; cannot be declared until spinal shock ends (bulbocavernosus returns, or 48 h). Even then, 80% regain one root level and ~20% two. Incomplete: any distal sparing — more sparing and faster recovery predict more recovery; once recovery plateaus it stops.`],
-['diagnosis', `Spinal shock: the four phases and which reflex comes back first`, `24–72 hours of flaccid paralysis, hypotonia, areflexia. Ends when the bulbocavernosus reflex returns (conus/cauda injuries may permanently abolish it).
-Phase 1 (24–48 h): areflexia/hyporeflexia — loss of descending excitatory drive. Phase 2 (next 1–2 days): initial reflex return — POLYSYNAPTIC reflexes first (bulbocavernosus); monosynaptic deep tendon reflexes wait for phase 3. Phase 3 (1–4 weeks): initial hyperreflexia (receptor up-regulation). Phase 4 (1–12 months): final hyperreflexia and spasticity (loss of inhibitory input, altered muscle performance).`],
-['diagnosis', `Incomplete cord syndromes: mechanism, deficit, and prognosis`, `Central: most common; hyperextension in a stenotic older spine (osteophytes anteriorly, flavum posteriorly); central gray injury → arms worse than legs, variable sensory sparing; fair prognosis — about half of elderly and nearly all young patients walk again, hand function recovers less.
-Anterior: second most common; direct anterior compression or anterior spinal artery/Adamkiewicz ischemia; anterior two-thirds — motor and pain/temperature lost, dorsal columns (vibration, proprioception, deep pressure) spared; legs worse than arms; WORST prognosis.
-Brown-Séquard: penetrating trauma; ipsilateral motor and proprioception loss, contralateral pain/temperature loss 1–2 levels below; BEST prognosis (90% walk).
-Posterior: rarest; dorsal columns lost, motor and pain/temperature intact.
-Root injury: level-based weakness, good prognosis. Complete: no function below the level, poor.`],
-['diagnosis', `Autonomic dysreflexia`, `Cord injuries above T6. Uncontrolled sympathetic output triggered most often by bladder distension or fecal impaction — also undiagnosed fractures (femur, ankle).
-Pounding headache from severe hypertension, anxiety, profuse sweating of head/neck, nasal congestion, blurred vision, pupillary dilation, pallor, reflex bradycardia.
-Treat the trigger: catheterize, disimpact, antihypertensives, atropine for severe bradycardia.`],
-['diagnosis', `Function by cord level after injury: respiration, transfers, ADLs`, `Functional level = most distal intact sensory level AND most distal motor level with grade ≥4.
-Respiration: C1–2 vital capacity 5–10%, ventilator-dependent, no cough; C3–5 VC ~20%, weak ineffective cough; lower cervical/upper thoracic VC 30–50%, cough weak but may work; T11 and below near-normal VC, strong cough.
-Mobility: C3 or above ventilator-dependent; C4 transfer-dependent; C5 transfer with assist; C6 independent transfers, grooming and dressing, can use a flexor-hinge wrist-hand orthosis; C7 can cut food with a knife.`],
-['diagnosis', `Syringomyelia vs hydromyelia vs cord edema`, `Syrinx: confluent abnormal CSF within the cord; orthopaedic causes — post-traumatic and disc-related; also post-inflammatory, arachnoid cyst, tumor, idiopathic, Chiari/foramen magnum obstruction. Symptoms: cough/strain headaches, brainstem signs (dysphagia, voice change, nystagmus, ataxia, sleep apnea), cape-like sensory loss (upper > lower), hand atrophy, spasticity, bowel/bladder change, dysesthetic pain.
-Hydromyelia: dilated remnant of the central canal — normal variant, cord not expanded, not pathologic. Cord edema: interstitial fluid (contusion, tumor cyst), not a confluent cavity.
-MRI is the study (T1 shows the cavity; gadolinium excludes tumor; T2 shows septa). CT myelogram via C1–2 puncture can show an obstructive arachnoid web acting as a one-way valve.`],
-// ---- Trauma: upper cervical ----
-['diagnosis', `Occipitocervical dissociation: measurements and Harborview staging`, `Head separated from C1; often fatal; plain films miss it (CT/MRI ~85% sensitive).
-Powers ratio: basion→posterior arch of C1 ÷ anterior arch of C1→opisthion; >1.0 = anterior dislocation (misses posterior OCD). Harris: basion-axial interval 4–12 mm; basion-dental interval 4–5 mm adults (up to 10 mm children); >12 mm abnormal.
-Harborview: I ligament injury on MRI, alignment within 2 mm, ≤2 mm distraction on traction film; II same but distraction on traction film; III >2 mm distraction on static films. Stage II–III or any deficit → posterior occiput–C2 fusion; nonoperative options essentially do not exist.`],
-['classification', `Occipital condyle fractures (Anderson-Montesano) and C1 ring fracture types`, `Occipital condyle: I comminuted impaction — stable; II shear/compression extending into the skull base — variably stable; III alar ligament avulsion with a transverse component — unstable, associated with occipitocervical dissociation. Collar for stable; occipitocervical fusion for instability or deficit.
-C1 (Levine-Edwards): posterior arch (hyperextension), lateral mass (axial load + lateral bend), isolated anterior arch (hyperextension), burst/Jefferson (axial load).`],
-['diagnosis', `Jefferson fracture: transverse ligament rules and treatment`, `Stability = transverse ligament. Combined lateral mass overhang >6.9 mm on the open-mouth view (8.1 mm with magnification; ~7 mm rule) = ligament rupture. ADI >3.5 mm = transverse ligament damaged; >5 mm = transverse AND alar ligaments.
-Intact ligament → halo vest 6–12 weeks. Incompetent ligament, or residual overhang >6.9 mm/ADI >3.5 mm after halo → posterior C1–2 (or occiput–C2) fusion.`],
-['classification', `Atlantoaxial rotatory instability (Fielding-Hawkins)`, `I: rotationally unstable, transverse ligament intact, dens is the pivot (most common; ≤3 mm anterior displacement).
-II: transverse ligament incompetent, one facet pivots (3–5 mm displacement).
-III: both facets subluxed anteriorly, ADI >5 mm.
-IV: both facets subluxed posteriorly.
-V: frank dislocation.
-Traumatic cases: external immobilization for type I (maybe II) with close follow-up; surgery (posterior C1–2 fusion, include occiput if occipitocervical instability) for deficit, failed closed treatment, or chronic fixed deformity with spasm/instability. Children: often Grisel syndrome after pharyngeal infection, Down, Morquio, achondroplasia, Klippel-Feil, SED, Larsen; distinguish from congenital torticollis (palpable SCM mass).`],
-['classification', `Odontoid fractures: types, nonunion risks, and the anterior screw rules`, `Anderson-D'Alonzo: I alar ligament avulsion of the tip (collar; check for occipitocervical instability); II base of the dens (IIA comminuted base) — most common, ~32% nonunion; III into the C2 body — heals in a rigid orthosis/halo (operate if initial displacement >5 mm).
-Type II nonunion risk factors: displacement >5 mm, posterior displacement, angulation >10°, age >40 (operate particularly >50), delayed treatment. Nondisplaced II → rigid orthosis vs halo (controversial); displaced II/IIA → surgery.
-Options: posterior C1–2 fusion, or anterior odontoid screw (preserves rotation, higher failure rate) — requires a REDUCED fracture and favorable geometry: posterior-oblique or horizontal lines accept a perpendicular screw; an ANTERIOR-oblique line (anterosuperior → posteroinferior) and barrel chest/short neck are contraindications (screw cut-out). Patients >80 do poorly regardless; airway problems postoperatively and in halos.`],
-['classification', `Hangman fracture (Levine-Edwards) and the type IIA traction trap`, `Bilateral C2 pars fracture from hyperextension + axial load. I: <3 mm displacement, no angulation → rigid collar (IA = asymmetric/atypical lines). II: >3 mm displacement with secondary flexion → surgery (C1–2 fixation or osteosynthesis); traction acceptable. IIA: angulation WITHOUT translation (flexion-distraction, disc avulsed) — looks like a type I; traction WORSENS it → halo vest in compression/extension or surgery. III: bilateral pars fracture with C2–3 facet dislocation (flexion-distraction then extension) → open reduction and C2–3 fusion (C1–3 if pars comminution prevents C2 purchase).
-Acceptable reduction: <4 mm translation, <10° angulation. Vertebral artery injury rare, increasingly seen on MRA.`],
-['anatomy', `Anatomy hazards of C1–2 posterior fixation`, `Vertebral artery runs in the C2 transverse foramen then onto the superior surface of C1 in its groove — preoperative CT before transarticular screws; use a shorter straight C2 pars screw if aberrant.
-C2 (greater occipital) nerve lies just dorsal to the C1–2 joint — injury → posterior scalp numbness. C1 lateral mass screw starts at the center of the lateral mass.
-Other complications: neurologic injury, dural leak, nonunion/malunion.`],
-// ---- Trauma: subaxial cervical ----
-['classification', `Subaxial cervical injuries: Allen-Ferguson mechanisms and SLIC scoring`, `Allen-Ferguson (mechanistic): compressive flexion, distractive flexion (jumped facets), compressive extension, vertical compression, distractive extension, lateral flexion. Surgery generally for neurologic instability, PLC disruption, fracture-dislocations/distractive flexion. Burst fracture with intact PLC, no deficit, acceptable alignment → external immobilization (controversial).
-SLIC (Vaccaro): morphology — none 0, compression 1, burst 2, distraction (facet perch, hyperextension) 3, rotation/translation (facet dislocation, unstable teardrop) 4; discoligamentous complex — intact 0, indeterminate (isolated interspinous widening, MRI signal only) 1, disrupted (disc widening, perch, dislocation) 2; neurology — intact 0, root 1, complete cord 2, incomplete 3, +1 for continuous compression with deficit. Higher totals favor surgery (no fixed cutoff in the text). Approach follows the compression: anterior discectomy/corpectomy for anterior compression, laminectomy for posterior; realignment gives indirect decompression.`],
-['management', `Facet dislocations: translation percentages and the MRI-before-reduction rule`, `Unilateral: ~25% anterior translation; bilateral: >50% — often with cord injury.
-Awake, alert, cooperative patient who can be examined → closed reduction with traction before MRI is acceptable. Obtunded or uncooperative → MRI FIRST (disc herniation may be driven into the cord by reduction). Surgical reduction of facets and fusion is required for locked facets; “floating lateral mass” injuries need fusion. Consider MRI before any reduction for possible disc herniation.`],
-['classification', `Thoracolumbar injuries: Denis three columns, AO types, and TLISS`, `Denis columns: anterior = ALL + anterior 1/3 of body/disc; middle = PLL + posterior 2/3 of body/disc; posterior = pedicles, facets, laminae, spinous/transverse processes, ligamentum flavum, inter-/supraspinous ligaments. A “fourth column” (sternum-rib complex) adds thoracic stability. Injuries: compression (anterior only), burst (anterior + middle ± posterior), flexion-distraction/Chance (middle + posterior fail in tension, axis at the ALL), fracture-dislocation (all three, high neurologic rate).
-AO: A compression (axial load), B distraction (B1 ligamentous, B2 osseoligamentous posteriorly), C multidirectional/fracture-dislocation (very unstable).
-TLISS: mechanism — compression 1 (+1 lateral angulation >15°, +1 burst), translation/rotation 3, distraction 4; neurology — root 2, complete cord/conus 2, incomplete 3, cauda equina 3; PLC — intact 0, indeterminate 2, injured 3. Total ≤3 nonoperative, 4 either, ≥5 operative. Delayed instability: >3.5 mm subluxation or >11° angulation difference between adjacent segments.`],
-['management', `Thoracolumbar fracture treatment by pattern`, `Compression: stable, orthosis or symptomatic care; osteoporotic ones need a bone-health workup; >50% anterior collapse or spinous-process widening suggests posterior injury.
-Burst: hyperextension orthosis if neurologically intact with intact PLC (thresholds quoted: >30° kyphosis or incomplete cord injury with compromise push toward surgery); PLC disrupted → posterior instrumented fusion (classically three above, two below; short-segment now possible); deficit → anterior decompression of the retropulsed middle column (specifically indicated for incomplete cord injury), posterior approach if there is a lamina fracture (root entrapment/dural tear). Laminectomy alone is contraindicated (progressive kyphosis).
-Chance: bony → hyperextension orthosis; ligamentous → posterior fusion (late kyphosis from an incompetent PLC); ~50% intra-abdominal (GI) injury, watch for ileus.
-Fracture-dislocation: highly unstable, long posterior constructs with multiple fixation points ± anterior decompression/column support.
-Thoracic anatomy: T1–10 stabilized by ribs/sternum/facets; thoracolumbar junction is the transition zone; mid-thoracic cord is a vascular watershed; the cord ends at L1–2 so injuries below L1 (roots, not cord) do better. Associated: adynamic ileus; calcaneus fractures in ~10%.`],
-['management', `Gunshot wounds to the spine`, `Usually mechanically stable — no surgery for stability. Remove the projectile for progressive neurologic decline; a retained canal projectile at L1 or below may be removed even in stable patients; T12 and above removal is controversial (may worsen deficits).
-Transabdominal path with hollow viscus perforation → tetanus prophylaxis and IV antibiotics 7–14 days; solid organ injury → oral antibiotics. Steroids are contraindicated in penetrating injuries.`],
-// ---- Pediatric spine trauma ----
-['diagnosis', `Pediatric spine trauma: anatomic differences and how they change management`, `Ductile skeleton; relatively large head → elevate the torso 2–3 cm (pediatric board or towels) to keep the neck in line; thin skull → more pins at lower torque (6–8 pins at 2–4 in-lb). The cord starts at ~L3 at birth and stops growing in infancy, ending at T12–L2 in adults (so the adult lumbar spine holds cauda equina).
-SCIWORA (Pang & Wilberger, 1982): cord injury/myelopathy with normal radiographs/tomography — elastic column, tenuous cord blood supply; original definition predates MRI, which now often shows ligament/disc injury, hemorrhage, or even transection, though normal MRI occurs too; excludes penetrating trauma, electric shock, obstetric and congenital causes.
-Chance fractures occur lower (L1–2, L2–3) because of a different center of gravity; bony + intact → extension brace; ligamentous → surgery.`],
-['diagnosis', `Pediatric dens fracture, pseudosubluxation, and apophyseal ring avulsion`, `Dens fracture: most common pediatric cervical fracture, usually <6 years, through the basilar synchondrosis; AVOID traction (distracts the dens); reduce in hyperextension → Minerva cast or compression halo.
-Pseudosubluxation: physiologic hypermobility at C2–3 (then C3–4) in children <8; up to 4 mm/40% anterior C2-on-C3 displacement, ADI up to 5 mm; accentuated by slight flexion; normal prevertebral soft tissue; Swischuk line — the C2 posterior arch should lie within 2 mm of the C1–C3 spinolaminar line.
-Apophyseal ring avulsion: adolescents/young adults, ring fragment with disc herniation (relative weakness of the ring; Scheuermann link debated); trauma often unrecognized; must be distinguished from a calcified disc/PLL or osteophyte; radiographs miss up to a third, MRI misses bone — CT identifies nearly all.`]
+// exam / imaging
+['d','Spine radiograph timing without red flags','Only if symptoms persist > 4–6 weeks.'],
+['d','Why get upright films','Show alignment and subtle instability better than supine.'],
+['d','Degenerative changes on radiographs by age 65','~95% of men, ~70% of women.'],
+['d','Cervical MRI false positives > 40 y','~25% have HNP or foraminal stenosis.'],
+['d','Lumbar MRI findings in asymptomatic 75-year-olds','~90% show degeneration/bulging.'],
+['d','Best study for recurrent herniation vs scar','MRI with gadolinium (scar enhances).'],
+['d','Myelomalacia on MRI','Bright T2 signal in a thinned cord.'],
+['d','Bone scan pitfall in spine tumors','Negative in myeloma; misses up to 25% of metastases.'],
+['d','Motor grade 3','Movement against gravity only.'],
+['d','Motor grade 4','Against gravity plus some resistance.'],
+['d','EMG/NCS main caveat','High false-negative rate — correlate clinically.'],
+['d','Bulbocavernosus reflex: how elicited','Squeeze glans/clitoris or tug Foley → anal sphincter contraction.'],
+['d','Absent bulbocavernosus reflex 24–48 h after cord injury','Spinal shock present — cannot grade completeness yet.'],
+['d','Spine history: night pain suggests…','Tumor.'],
+['d','Spine history: fever or weight loss suggests…','Infection or tumor.'],
+['d','Spine history: mechanical pain suggests…','Instability or discogenic disease.'],
+['d','MMPI "inverted V" pattern','Hysteria + hypochondriasis + depression — poor lumbar disc surgery outcome.'],
+['d','Wide-based gait suggests…','Myelopathy.'],
+['d','Forward-leaning gait suggests…','Lumbar stenosis.'],
+['d','Waddell signs (categories)','Superficial tenderness, simulation, distraction, non-anatomic findings, over-reaction.'],
+['d','Waddell signs threshold','≥ 3 of 5 suggests non-organic component.'],
+['d','Back pain worse with flexion','Discogenic.'],
+['d','Back pain worse with extension','Spondylolisthesis / facet arthropathy.'],
+['d','Leg pain worse with flexion/sitting','Disc herniation.'],
+['d','Leg pain worse with extension/walking','Spinal stenosis.'],
+['d','Most specific test for lumbar HNP','Contralateral (crossed) straight-leg raise.'],
+['d','Supine SLR angle and roots','30–70°; L4, L5, S1 (sensitive, not specific).'],
+['d','Femoral tension sign tests…','L2–L4 roots (prone knee flexion, hip extended).'],
+['d','Laségue sign','Relief of leg pain with knee flexion at same hip flexion.'],
+// root levels
+['a','C5 root: muscle, sensation, reflex','Deltoid/biceps; lateral arm; biceps reflex.'],
+['a','C6 root: muscle, sensation, reflex','Wrist extensors/biceps; thumb-index; brachioradialis reflex.'],
+['a','C7 root: muscle, sensation, reflex','Triceps/wrist flexors/finger extensors; middle finger; triceps reflex.'],
+['a','C8 root: muscle and sensation','Finger flexors, interossei; ulnar two fingers; no reflex.'],
+['a','T1 root: muscle and sensation','Interossei; ulnar forearm; no reflex.'],
+['a','Most common cervical radiculopathy level','C6–7 (C7 root); spondylosis most common at C5–6.'],
+['a','Cervical root exit rule','Roots exit ABOVE the same-numbered vertebra; C5–6 disc → C6 root.'],
+['a','C7–T1 disc compresses which root?','C8.'],
+['a','L4 root: muscle, sensation, reflex','Tibialis anterior/quadriceps; medial calf; patellar reflex.'],
+['a','L5 root: muscle, sensation, reflex','EHL/EDL, gluteus medius; dorsal foot/lateral calf; no reflex.'],
+['a','S1 root: muscle, sensation, reflex','Gastroc-soleus, peroneals; lateral/plantar foot; Achilles reflex.'],
+['a','Lumbar root exit rule','Roots exit BELOW the same-numbered pedicle.'],
+['a','Paracentral L4–5 disc compresses…','Traversing L5 root.'],
+['a','Far-lateral L4–5 disc compresses…','Exiting L4 root.'],
+['a','Trendelenburg gait points to which disc?','Paracentral L4–5 (L5 root, gluteus medius).'],
+['d','L5–S1 isthmic spondylolisthesis root vs L5–S1 HNP root','L5 (exiting) vs S1 (traversing).'],
+// cervical
+['d','Four clinical entities of cervical spondylosis','Axial neck pain, radiculopathy, myelopathy, myeloradiculopathy.'],
+['d','Cervical spondylosis peak age and sex','40–50; men > women.'],
+['d','Cervical spondylosis risk factors','Frequent lifting, smoking, excessive driving.'],
+['a','Five articulations in the cervical degenerative cascade','Disc + two uncovertebral (Luschka) + two facet joints.'],
+['d','Soft cervical disc herniation location','Posterolateral, between uncinate process and lateral PLL edge.'],
+['d','Hard cervical disc','HNP with disco-osteophytic spur.'],
+['d','Rare symptom of anterior cervical osteophyte/herniation','Dysphagia.'],
+['d','Cervical canal: normal / relative / absolute stenosis','≥ 14 mm / 10–13 mm / < 10 mm.'],
+['d','Pavlov-Torg ratio abnormal','< 0.8 (canal ÷ body width); poor screening value.'],
+['d','Cervical extension effect on the cord','Compressed between disc/bar and infolded flavum.'],
+['a','Lateral cervical radiograph lines','Prevertebral soft tissue, anterior vertebral, posterior vertebral, spinolaminar, spinous process.'],
+['d','Prevertebral soft tissue limits','≤ 6 mm at C2; ≤ 20 mm at C6.'],
+['d','Adequate trauma lateral cervical film must show…','C7–T1 junction.'],
+['d','Discogenic neck pain exam and MRI','Normal neurologic exam; T2 dark disc ± high-intensity zone.'],
+['m','Discogenic neck pain treatment','Nonoperative; education on self-limited course.'],
+['d','Spurling test','Rotation + lateral bend + axial compression reproduces radicular pain.'],
+['d','Shoulder abduction relief sign','Hand on head relieves pain → cervical radiculopathy.'],
+['m','Cervical radiculopathy surgical indications','Progressive motor weakness; persistent disabling pain.'],
+['m','Cervical radiculopathy procedures','ACDF, ACCF (retrovertebral pathology), posterior keyhole foraminotomy (lateral soft disc).'],
+['d','Anterior plating benefit','Raises fusion rate in multilevel discectomy; protects corpectomy struts.'],
+['d','Cervical myelopathy subtle symptoms','Hand clumsiness, worsening handwriting, ataxic gait, urinary urgency.'],
+['d','Myelopathy natural history: most common pattern','Stepwise deterioration with plateaus (65–80%).'],
+['d','Myelopathy rapid decline frequency','3–5% (days–weeks).'],
+['d','Finger escape sign','Small finger drifts into abduction (weak intrinsics).'],
+['d','Inverted radial reflex','Finger flexion when tapping brachioradialis.'],
+['d','Lhermitte sign','Lightning sensation down the back with neck flexion.'],
+['d','Grip-and-release test threshold','< 20 in 10 seconds.'],
+['m','Posterior cervical decompression contraindication','Fixed kyphosis (cord cannot drift back).'],
+['m','Laminoplasty indications','Multilevel spondylosis, congenital stenosis, OPLL — with lordosis.'],
+['d','Laminectomy alone risk','Post-laminectomy kyphosis.'],
+['m','Circumferential cervical surgery indication','Multilevel corpectomy with strut (unstable).'],
+['d','C5 palsy after posterior decompression','~5–8%; usually recovers.'],
+['d','ACDF complications','RLN injury, dysphagia, airway obstruction, nonunion, adjacent segment disease.'],
+['m','Symptomatic ACDF pseudarthrosis','Posterior fusion.'],
+['m','Asymptomatic-of-arm-pain ACDF fibrous nonunion with mild neck pain','Nonoperative.'],
+['c','Ranawat I','Subjective paresthesia and pain.'],
+['c','Ranawat II','Subjective weakness with UMN findings.'],
+['c','Ranawat IIIA vs IIIB','Objective weakness; A ambulatory, B nonambulatory.'],
+['d','RA cervical instability order','AAS (50–80%) → basilar invagination (40%) → subaxial subluxation (20%).'],
+['d','RA occipital headache cause','C1–2 erosion compressing the greater occipital branch of C2.'],
+['m','RA preop requirement','Flexion-extension cervical films before any elective surgery.'],
+['d','AAS instability on flexion-extension','Anterior ADI motion > 3.5 mm.'],
+['d','AAS surgical thresholds','AADI > 9–10 mm; PADI < 14 mm.'],
+['d','More sensitive predictor of cord injury in RA','PADI (space available for cord) < 14 mm.'],
+['d','Cervicomedullary angle normal and threshold','135–175°; < 135° = impending injury.'],
+['d','Most reproducible line for basilar invagination','Ranawat line.'],
+['m','Basilar invagination surgery','Occiput–C2 fusion with gentle traction; odontoidectomy secondary.'],
+['d','Subaxial subluxation instability markers','> 4 mm or > 20% of body; cervical height index < 2.0.'],
+['c','Gallie fusion biomechanics','One sublaminar wire; poor in rotation.'],
+['c','Brooks fusion biomechanics','Two wedge grafts, two sublaminar wires; poor in rotation.'],
+['c','Magerl transarticular screws requirements','Reduced C1–2 joint; preop CT for vertebral artery.'],
+['c','Harms C1–C2 construct advantages','Strongest; no reduction needed; less artery/C2 nerve risk.'],
+['a','Vertebral artery course at C1–2','C2 transverse foramen → groove on superior C1.'],
+['a','C2 nerve location at C1–2 fixation','Dorsal to the C1–2 joint (posterior scalp numbness if injured).'],
+['d','AS patient with neck pain','Fracture until proven otherwise — CT (and MRI).'],
+['d','AS spine fracture hazard','Epidural hematoma; unstable three-column injury.'],
+['m','AS fracture immobilization position','Habitual kyphotic position — never flat.'],
+['d','AS chin-on-chest measurement','Chin-brow vertical angle.'],
+['m','AS deformity: correct first','Hips and lumbar spine before the neck.'],
+['m','AS cervicothoracic osteotomy level','C7–T1 PSO (vertebral artery not yet in the spine).'],
+['d','Root at risk in C7–T1 osteotomy','C8.'],
+['d','OPLL demographics','East Asian predominance; men 2:1; cervical > thoracic.'],
+['c','OPLL types','Continuous, segmental, mixed, localized.'],
+['d','Best imaging for OPLL','CT (MRI mistakes it for multilevel HNP).'],
+['m','Asymptomatic OPLL','No prophylactic surgery.'],
+['d','Anterior OPLL surgery risk','Dural tears (OPLL fused to dura); anterior floating technique.'],
+['d','Stinger mechanism','Upper plexus stretch; unilateral; no steroids.'],
+['d','Bilateral symptoms after neck injury mean…','Cord injury, not a stinger.'],
+['d','Transient quadriplegia most common levels','C3–4.'],
+['d','No contact sports after transient quadriplegia when…','Instability, HNP, degenerative change, symptoms > 36 h.'],
+// thoracic
+['d','Symptomatic thoracic disc herniation frequency','~1% of surgical HNPs.'],
+['d','Most common thoracic HNP level','T11–12 (75% at T8–T12).'],
+['d','Thoracic myelopathy exam','Leg hyperreflexia/weakness with normal upper extremities.'],
+['m','Central thoracic HNP approach','Anterior transthoracic.'],
+['m','Lateral thoracic HNP approach','Posterior transpedicular / lateral extracavitary.'],
+['d','Thoracic HNP contraindicated procedure','Laminectomy alone.'],
+// lumbar
+['d','"Backache disc"','L4–5 (then L5–S1).'],
+['d','Disc types: protrusion vs extrusion vs sequestration','Bulge with intact annulus / through annulus under PLL / free fragment.'],
+['d','Why older patients herniate less','Desiccated nucleus.'],
+['d','Discogenic back pain MRI','Dark disc ± high-intensity zone (annular tear).'],
+['d','Discography positive criterion','Concordant pain; include a control level.'],
+['d','Discography risk','Needle annular tears accelerate degeneration.'],
+['d','Low back pain natural history','> 50% recover in 1 week; 90% in 1–3 months.'],
+['d','Sciatica natural history','Half recover in 1 month; investigate at 6 weeks.'],
+['m','Total disc arthroplasty indications','Single level L4–5 or L5–S1, no spondylolisthesis, 6 months failed nonop.'],
+['d','Intradiscal electrothermy status','Abandoned — relief < 1 year.'],
+['m','Far-lateral herniation approach','Paramedian muscle-splitting (Wiltse).'],
+['m','Discectomy positioning pearl','Abdomen free — lowers IVC/epidural venous pressure.'],
+['d','Discectomy approaches compared','Open, micro, endoscopic equally effective.'],
+['m','Fusion with discectomy when…','Pre-existing instability or > 50% both facets / 100% one facet resected.'],
+['d','SPORT disc herniation 2-year result','No significant primary-outcome difference (ITT); secondary outcomes favored surgery.'],
+['d','Workers\' compensation and disc surgery','Worse symptoms, function, satisfaction.'],
+['d','Central stenosis absolute definition','< 100 mm² or < 10 mm AP on CT.'],
+['d','Soft-tissue contribution to central stenosis','Up to 40% (flavum, capsule, disc).'],
+['d','Why central stenosis is more common in men','Smaller L3–5 canal.'],
+['a','Lateral recess boundaries','Superior facet posteriorly, thecal sac medially, pedicle laterally, body anteriorly.'],
+['a','Lateral recess stenosis compresses…','Traversing root (L5 at L4–5).'],
+['a','Foraminal stenosis compresses…','Exiting root (L4 at L4–5).'],
+['d','Normal foraminal dimensions','Height 20–30 mm; width 8–10 mm.'],
+['d','Tandem stenosis','Cervical + lumbar stenosis.'],
+['d','Neurogenic claudication relief','Sitting or flexion only — not standing.'],
+['d','Neurogenic vs vascular: bicycling','Neurogenic tolerates it; vascular provokes it.'],
+['d','Neurogenic vs vascular: uphill walking','Neurogenic later symptoms; vascular sooner.'],
+['d','Stenosis exam findings','Abnormal in < 50%; limited extension is the main sign.'],
+['d','Standing treadmill test sensitivity','> 90%.'],
+['m','Central stenosis surgery','Laminectomy + partial medial facetectomy (no fusion usually).'],
+['d','Common cause of persistent leg pain after laminectomy','Residual foraminal stenosis.'],
+['m','Fusion indications with stenosis surgery','Facet removed, pars defect, radiographic instability, spondylolisthesis, degenerative scoliosis.'],
+['d','SPORT stenosis 4-year result','Surgery significantly better pain and function.'],
+['d','Alendronate and fusion','Reduces fusion in animal models — hold postoperatively.'],
+['d','Spondylolysis demographics','Gymnasts, football linemen; extension pain; hereditary.'],
+['d','Spondylolysis radiograph yield','Lateral 80%; obliques add 15% (Scottie dog collar).'],
+['d','SPECT uptake in spondylolysis means…','Acute lesion with healing potential.'],
+['d','Unilateral pars defect progression','Almost never slips.'],
+['c','Wiltse type I','Dysplastic — child; S1 facet dysplasia; intact arch → progression/cauda equina risk.'],
+['c','Wiltse type II','Isthmic — most common; L5–S1.'],
+['c','Wiltse type III','Degenerative — > 40 y; L4–5.'],
+['c','Wiltse type IV','Traumatic (non-pars fracture).'],
+['c','Wiltse type V','Pathologic.'],
+['c','Wiltse type VI','Postsurgical.'],
+['c','Meyerding I','0–25%.'],
+['c','Meyerding II','25–50%.'],
+['c','Meyerding III','50–75%.'],
+['c','Meyerding IV','> 75%.'],
+['c','Meyerding V','> 100% (spondyloptosis).'],
+['d','Slip angle normal and risk threshold','Normally < 0° (lordotic); > 10° progression risk.'],
+['d','Normal sacral inclination','> 30°.'],
+['d','Pelvic incidence normal vs spondylolisthesis','50–55° vs 70–80° (does not predict progression).'],
+['d','Gill nodule','Fibrocartilaginous pars mass compressing the exiting L5 root.'],
+['d','Pediatric spondylolisthesis presentation','Back pain, hamstring tightness, step-off, pelvic waddle.'],
+['d','Age slips usually begin','4–6 years.'],
+['d','Pediatric slip progression risk factors','Young age, female, slip angle > 10°, high grade, dysplastic features.'],
+['m','Grade I slip and sports','Return to all sports when asymptomatic.'],
+['m','Asymptomatic grade II slip','Restrict gymnastics/football.'],
+['m','Low-grade slip surgery','In situ L5–S1 posterolateral fusion (Wiltse approach).'],
+['m','Pars repair indications','< 10% slip; defect at L4 or above (Buck screw / Bradford wiring).'],
+['m','High-grade (≥ 50%) slip in a child','Prophylactic fusion even if asymptomatic — L4–S1 in situ.'],
+['d','Why fuse L4–S1 in high-grade slips','L5 too far anterior to bridge L5–S1 alone.'],
+['d','Reduction of spondylolisthesis: root injury rate','20–30% L5 (mostly transient).'],
+['d','Gaines procedure','L5 vertebrectomy for spondyloptosis.'],
+['d','Degenerative spondylolisthesis demographics','Women > 40 (4–5:1), African Americans, diabetics; L4–5.'],
+['d','Degenerative spondylolisthesis anatomic predispositions','Sacralized L5; sagittal facets.'],
+['d','Shopping-cart sign','Relief with flexion (stenosis).'],
+['m','Degenerative spondylolisthesis surgery','Decompression + posterolateral fusion.'],
+['d','Indication to add fusion to laminectomy (exam favorite)','Degenerative spondylolisthesis at that level.'],
+['d','Adult isthmic slip pain pattern','Extension-aggravated back pain + L5 radiculopathy.'],
+['d','Cauda equina: most consistent finding','Urinary retention (check post-void residual).'],
+['d','Cauda equina exam essentials','Perianal sensation, rectal tone, voluntary contraction.'],
+['m','Cauda equina decompression timing','As early as possible; best within 48 h.'],
+['d','Postoperative urinary retention should raise…','Cauda equina syndrome (hematoma).'],
+['d','Recurrent leg pain after 6–12 pain-free months','Recurrent HNP, new level, or unrecognized lateral stenosis.'],
+['d','Epidural fibrosis timing and treatment','~3 months; responds poorly to re-exploration.'],
+['d','Vascular injury during discectomy mortality','> 50%.'],
+['d','Dural tear incidence','1–4% (up to 47% in revisions).'],
+['m','Postoperative CSF leak','Bed rest + subarachnoid drain.'],
+['d','Well-repaired dural tear outcome','Unaffected.'],
+['d','Postoperative discitis timing','3–6 weeks; severe back pain, high ESR → gadolinium MRI, biopsy.'],
+// deformity
+['d','Adult scoliosis curve progression threshold','Unlikely < 30°.'],
+['d','Highest-risk adult curve','Right thoracic > 50° (~1°/year).'],
+['d','Pregnancy and curve progression','No association.'],
+['d','Thoracic curve affecting pulmonary function','> 60–65°; > 90° affects mortality.'],
+['d','Strongest predictor of disability in adult deformity','Sagittal imbalance.'],
+['d','Fusion ending at L5 problems','L5–S1 degeneration; progressive sagittal imbalance.'],
+['d','Fusion to sacrum problems','Pseudarthrosis, gait disturbance.'],
+['m','Iliac fixation indication','Lumbosacral fusions > 3 levels.'],
+['d','Pseudarthrosis rate, posterior-only adult scoliosis fusion','~15%; highest at thoracolumbar junction and L5–S1.'],
+['d','Older adult deformity complication rate','Up to 25%.'],
+['d','Postlaminectomy kyphosis risk in children','~90% → prophylactic fusion.'],
+['d','Anterior fusion for kyphosis when…','Does not correct to ≤ 55° on hyperextension lateral.'],
+['c','Smith-Petersen osteotomy correction','5–10° per level; needs mobile disc.'],
+['d','Osteoclasis','Opening the disc anteriorly in ankylosed spines — abandoned (vessel injury, anterior void).'],
+['c','Pedicle subtraction osteotomy correction','~30°.'],
+['d','PSO technical error','Breaching the anterior cortex → parallel collapse, under-correction.'],
+['c','Vertebral column resection correction','30–40°.'],
+['d','Traditional lumbar osteotomy level in AS','L3 (below the cord).'],
+['d','SVA / PI-LL / PT thresholds for disability','SVA > 5 cm; PI–LL > 10°; PT > 20–25°.'],
+['d','Pelvic incidence formula','PI = PT + SS (fixed constant).'],
+['d','Proximal junctional kyphosis risk factors','Ending at apex, over-correction, osteoporosis.'],
+['d','Bisphosphonate effect on vertebral fractures','↓ 65% at 1 year, 40% at 3 years.'],
+['d','Vertebroplasty vs kyphoplasty cement','Low-volume/high-pressure vs high-volume/low-pressure.'],
+['d','Requirement for cement augmentation to help','Fracture still healing — STIR-bright on MRI.'],
+['d','Cement augmentation complications','Hypotension, canal extravasation, pulmonary cement embolism.'],
+['d','Sham-controlled vertebroplasty trials','INVEST, Buchbinder — no benefit.'],
+// sacropelvis
+['d','SI joint provocative tests','Gaenslen, FABER, direct compression.'],
+['m','SI joint fusion','Not indicated unless infected.'],
+['d','Coccygodynia natural history','Self-limited over 1–2 years; surgery high failure.'],
+['d','Sacral insufficiency fracture bone scan','H-shaped (Honda) uptake.'],
+// tumors
+['d','Vertebral body tumors','LCH, GCT, chordoma, osteosarcoma, hemangioma, mets, myeloma/lymphoma.'],
+['d','Posterior element tumors','ABC, osteoblastoma, osteoid osteoma.'],
+['d','Bone destruction needed to see a lytic lesion on plain films','> 30% of the body.'],
+['d','Winking owl sign','Absent pedicle on AP — tumor.'],
+['d','Malignant spine tumor MRI signal','Low T1, high T2.'],
+['d','Spine level frequency for malignancy','Lumbar > thoracic > cervical; body > posterior elements.'],
+['d','Metastasis spread order in a vertebra','Body first, then pedicles.'],
+['d','Spine metastasis red flags','Cancer history, weight loss, night pain, age > 50.'],
+['m','Epidural cord compression best treatment','Radiation + direct surgical decompression (Patchell).'],
+['m','Spine tumor surgical indications','Progressive deficit or pain despite radiation, open biopsy need, instability, radioresistant tumor.'],
+['m','Vertebroplasty in spine metastasis','Myeloma/breast without instability or deficit.'],
+['m','Upper cervical tumor approach','Posterior.'],
+['m','Body tumor of lower cervical/thoracic/lumbar approach','Anterior.'],
+['d','Osteoid osteoma scoliosis: side and resolution','Lesion at apex of convexity; resolves if resected within 18 months in child < 11.'],
+['d','Spinal osteoblastoma features','Posterior elements, older patients, > 50% neurologic involvement.'],
+['m','Multifocal spinal osteoblastoma','En bloc excision (no radiation).'],
+['d','Vertebral hemangioma plain film / CT','Jailhouse striations; spikes of bone (polka dot).'],
+['d','Hemangioma vs Paget vertebra','Hemangioma not expanded; Paget expanded.'],
+['d','Vertebra plana in a child','Eosinophilic granuloma (Calvé) — ≥ 50% height reconstitutes.'],
+['d','Spinal GCT age and radiation','4th–5th decades; avoid radiation (malignant change).'],
+['m','Myeloma spine treatment','Radiation 3000–4000 cGy ± chemo; surgery for instability.'],
+['d','Chordoma spine sites','Sacrum, skull base, cervical next.'],
+['d','Chordoma survival','10–15 years; cure rare; high recurrence.'],
+['d','Ivory vertebra','Lymphoma (also Paget, mets).'],
+['d','Neurofibroma radiographic clue','Enlarged intervertebral foramen on obliques.'],
+['d','Polyostotic fibrous dysplasia spine involvement','≥ 60%, posterior elements; screen for scoliosis.'],
+// infections
+['d','Osteodiscitis mean age and organism','~7 years; S. aureus.'],
+['d','Earliest radiographic sign of discitis','Loss of lumbar lordosis.'],
+['d','Discitis radiograph lag','10 days – 3 weeks.'],
+['d','Discitis test of choice','Gadolinium MRI.'],
+['m','Discitis antibiotic timing','Hold until percutaneous biopsy if possible.'],
+['d','Vertebral osteomyelitis organism','S. aureus 50–75%; gram-negatives in elderly.'],
+['d','Vertebral osteomyelitis diagnostic delay','6–12 weeks.'],
+['d','Most common symptom of vertebral osteomyelitis','Back pain (not fever).'],
+['d','Vertebral osteomyelitis neurologic deficit risk','40% in elderly, cephalic infection, diabetes/RA, delayed diagnosis.'],
+['d','Disc space in infection vs metastasis','Destroyed in infection; preserved in metastasis.'],
+['d','Most accurate test for pyogenic spine infection','MRI (with gadolinium).'],
+['m','Vertebral osteomyelitis antibiotic duration','6–12 weeks IV.'],
+['m','Vertebral osteomyelitis surgery','Anterior debridement + strut graft for abscess, deficit, destruction.'],
+['d','Lab used to monitor response','CRP.'],
+['d','Epidural abscess presentation order','Back pain → neurologic deficit → fever.'],
+['d','Epidural abscess location','Posterior thoracic/lumbar.'],
+['d','Epidural abscess MRI distinction from CSF','Pus enhances with gadolinium on T1; CSF stays dark.'],
+['m','Epidural abscess treatment','Urgent surgical decompression (laminectomy if posterior).'],
+['d','TB spine: site of origin','Vertebral body metaphysis, spreading under the ALL.'],
+['d','TB spine: disc involvement','Preserved early.'],
+['d','TB spine: abscess and skip lesions','Abscess ~50%; skip lesions 15%.'],
+['d','TB spine chest film / PPD','2/3 abnormal chest film; 20% PPD negative.'],
+['m','Hong Kong procedure','Anterior debridement + uninstrumented autogenous strut for TB.'],
+['d','Fungal spondylitis host','Immunocompromised.'],
+['d','Destructive spondyloarthropathy','Dialysis patients; 3 vertebrae/2 discs; crystal/amyloid.'],
+['d','DISH definition','Nonmarginal flowing syndesmophytes at ≥ 3 successive levels.'],
+['d','DISH side and region','Right side, thoracic.'],
+['d','DISH associations','Diabetes, gout, heterotopic ossification after THA, dysphagia.'],
+['d','AS syndesmophytes','Marginal (bamboo spine).'],
+['d','AS SI joint involvement','Bilateral obliteration; iliac side first.'],
+['d','HLA-B27 in AS','95% positive, but only 2% of carriers get AS — not diagnostic.'],
+['d','AS extra-articular associations','Anterior uveitis, restrictive lung disease, aortic regurgitation, colitis.'],
+['m','AS lumbar deformity surgery','Posterior extension osteotomy + compression instrumentation.'],
+// trauma general
+['d','Minimum trauma imaging','AP chest, AP pelvis, lateral c-spine to C7–T1.'],
+['d','CT sagittal sensitivity for cervical fractures','~85%; may miss axial-plane type II dens.'],
+['d','Sacral sparing means…','Incomplete cord injury.'],
+['d','ASIA neurologic level definition','Most cephalad level with normal bilateral motor and sensory function.'],
+['d','Multilevel spine injury rate','10–20% — image the whole spine.'],
+['d','Most common cause of hypotension in spine trauma','Hemorrhagic shock.'],
+['d','Neurogenic shock hallmark','Hypotension with bradycardia.'],
+['m','Neurogenic shock treatment','Volume first, then vasopressors; MAP ≥ 85 for 5–7 days.'],
+['d','Backboard ulcer timing','30–60 minutes.'],
+['d','Halo controls poorly…','Axial distraction (and subaxial motion).'],
+['a','Halo anterior pin safe zone','Above the eyebrow, middle-to-lateral third (supraorbital nerve).'],
+['d','Halo pins: adults vs children','4 pins at 6–8 in-lb vs 8–10 pins at 2 in-lb.'],
+['a','Gardner-Wells pin placement','In line with the external auditory meatus, ~1 cm above the pinna.'],
+['d','Methylprednisolone for cord injury: current status','Option at best; not standard of care; many centers abandoned.'],
+['d','NASCIS dosing','30 mg/kg bolus, then 5.4 mg/kg/h × 24 h (< 3 h) or 48 h (3–8 h).'],
+['d','Steroid contraindications in cord injury','Penetrating injury, > 8 h, root/plexus/cauda injuries, pregnancy, age < 13, infection.'],
+['c','ASIA A','No motor, complete sensory loss.'],
+['c','ASIA B','No motor, incomplete sensory.'],
+['c','ASIA C','Motor < 3/5, incomplete sensory.'],
+['c','ASIA D','Motor > 3/5.'],
+['c','Frankel B','Sensory only below the level.'],
+['d','Complete injury root recovery','80% regain one level; ~20% two levels.'],
+['d','Spinal shock duration','24–72 hours.'],
+['d','Spinal shock ends when…','Bulbocavernosus reflex returns.'],
+['d','Injuries that may permanently abolish the BCR','Conus / cauda equina injuries.'],
+['d','First reflex to return after spinal shock','Bulbocavernosus (polysynaptic); DTRs return in phase 3.'],
+['d','Spinal shock phase 4','1–12 months: hyperreflexia and spasticity.'],
+['d','Central cord mechanism','Hyperextension in a stenotic spine; central gray injury.'],
+['d','Central cord deficit pattern','Arms worse than legs.'],
+['d','Central cord ambulation prognosis','~Half of elderly, nearly all young patients.'],
+['d','Anterior cord deficits','Motor and pain/temperature lost; dorsal columns spared.'],
+['d','Anterior cord prognosis','Worst.'],
+['d','Anterior cord vascular cause','Anterior spinal artery / Adamkiewicz ischemia.'],
+['d','Brown-Séquard deficits','Ipsilateral motor/proprioception; contralateral pain/temperature 1–2 levels below.'],
+['d','Brown-Séquard prognosis','Best (~90% walk); penetrating trauma.'],
+['d','Posterior cord syndrome','Rarest; dorsal columns lost, motor intact.'],
+['d','Autonomic dysreflexia level and triggers','Above T6; bladder distension, fecal impaction.'],
+['d','Autonomic dysreflexia signs','Pounding headache, hypertension, sweating, nasal congestion, bradycardia.'],
+['m','Autonomic dysreflexia treatment','Catheterize, disimpact, antihypertensives, atropine if severe.'],
+['d','C1–2 injury respiratory status','VC 5–10%; ventilator-dependent; no cough.'],
+['d','C3–5 injury respiratory status','VC ~20%; weak cough.'],
+['d','Level for independent transfers','C6.'],
+['d','Level able to cut food with a knife','C7.'],
+['d','Level that is transfer-dependent','C4.'],
+['d','Syrinx vs hydromyelia','Syrinx pathologic cavity; hydromyelia dilated central canal (normal variant).'],
+['d','Syringomyelia sensory pattern','Cape-like; upper > lower.'],
+['d','Syrinx imaging','MRI; gadolinium to exclude tumor.'],
+// upper cervical trauma
+['d','Powers ratio','Basion→C1 posterior arch ÷ C1 anterior arch→opisthion; > 1.0 = anterior OCD.'],
+['d','Basion-dental interval abnormal','> 12 mm (normal 4–5 mm adults, ≤ 10 children).'],
+['c','Harborview stage III OCD','> 2 mm distraction on static films.'],
+['m','Occipitocervical dissociation treatment','Posterior occiput–C2 fusion (stage II–III or any deficit).'],
+['c','Anderson-Montesano type III','Alar ligament avulsion — unstable; OCD association.'],
+['d','Jefferson fracture mechanism','Axial load C1 burst.'],
+['d','Rule of Spence','Lateral mass overhang > 6.9 mm (8.1 with magnification) = transverse ligament rupture.'],
+['d','ADI > 3.5 mm means…','Transverse ligament damaged.'],
+['d','ADI > 5 mm means…','Transverse AND alar ligaments damaged.'],
+['m','Jefferson with intact transverse ligament','Halo vest 6–12 weeks.'],
+['m','Jefferson with ruptured transverse ligament','Posterior C1–2 (or O–C2) fusion.'],
+['c','Fielding-Hawkins I','Rotatory, ligament intact, dens pivot (≤ 3 mm).'],
+['c','Fielding-Hawkins II','Ligament incompetent, one facet pivots (3–5 mm).'],
+['c','Fielding-Hawkins III','Both facets anterior; ADI > 5 mm.'],
+['c','Fielding-Hawkins IV','Both facets posterior.'],
+['c','Anderson-D\'Alonzo type I','Alar avulsion of the tip → collar; check OCD.'],
+['c','Anderson-D\'Alonzo type II','Base of the dens — most common; nonunion ~32%.'],
+['c','Anderson-D\'Alonzo type IIA','Comminuted base.'],
+['c','Anderson-D\'Alonzo type III','Into C2 body → orthosis/halo; operate if > 5 mm displaced.'],
+['d','Type II dens nonunion risk factors','Displacement > 5 mm, posterior displacement, angulation > 10°, age > 40, delay.'],
+['d','Anterior odontoid screw requirements','Reducible fracture; posterior-oblique or horizontal line; no barrel chest.'],
+['d','Fracture line contraindicating an anterior odontoid screw','Anterior-oblique (anterosuperior → posteroinferior).'],
+['d','Odontoid fracture outcome > 80 y','Poor regardless of treatment.'],
+['d','Hangman fracture mechanism','Hyperextension + axial load; bilateral C2 pars.'],
+['c','Levine-Edwards I','< 3 mm, no angulation → collar.'],
+['c','Levine-Edwards II','> 3 mm displaced, angulated → surgery (traction OK).'],
+['c','Levine-Edwards IIA','Angulation without translation — NO traction; halo in compression or surgery.'],
+['c','Levine-Edwards III','Bilateral pars + C2–3 facet dislocation → open reduction, C2–3 fusion.'],
+['d','Hangman acceptable reduction','< 4 mm translation, < 10° angulation.'],
+// subaxial and thoracolumbar trauma
+['c','Allen-Ferguson mechanisms','Compressive flexion, distractive flexion, compressive extension, vertical compression, distractive extension, lateral flexion.'],
+['d','Subaxial burst with intact PLC, no deficit','External immobilization (controversial).'],
+['c','SLIC morphology points','Compression 1, burst 2, distraction 3, rotation/translation 4.'],
+['c','SLIC DLC points','Intact 0, indeterminate 1, disrupted 2.'],
+['c','SLIC neurology points','Root 1, complete 2, incomplete 3, +1 continuous compression.'],
+['d','Unilateral vs bilateral facet dislocation translation','~25% vs > 50%.'],
+['m','Facet dislocation, awake and examinable','Closed traction reduction before MRI is acceptable.'],
+['m','Facet dislocation, obtunded','MRI first (disc herniation).'],
+['d','Floating lateral mass','Needs fusion.'],
+['a','Denis anterior column','ALL + anterior 1/3 body/disc.'],
+['a','Denis middle column','PLL + posterior 2/3 body/disc.'],
+['a','Denis posterior column','Pedicles, facets, laminae, spinous/transverse processes, ligaments.'],
+['d','Fourth column (thoracic)','Sternum–rib complex.'],
+['d','Denis flexion-distraction axis of rotation','Anterior longitudinal ligament.'],
+['c','AO type A','Compression (axial load).'],
+['c','AO type B','Distraction (B1 ligamentous, B2 osseoligamentous).'],
+['c','AO type C','Multidirectional / fracture-dislocation.'],
+['c','TLISS mechanism points','Compression 1 (+1 angulation > 15°, +1 burst), translation 3, distraction 4.'],
+['c','TLISS neurology points','Root 2, complete cord 2, incomplete 3, cauda equina 3.'],
+['c','TLISS PLC points','Intact 0, indeterminate 2, injured 3.'],
+['d','TLISS totals','≤ 3 nonoperative; 4 either; ≥ 5 operative.'],
+['d','Delayed instability criteria','> 3.5 mm subluxation or > 11° angulation difference.'],
+['m','Burst fracture, intact neurology and PLC','Hyperextension orthosis.'],
+['m','Burst fracture with PLC disruption','Posterior instrumented fusion.'],
+['m','Burst with deficit and retropulsion','Anterior decompression (posterior if lamina fracture).'],
+['d','Lamina fracture with deficit suggests…','Root entrapment / dural tear.'],
+['m','Thoracolumbar laminectomy alone','Contraindicated — progressive kyphosis.'],
+['m','Bony Chance fracture','Hyperextension orthosis.'],
+['m','Ligamentous Chance fracture','Posterior fusion.'],
+['d','Chance fracture associated injury','~50% intra-abdominal (GI); watch for ileus.'],
+['d','Fracture associated with thoracolumbar injuries','Calcaneus (~10%).'],
+['d','Level where the cord ends','L1–2 (injuries below do better — roots).'],
+['d','Mid-thoracic cord vascular status','Watershed — ischemia risk.'],
+['m','Retained bullet at L1 or below','Consider removal.'],
+['m','Retained bullet T12 and above','Removal controversial (may worsen deficit).'],
+// peds spine trauma
+['d','Pediatric torso elevation on a board','2–3 cm (large head).'],
+['d','Cord level at birth','~L3; stops growing in infancy.'],
+['d','Pediatric dens fracture site and age','Basilar synchondrosis; < 6 years.'],
+['m','Pediatric dens fracture treatment','Reduce in hyperextension → Minerva or compression halo; avoid traction.'],
+['d','Pediatric Chance fracture levels','Lower — L1–2, L2–3.'],
+['d','Apophyseal ring avulsion best imaging','CT (radiographs miss 1/3; MRI misses bone).'],
+// misc general
+['a','ACDF side choice reasoning','Left: consistent RLN; right: more variable (non-recurrent) RLN.'],
+['d','Most common ACDF complication','Dysphagia.'],
+['d','Superior laryngeal nerve injury sign','Loss of high-pitched voice.'],
+['d','Horner syndrome after ACDF cause','Sympathetic chain on longus colli.'],
+['a','Vertebral artery enters the transverse foramen at…','C6.'],
+['d','ALIF L5–S1 complication','Retrograde ejaculation (superior hypogastric plexus).'],
+['a','Lateral transpsoas approach nerve risks','Lumbar plexus/femoral (posterior disc), genitofemoral.'],
+['d','Narrowest thoracic pedicles','T4–T6.'],
+['d','Largest lumbar pedicle','L5.'],
+['a','Lumbar root position relative to pedicle','Inferomedial — medial breach injures the same-numbered root.'],
+['d','Triggered EMG threshold suggesting breach','< 6–8 mA.'],
+['a','Cervical lateral mass screw trajectory','Superolateral (avoid vertebral artery and root).'],
+['d','Gold-standard fusion graft','Iliac crest autograft.'],
+['d','Pseudarthrosis risk factors','Smoking, NSAIDs > 2 weeks, steroids, diabetes, multilevel, osteoporosis.'],
+['d','Single-level ACDF pseudarthrosis rate','5–10%.'],
+['d','Adjacent segment disease rate','~2–3% per year.'],
+['d','Torg-Pavlov ratio in athletes','< 0.8 = stenosis; functional stenosis on MRI matters more.'],
+['d','Return to contact after single-level ACDF','Generally allowed once fused.'],
+['d','Absolute contraindications to contact sports (cervical)','Residual cord signal, functional stenosis, C1–2 instability, multilevel fusion > 2, os odontoideum.'],
+['a','Annulus fibrosus collagen','Type I.'],
+['a','Nucleus pulposus composition','Type II collagen, aggrecan, high water; notochordal origin.'],
+['d','Highest intradiscal pressure position (Nachemson)','Sitting flexed with weight.'],
+['d','Modic type 1 change','Endplate edema/inflammation (pain association).'],
+['d','Thoracic outlet syndrome type most common','Neurogenic (> 90%; C8–T1).'],
+['d','Gilliatt-Sumner hand','APB atrophy in neurogenic TOS.'],
+['d','Paget-Schroetter','Effort thrombosis of the subclavian vein — anticoagulate, first rib resection.'],
+['d','Pediatric back pain red flags','Age < 4, night pain, fever, neurologic signs, > 4 weeks.'],
+['d','Pediatric discitis presentation','Refuses to walk/sit; L4–5; MRI; antibiotics.'],
+['d','SINS score ranges','0–6 stable; 7–12 indeterminate; 13–18 unstable.'],
+['d','Separation surgery concept','Circumferential decompression + instrumentation, then stereotactic radiosurgery.'],
 ]);

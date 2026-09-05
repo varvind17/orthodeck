@@ -9,7 +9,7 @@ Files in this folder:
 | `index.html` | the app screen and styling |
 | `app.js` | spaced-repetition engine, sessions, editing, AI chat |
 | `db.js` | on-device storage (IndexedDB) |
-| `cards.js` | the seed deck (374 cards, OITE-weighted; spine expanded from Miller's ch. 8) |
+| `cards.js` | the seed deck (1,891 granular cards, one fact each; spine includes Miller's ch. 8) |
 | `sw.js` | service worker — makes it work offline |
 | `manifest.json`, `icons/` | lets iOS install it as an app |
 | `vendor/` | pdf.js — reads PDFs on the phone for the chapter importer |
@@ -49,7 +49,7 @@ Chat needs a signal; studying does not. Usage is billed to your key at Anthropic
 - **Home** shows what's due. **Start studying** runs everything due; tapping a domain runs just that domain; **Quick 10** grabs ten cards (including cards not yet due) for a 2-minute gap.
 - **Tap** the card or **Show answer** to reveal. Rate with **Again / Hard / Good / Easy** — the little number under each is when you'll see the card next. **Swipe right = Good, swipe left = Again.**
 - **Undo** (curved arrow) takes back the last rating. **Skip** sends the card to the end of the session.
-- Scheduling is an SM-2 variant with Anki-style learning steps (1 min → 10 min → 1 day; Easy jumps to 4 days). Lapses drop the ease factor. Default 20 new cards/day, adjustable in Settings.
+- Cards are deliberately granular — one fact per card, a phrase per side — so expect fast reviews and a large daily count. Scheduling is an SM-2 variant with Anki-style learning steps (1 min → 10 min → 1 day; Easy jumps to 4 days). Lapses drop the ease factor. Default 20 new cards/day, adjustable in Settings.
 - New cards are drawn in proportion to the AAOS OITE blueprint (Hip & knee 19%, Pediatrics 12%, Trauma 11%, Basic science 10%, Foot & ankle 9%, Spine 9%, Shoulder & elbow 8%, Hand 7%, Oncology 7%, Sports 7%). Note the blueprint is anatomic: hip/femur/knee fractures and arthroplasty are in "Hip & knee".
 
 ## Part 5 — Editing cards and adding images
@@ -78,4 +78,4 @@ When adding cards to `cards.js`, add them at the **end** of a domain block. Card
 
 - The seed deck was written as a study aid, not a clinical reference. Numbers and thresholds drift between sources and years — verify anything you'd act on.
 - iOS can evict a PWA's stored data if the app isn't opened for several weeks and the phone runs low on space. Export a backup now and then.
-- Built: study engine + seed deck (374 cards), per-card editing/images, AI chat, chapter importer with review queue. Not built: subspecialty "advanced" tiers and the curated "What's new" PubMed feed.
+- Built: study engine + seed deck (1,891 one-fact cards), per-card editing/images, AI chat, chapter importer with review queue. Not built: subspecialty "advanced" tiers and the curated "What's new" PubMed feed.

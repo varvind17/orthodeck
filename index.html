@@ -310,8 +310,8 @@
       <label class="field"><span>Chapter PDF</span><input id="i-file" type="file" accept="application/pdf,.pdf"></label>
       <label class="field"><span>…or paste text</span><textarea id="i-text" placeholder="Paste a chapter, lecture notes, or a guideline summary"></textarea></label>
       <label class="field"><span>Domain for these cards</span><select id="i-domain"><option value="auto">Let the model decide per card</option></select></label>
-      <label class="field"><span>Card density</span><select id="i-density"><option value="normal">Normal — one card per testable concept</option><option value="dense">Dense — more, shorter cards</option><option value="light">Light — high-yield only</option></select></label>
-      <p class="note">Runs on your Anthropic key. A 50-page chapter is about 8–10 requests and a few minutes. Keep the app open while it works.</p>
+      <label class="field"><span>Card density</span><select id="i-density"><option value="dense">Granular — every testable fact, one per card</option><option value="normal">Standard — one fact per card, main points</option><option value="light">Light — high-yield facts only</option></select></label>
+      <p class="note">Runs on your Anthropic key. Cards come out one fact each, a phrase per side. A 50-page chapter is about 10–12 requests and a few minutes. Keep the app open while it works.</p>
       <button class="primary" id="btn-import-start">Read and make cards</button>
       <p class="note" id="i-status"></p>
     </div>
