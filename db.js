@@ -1,8 +1,8 @@
 // Tiny promise wrapper over IndexedDB. All user data lives here, on-device.
 const DB = (() => {
   const NAME = 'orthodeck';
-  const VERSION = 2;
-  const STORES = ['progress', 'overrides', 'usercards', 'settings', 'chats', 'stats', 'queue'];
+  const VERSION = 3;
+  const STORES = ['progress', 'overrides', 'usercards', 'settings', 'chats', 'stats', 'queue', 'log'];
   let dbp = null;
 
   function open() {

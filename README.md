@@ -46,6 +46,26 @@ Chat needs a signal; studying does not. Usage is billed to your key at Anthropic
 
 ## Part 4 — Studying
 
+**Scheduler.** OrthoDeck uses FSRS-5 (the algorithm Anki now defaults to) with default parameters and 1-min / 10-min learning steps. Settings → **Target retention** sets how much you want to remember at review time: 90% is the default; raise to 95% in the month before the OITE (more daily reviews), lower afterwards.
+
+**On each card:** Edit, Ask AI, **Flag** (verify / not board-relevant / keeps tripping me / needs rewrite), **Suspend** (drops it from rotation; unsuspend from Browse), Skip. After the answer, a **Related** list shows sibling cards (other grades of the same classification) and cards sharing key terms — tap to open one.
+
+**Siblings are buried:** after you rate "Garden I", the other Garden grades won't appear in the same session, so you learn the fact rather than the sequence. Turn off in Settings.
+
+**Reverse cards:** every classification card also exists reversed (answer → name). Turn off in Settings if you want fewer cards.
+
+**Leeches:** a card failed 8 times (adjustable) is tagged and suspended. Browse → **Leeches** lists them; rewrite or unsuspend.
+
+**Cloze cards:** write `The {{c1::deep deltoid}} resists lateral talar shift` in the front. The importer makes these for list-heavy text.
+
+**Cram mode** (home screen) ignores scheduling and shows everything you've seen in a domain — for the last days before the exam.
+
+**After a session** with any misses: **Explain my misses** groups the failed cards by concept and explains the underlying idea (uses your API key).
+
+**Progress** (bar-chart icon): retention, mastered cards, reviews per day, next-week forecast, and **Blueprint vs you** — domains sorted by OITE weight × how far you are from mastering them, so you see where effort buys the most.
+
+### Old notes on studying
+
 - **Home** shows what's due. **Start studying** runs everything due; tapping a domain runs just that domain; **Quick 10** grabs ten cards (including cards not yet due) for a 2-minute gap.
 - **Tap** the card or **Show answer** to reveal. Rate with **Again / Hard / Good / Easy** — the little number under each is when you'll see the card next. **Swipe right = Good, swipe left = Again.**
 - **Undo** (curved arrow) takes back the last rating. **Skip** sends the card to the end of the session.
@@ -76,13 +96,17 @@ Tap a result to see it larger, then **Add to card** and **Save**. Images are sto
 
 1. On your phone, save the chapter PDF somewhere you can reach from the Files app (iCloud Drive, Downloads, or AirDrop it).
 2. In OrthoDeck tap **Make cards from a chapter** (home screen) or Settings → Import.
-3. Choose the PDF (or paste text), pick the domain (or let the model decide per card) and a density, then **Read and make cards**. The PDF is read on the phone; the text goes to Claude in sections of ~4,500 words, one request each. A 50-page chapter is about 8–10 requests and takes a few minutes — keep the app in the foreground.
+3. Choose the PDF. The app reads it, shows the page count, and lets you set a **page range** (skip references/index). The extracted text appears in an editable box — delete anything you don't want cards from. Pick the domain (or let the model decide per card) and a density, then **Read and make cards**. The PDF is read on the phone; the text goes to Claude in sections of ~4,500 words, one request each. A 50-page chapter is about 8–10 requests and takes a few minutes — keep the app in the foreground.
 4. Every generated card lands in a **review queue**. Tap a card to edit the front/back/domain, then **Accept** (adds it to your deck as your own card), **Discard**, or **Skip for now**. **Accept all** exists but the point of the queue is that you check numbers and classifications against the book first.
 5. Accepted cards show under Browse → **Mine** and enter the normal study rotation.
 
 Notes: scanned PDFs with no text layer will not work (you need a PDF where you can select text). The importer needs a signal and uses your API key; cost is roughly a few cents per chapter. The queue survives closing the app and is included in backups.
 
-## Part 8 — Updating the app later
+## Part 8 — Sharing decks
+
+Settings → **Share a deck**: pick "My own cards", your edited built-in cards, or a whole domain, then **Export deck file**. Send the file to a co-resident; they use **Import a deck file** and the cards join their rotation as their own cards (duplicates skipped, no progress carried).
+
+## Part 9 — Updating the app later
 
 If you change any file (e.g. add cards to `cards.js`), also change `CACHE_VERSION` in `sw.js` (e.g. `orthodeck-v2`) before uploading to GitHub, or installed phones will keep the old cached copy. The app shows "Update ready — close and reopen" when it downloads the new version.
 
@@ -92,4 +116,4 @@ When adding cards to `cards.js`, add them at the **end** of a domain block. Card
 
 - The seed deck was written as a study aid, not a clinical reference. Numbers and thresholds drift between sources and years — verify anything you'd act on.
 - iOS can evict a PWA's stored data if the app isn't opened for several weeks and the phone runs low on space. Export a backup now and then.
-- Built: study engine + seed deck (1,891 one-fact cards), per-card editing/images, AI chat, chapter importer with review queue, web image search (Commons/Google). Not built: subspecialty "advanced" tiers and the curated "What's new" PubMed feed.
+- Built: FSRS scheduler with target retention, seed deck (1,891 one-fact cards + reverse classification cards), per-card editing/images, AI chat, chapter importer with review queue, web image search (Commons/Google). Not built: subspecialty "advanced" tiers and the curated "What's new" PubMed feed.

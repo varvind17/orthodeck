@@ -169,6 +169,30 @@
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
+<style>
+  .toolrow { flex-wrap: wrap; }
+  .related { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .related h4 { margin: 0 0 6px; font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .related button { display: block; width: 100%; text-align: left; padding: 7px 0; font-size: 14.5px; border-top: 1px solid var(--line); }
+  .related button:first-of-type { border-top: 0; }
+  .related button b { color: var(--accent); font-weight: 600; }
+  mark { background: var(--accent-soft); color: var(--accent); font-weight: 600; border-radius: 4px; padding: 0 3px; }
+  .clozegap { color: var(--accent); font-weight: 700; }
+  .flagpill { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; }
+  .bars { display: flex; align-items: flex-end; gap: 3px; height: 90px; margin: 8px 0 4px; }
+  .bars i { flex: 1; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 2px; display: block; }
+  .bars i.today { background: var(--easy); }
+  .barlabels { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .heat { display: grid; grid-template-columns: 1.4fr 0.6fr 0.7fr 0.7fr 1.2fr; gap: 6px 8px; align-items: center; font-size: 14px; }
+  .heat .h { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .heat .p { height: 10px; background: var(--line); border-radius: 5px; overflow: hidden; }
+  .heat .p i { display: block; height: 100%; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0 16px; }
+  .stat { background: var(--surface); border-radius: 14px; padding: 12px; box-shadow: 0 1px 0 var(--line); }
+  .stat b { display: block; font-family: var(--serif); font-size: 26px; font-weight: 600; }
+  .stat span { font-size: 13px; color: var(--muted); }
+  .explain { white-space: pre-wrap; line-height: 1.5; font-size: 16px; }
+</style>
 </head>
 <body>
 
@@ -176,9 +200,10 @@
 <section id="home" class="screen active">
   <div class="bar">
     <h1>OrthoDeck</h1>
-    <button class="iconbtn" id="btn-settings" aria-label="Settings">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-    </button>
+    <div>
+      <button class="iconbtn" id="btn-stats" aria-label="Stats"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button>
+      <button class="iconbtn" id="btn-settings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    </div>
   </div>
   <div class="home-body">
     <p class="due-lead" id="due-lead">Loading your deck…</p>
@@ -187,8 +212,9 @@
       <button class="secondary" id="btn-browse">Browse cards</button>
       <button class="secondary" id="btn-quick">Quick 10</button>
     </div>
-    <div class="row"><button class="secondary" id="btn-import-home">Make cards from a chapter</button></div>
+    <div class="row"><button class="secondary" id="btn-import-home">Make cards from a chapter</button><button class="secondary" id="btn-cram">Cram mode</button></div>
     <p class="note hidden" id="queue-note"></p>
+    <p class="note hidden" id="exam-note"></p>
     <div class="domains">
       <h2>By domain — tap to study one</h2>
       <div id="domain-list"></div>
@@ -200,16 +226,11 @@
 <!-- ============ STUDY ============ -->
 <section id="study" class="screen">
   <div class="bar">
-    <button class="iconbtn" id="btn-study-close" aria-label="Close">
-      <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
-    </button>
+    <button class="iconbtn" id="btn-study-close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     <div class="title" id="study-title">Studying</div>
-    <button class="iconbtn" id="btn-undo" aria-label="Undo last rating">
-      <svg viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg>
-    </button>
+    <button class="iconbtn" id="btn-undo" aria-label="Undo last rating"><svg viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg></button>
   </div>
   <div class="progressline"><i id="study-progress" style="width:0%"></i></div>
-
   <div class="cardwrap" id="cardwrap">
     <div class="card" id="card">
       <div class="tag"><span id="c-domain"></span><span id="c-type"></span></div>
@@ -218,17 +239,18 @@
         <div class="a" id="c-a"></div>
         <div class="imgs" id="c-imgs"></div>
         <div class="edited" id="c-edited"></div>
+        <div class="related hidden" id="c-related"><h4>Related</h4><div id="c-related-list"></div></div>
       </div>
       <div class="hint" id="c-hint">Tap to reveal</div>
     </div>
   </div>
-
   <div class="toolrow">
     <button id="btn-edit">Edit</button>
     <button id="btn-chat">Ask AI</button>
+    <button id="btn-flag">Flag</button>
+    <button id="btn-suspend">Suspend</button>
     <button id="btn-skip">Skip</button>
   </div>
-
   <div class="showbar" id="showbar"><button class="primary" id="btn-show">Show answer</button></div>
   <div class="ratebar hidden" id="ratebar">
     <button class="again" data-r="1"><b>Again</b><span id="iv1"></span></button>
@@ -236,12 +258,11 @@
     <button class="good" data-r="3"><b>Good</b><span id="iv3"></span></button>
     <button class="easy" data-r="4"><b>Easy</b><span id="iv4"></span></button>
   </div>
-
   <div class="done hidden" id="done">
     <h2>Done for now</h2>
     <p id="done-summary"></p>
     <button class="primary" id="btn-done-home">Back to deck</button>
-    <div class="row"><button class="secondary" id="btn-done-more">Study ahead (10 more)</button></div>
+    <div class="row"><button class="secondary" id="btn-done-more">Study ahead (10 more)</button><button class="secondary hidden" id="btn-explain">Explain my misses</button></div>
   </div>
 </section>
 
@@ -257,6 +278,22 @@
   <div class="list" id="browse-list"></div>
 </section>
 
+<!-- ============ STATS ============ -->
+<section id="stats" class="screen">
+  <div class="bar">
+    <button class="iconbtn" id="btn-stats-back" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="title">Progress</div>
+    <span style="width:44px"></span>
+  </div>
+  <div class="body" style="padding:0 16px 32px;overflow-y:auto;flex:1">
+    <div class="stat-grid" id="stat-grid"></div>
+    <div class="section"><h2>Reviews — last 14 days</h2><div class="bars" id="bars"></div><div class="barlabels"><span id="bars-l0"></span><span>today</span></div></div>
+    <div class="section"><h2>Due in the next 7 days</h2><div class="bars" id="forecast"></div><div class="barlabels"><span>tomorrow</span><span>+7</span></div><p class="note" id="forecast-note"></p></div>
+    <div class="section"><h2>Blueprint vs you</h2><p class="note">Sorted by where effort buys the most: OITE weight × how far you are from mastering that domain.</p><div class="heat" id="heat"></div></div>
+    <div class="section"><h2>Leeches &amp; flags</h2><p class="note" id="leech-note"></p><div class="row"><button class="secondary" id="btn-view-leeches">View leeches</button><button class="secondary" id="btn-view-flags">View flagged</button></div></div>
+  </div>
+</section>
+
 <!-- ============ SETTINGS ============ -->
 <section id="settings" class="screen">
   <div class="bar">
@@ -266,13 +303,21 @@
   </div>
   <div class="body" style="padding:0 16px 32px;overflow-y:auto;flex:1">
     <div class="section">
-      <h2>Daily pace</h2>
-      <label class="field"><span>New cards per day</span><input id="s-new" type="number" min="0" max="200" inputmode="numeric"></label>
-      <label class="field"><span>Max reviews per session</span><input id="s-max" type="number" min="5" max="500" inputmode="numeric"></label>
+      <h2>Scheduling (FSRS)</h2>
+      <label class="field"><span>Target retention</span><select id="s-retention">
+        <option value="0.8">80% — fewer reviews</option><option value="0.85">85%</option><option value="0.9">90% (default)</option><option value="0.93">93%</option><option value="0.95">95% — exam month</option><option value="0.97">97% — maximum</option>
+      </select></label>
+      <p class="note">Higher retention = shorter intervals and more daily reviews. Raise it in the weeks before the OITE, lower it afterward.</p>
+      <label class="field"><span>New cards per day</span><input id="s-new" type="number" min="0" max="500" inputmode="numeric"></label>
+      <label class="field"><span>Max reviews per session</span><input id="s-max" type="number" min="5" max="1000" inputmode="numeric"></label>
       <label class="field"><span>New day starts at</span><select id="s-daystart">
         <option value="0">Midnight</option><option value="1">1:00 AM</option><option value="2">2:00 AM</option><option value="3">3:00 AM</option><option value="4">4:00 AM</option><option value="5">5:00 AM</option><option value="6">6:00 AM</option><option value="7">7:00 AM</option><option value="8">8:00 AM</option>
       </select></label>
-      <p class="note">Reviews after midnight but before this hour count toward the previous day, so a late session doesn't use up tomorrow's new cards.</p>
+      <label class="field"><span>Exam date (for countdown)</span><input id="s-exam" type="date"></label>
+      <label class="toggle"><span>Bury siblings <span style="color:var(--muted);font-size:13px">— don't show Garden II right after Garden I</span></span><input id="s-bury" type="checkbox"></label>
+      <label class="toggle"><span>Reverse cards for classifications <span style="color:var(--muted);font-size:13px">— answer → name</span></span><input id="s-reverse" type="checkbox"></label>
+      <label class="field"><span>Leech threshold (lapses)</span><input id="s-leech" type="number" min="3" max="30" inputmode="numeric"></label>
+      <label class="field"><span>Leech action</span><select id="s-leechaction"><option value="suspend">Suspend and tag</option><option value="tag">Tag only</option></select></label>
     </div>
     <div class="section">
       <h2>Domains in rotation</h2>
@@ -282,18 +327,21 @@
       <h2>AI chat</h2>
       <label class="field"><span>Anthropic API key (stored only on this phone)</span><input id="s-key" type="password" autocomplete="off" placeholder="sk-ant-…"></label>
       <label class="field"><span>Model</span><input id="s-model" type="text" autocomplete="off" spellcheck="false"></label>
-      <p class="note">Calls go directly from your phone to api.anthropic.com. Chat needs a signal; studying does not. Get a key at console.anthropic.com. Keys entered here are visible to anyone with your unlocked phone, so use a key you can revoke.</p>
+      <p class="note">Calls go directly from your phone to api.anthropic.com. Chat, chapter import and "explain my misses" need a signal; studying does not.</p>
     </div>
     <div class="section">
       <h2>Image search</h2>
       <label class="field"><span>Google API key (optional)</span><input id="s-gkey" type="password" autocomplete="off" placeholder="AIza…"></label>
-      <label class="field"><span>Google Programmable Search Engine ID (cx)</span><input id="s-gcx" type="text" autocomplete="off" spellcheck="false" placeholder="a1b2c3d4e5f6g7h8i"></label>
-      <p class="note">Wikimedia Commons search works with no setup. For Google Images, create a key at console.cloud.google.com (enable "Custom Search API") and a search engine at programmablesearchengine.google.com with "Search the entire web" and "Image search" turned on. Free tier: 100 searches/day.</p>
+      <label class="field"><span>Google Programmable Search Engine ID (cx)</span><input id="s-gcx" type="text" autocomplete="off" spellcheck="false"></label>
+      <p class="note">Wikimedia Commons and the Safari + paste flow need no setup.</p>
     </div>
     <div class="section">
-      <h2>Import</h2>
+      <h2>Import &amp; share</h2>
       <div class="row"><button class="secondary" id="btn-import-settings">Make cards from a PDF or text</button></div>
-      <p class="note">Upload a textbook chapter (PDF) or paste text. The app reads it on your phone, asks Claude to write original flashcards from it, and puts every card in a review queue for you to accept, edit, or discard.</p>
+      <label class="field"><span>Share a deck (your cards, or a domain)</span><select id="s-deck"></select></label>
+      <div class="row"><button class="secondary" id="btn-deck-export">Export deck file</button><button class="secondary" id="btn-deck-import">Import a deck file</button></div>
+      <input id="deck-file" type="file" accept="application/json" class="hidden">
+      <p class="note">Deck files carry cards only (no progress). Co-residents import them and the cards join their rotation as their own cards; duplicates are skipped.</p>
     </div>
     <div class="section">
       <h2>Your data</h2>
@@ -303,13 +351,10 @@
       <div class="kv"><span>Reviews logged</span><span id="k-reviews"></span></div>
       <div class="row"><button class="secondary" id="btn-export">Export backup</button><button class="secondary" id="btn-import">Import backup</button></div>
       <input id="import-file" type="file" accept="application/json" class="hidden">
-      <p class="note">Backups include progress, edits, your cards and chats — not your API key. Restore on a new phone from the same file.</p>
+      <p class="note">Backups include progress, edits, your cards, chats and the review log — not API keys.</p>
       <button class="danger" id="btn-reset-progress">Reset all study progress</button>
     </div>
-    <div class="section">
-      <h2>About</h2>
-      <p class="note" id="about-text"></p>
-    </div>
+    <div class="section"><h2>About</h2><p class="note" id="about-text"></p></div>
   </div>
 </section>
 
@@ -323,12 +368,21 @@
   <div class="body" style="padding:0 16px 32px;overflow-y:auto;flex:1">
     <div id="import-setup">
       <label class="field"><span>Chapter PDF</span><input id="i-file" type="file" accept="application/pdf,.pdf"></label>
-      <label class="field"><span>…or paste text</span><textarea id="i-text" placeholder="Paste a chapter, lecture notes, or a guideline summary"></textarea></label>
+      <p class="note" id="i-status"></p>
+      <div id="i-pages" class="hidden">
+        <div class="row" style="align-items:end">
+          <label class="field" style="flex:1;margin-top:0"><span>From page</span><input id="i-from" type="number" min="1" inputmode="numeric"></label>
+          <label class="field" style="flex:1;margin-top:0"><span>To page</span><input id="i-to" type="number" min="1" inputmode="numeric"></label>
+          <button class="secondary" id="btn-i-range" style="height:46px">Apply</button>
+        </div>
+        <p class="note">Use the PDF's own page numbers (1 = first page of the file). Skip references and the index.</p>
+      </div>
+      <label class="field"><span>Text to convert — edit freely, delete references or figure legends</span><textarea id="i-text" style="min-height:160px" placeholder="Choose a PDF above, or paste a chapter, lecture notes, or a guideline summary here"></textarea></label>
+      <p class="note" id="i-words"></p>
       <label class="field"><span>Domain for these cards</span><select id="i-domain"><option value="auto">Let the model decide per card</option></select></label>
       <label class="field"><span>Card density</span><select id="i-density"><option value="dense">Granular — every testable fact, one per card</option><option value="normal">Standard — one fact per card, main points</option><option value="light">Light — high-yield facts only</option></select></label>
-      <p class="note">Runs on your Anthropic key. Cards come out one fact each, a phrase per side. A 50-page chapter is about 10–12 requests and a few minutes. Keep the app open while it works.</p>
-      <button class="primary" id="btn-import-start">Read and make cards</button>
-      <p class="note" id="i-status"></p>
+      <label class="toggle"><span>Also make cloze cards for list-heavy text</span><input id="i-cloze" type="checkbox" checked></label>
+      <button class="primary" id="btn-import-start">Make cards</button>
     </div>
     <div id="import-progress" class="hidden">
       <p class="due-lead" id="i-progress-lead">Reading…</p>
@@ -353,9 +407,10 @@
   </div>
   <div class="body">
     <label class="field"><span>Domain</span><select id="q-domain"></select></label>
-    <label class="field"><span>Front</span><textarea id="q-q" class="q"></textarea></label>
+    <label class="field"><span>Front (cloze cards use {{c1::answer}})</span><textarea id="q-q" class="q"></textarea></label>
     <label class="field"><span>Back</span><textarea id="q-a"></textarea></label>
     <p class="note" id="q-src"></p>
+    <p class="note warn hidden" id="q-dup"></p>
     <div class="row"><button class="primary" id="btn-q-accept" style="flex:1">Accept</button></div>
     <div class="row"><button class="secondary" id="btn-q-discard" style="color:var(--again)">Discard</button><button class="secondary" id="btn-q-next">Skip for now</button></div>
   </div>
@@ -375,7 +430,7 @@
   </div>
   <div style="padding:0 16px 8px">
     <div class="row" style="margin-top:0"><button class="secondary" id="btn-img-open-google">Open Google Images in Safari</button><button class="secondary" id="btn-img-paste">Paste image</button></div>
-    <p class="note">Easiest path for Google: open it in Safari, long-press the picture → Copy, come back and tap Paste image. Or Add to Photos, then use "Add from Photos" on the card.</p>
+    <p class="note">Easiest path for Google: open it in Safari, long-press the picture → Copy, come back and tap Paste image.</p>
   </div>
   <div class="body" id="img-results" style="padding-top:4px"></div>
 </div>
@@ -404,14 +459,13 @@
   </div>
   <div class="body">
     <label class="field" id="edit-domain-field"><span>Domain</span><select id="e-domain"></select></label>
-    <label class="field"><span>Front</span><textarea id="e-q" class="q"></textarea></label>
+    <label class="field" id="edit-type-field"><span>Type</span><select id="e-type"><option value="classification">Classification</option><option value="anatomy">Anatomy / approach</option><option value="diagnosis">Diagnosis</option><option value="management">Management</option><option value="cloze">Cloze</option></select></label>
+    <label class="field"><span>Front <span id="e-cloze-hint" style="color:var(--accent)">— for cloze, wrap answers like {{c1::syndesmosis}}</span></span><textarea id="e-q" class="q"></textarea></label>
     <label class="field"><span>Back</span><textarea id="e-a"></textarea></label>
-    <label class="field"><span>Add from Photos or Files (kept only on this phone)</span>
-      <input id="e-img" type="file" accept="image/*" multiple>
-    </label>
+    <label class="field"><span>Add from Photos or Files (kept only on this phone)</span><input id="e-img" type="file" accept="image/*" multiple></label>
     <div class="row"><button class="secondary" id="btn-e-paste">Paste image</button><button class="secondary" id="btn-img-search">Find an image</button></div>
     <div class="thumbs" id="e-thumbs"></div>
-    <p class="note">Add only de-identified images you have the right to use. Edits are yours alone — the built-in card text is untouched and you can revert any time.</p>
+    <p class="note">Edits are yours alone — the built-in card text is untouched and you can revert any time.</p>
     <button class="danger hidden" id="btn-edit-revert">Revert to built-in card</button>
     <button class="danger hidden" id="btn-edit-delete">Delete this card</button>
   </div>
@@ -438,7 +492,17 @@
   </div>
 </div>
 
-<!-- ============ PREVIEW SHEET (from browse) ============ -->
+<!-- ============ EXPLAIN SHEET ============ -->
+<div class="sheet" id="explain">
+  <div class="bar">
+    <button class="iconbtn" id="btn-explain-close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    <div class="title">Your misses, explained</div>
+    <span style="width:44px"></span>
+  </div>
+  <div class="body"><div class="explain" id="explain-text"></div></div>
+</div>
+
+<!-- ============ PREVIEW SHEET ============ -->
 <div class="sheet" id="preview">
   <div class="bar">
     <button class="iconbtn" id="btn-preview-close" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
@@ -450,8 +514,9 @@
     <div class="q" id="p-q"></div>
     <div class="a" id="p-a"></div>
     <div class="imgs" id="p-imgs" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"></div>
+    <div class="related" id="p-related"><h4>Related</h4><div id="p-related-list"></div></div>
     <div class="row"><button class="secondary" id="btn-p-edit">Edit</button><button class="secondary" id="btn-p-chat">Ask AI</button></div>
-    <div class="row"><button class="secondary" id="btn-p-study">Study this card now</button></div>
+    <div class="row"><button class="secondary" id="btn-p-study">Study now</button><button class="secondary" id="btn-p-flag">Flag</button><button class="secondary" id="btn-p-suspend">Suspend</button></div>
     <p class="note" id="p-sched"></p>
     <button class="danger" id="btn-p-reset">Reset this card's progress</button>
   </div>
