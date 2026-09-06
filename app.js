@@ -13,7 +13,7 @@
   const LEARN_AHEAD = 20 * MIN;     // show learning cards up to 20 min early when nothing else is due
   const DEFAULTS = {
     id: 'main', newPerDay: 40, maxReviews: 200, domains: DOMAINS.map((d) => d.key),
-    apiKey: '', model: 'claude-sonnet-4-6', gKey: '', gCx: ''
+    apiKey: '', model: 'claude-sonnet-4-6', gKey: '', gCx: '', dayStart: 4
   };
   const TYPES = { classification: 'Classification', anatomy: 'Anatomy / approach', diagnosis: 'Diagnosis', management: 'Management' };
   const DOMAIN_BY_KEY = Object.fromEntries(DOMAINS.map((d) => [d.key, d]));
@@ -43,7 +43,12 @@
     const w = document.createElement('div'); w.className = cls || ''; w.appendChild(el);
     const c = document.createElement('div'); c.className = 'imgcap'; c.textContent = im.credit; w.appendChild(c); return w;
   }
-  const todayKey = () => new Date().toISOString().slice(0, 10);
+  // Local calendar day, shifted by the user's day-start hour (default 4 AM), so a
+  // late-night session counts as the same day.
+  function todayKey() {
+    const d = new Date(); d.setHours(d.getHours() - (settings.dayStart ?? 4));
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
 
   // ---------- cards ----------
   function allCards() {
@@ -176,6 +181,11 @@
     (await DB.getAll('overrides')).forEach((o) => (overrides[o.id] = o));
     (await DB.getAll('usercards')).forEach((c) => (userCards[c.id] = c));
     (await DB.getAll('stats')).forEach((s) => (stats[s.id] = s));
+    if (!settings.statsLocalDay) { // one-time migration from UTC-keyed stats
+      const tk = todayKey();
+      for (const k of Object.keys(stats)) if (k >= tk) { delete stats[k]; await DB.del('stats', k); }
+      settings.statsLocalDay = true; await DB.put('settings', settings);
+    }
     (await DB.getAll('queue')).forEach((q) => (queue[q.id] = q));
   }
   const saveSettings = () => DB.put('settings', settings);
@@ -453,6 +463,18 @@
       lastQ = q;
     } catch (e) { box.innerHTML = `<p class="note warn">${esc(e.message)}</p>`; }
   }
+  function googleImagesUrl(q) { return 'https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(q); }
+  async function pasteImage() {
+    try {
+      if (!navigator.clipboard || !navigator.clipboard.read) throw new Error('unsupported');
+      const items = await navigator.clipboard.read(); let found = false;
+      for (const it of items) { const type = it.types.find((t) => t.startsWith('image/')); if (!type) continue; const blob = await it.getType(type); editImages.push(await fileToDataURL(blob)); found = true; }
+      if (!found) { toast('No image on the clipboard. Long-press a picture in Safari and choose Copy first.', 4000); return; }
+      renderThumbs(); toast('Image pasted — tap Save to keep it');
+    } catch (e) {
+      toast('Paste not available here — save the picture to Photos instead, then use "Add from Photos".', 4500);
+    }
+  }
   function openImageSearch() {
     if (!editCard) return;
     $('img-q').value = cleanQuery($('e-q').value || editCard.card.q || '');
@@ -636,7 +658,7 @@ Rules — GRANULAR cards:
 
   // ---------- settings ----------
   function renderSettings() {
-    $('s-new').value = settings.newPerDay; $('s-max').value = settings.maxReviews; $('s-key').value = settings.apiKey; $('s-model').value = settings.model; $('s-gkey').value = settings.gKey || ''; $('s-gcx').value = settings.gCx || '';
+    $('s-new').value = settings.newPerDay; $('s-max').value = settings.maxReviews; $('s-key').value = settings.apiKey; $('s-model').value = settings.model; $('s-gkey').value = settings.gKey || ''; $('s-gcx').value = settings.gCx || ''; $('s-daystart').value = String(settings.dayStart ?? 4);
     const d = $('s-domains'); d.innerHTML = '';
     DOMAINS.forEach((dm) => {
       const l = document.createElement('label'); l.className = 'toggle';
@@ -695,6 +717,9 @@ Rules — GRANULAR cards:
     document.querySelectorAll('#img-sources .chip').forEach((b) => (b.onclick = () => { imgSource = b.dataset.src; document.querySelectorAll('#img-sources .chip').forEach((x) => x.classList.toggle('on', x === b)); if ($('img-q').value) runImageSearch(false); }));
     $('btn-imgp-back').onclick = () => closeSheet('imgpreview');
     $('btn-imgp-add').onclick = addSelectedImage;
+    $('btn-img-open-google').onclick = () => { const q = cleanQuery($('img-q').value); if (!q) return; window.open(googleImagesUrl(q), '_blank'); };
+    $('btn-img-paste').onclick = pasteImage;
+    $('btn-e-paste').onclick = pasteImage;
     $('btn-edit-save').onclick = saveEdit;
     $('btn-edit-revert').onclick = () => confirm('Discard your edits and images for this card?') && revertEdit();
     $('btn-edit-delete').onclick = () => confirm('Delete this card permanently?') && deleteUserCard();
@@ -704,9 +729,9 @@ Rules — GRANULAR cards:
     $('btn-chat-send').onclick = () => sendChat();
     $('chat-text').addEventListener('input', (e) => { e.target.style.height = 'auto'; e.target.style.height = Math.min(120, e.target.scrollHeight) + 'px'; });
     document.querySelectorAll('#chat-chips .chip').forEach((b) => (b.onclick = () => sendChat(b.dataset.p)));
-    ['s-new', 's-max', 's-key', 's-model', 's-gkey', 's-gcx'].forEach((id) => ($(id).onchange = () => {
+    ['s-new', 's-max', 's-key', 's-model', 's-gkey', 's-gcx', 's-daystart'].forEach((id) => ($(id).onchange = () => {
       settings.newPerDay = Math.max(0, +$('s-new').value || 0); settings.maxReviews = Math.max(5, +$('s-max').value || 100);
-      settings.apiKey = $('s-key').value.trim(); settings.model = $('s-model').value.trim() || DEFAULTS.model; settings.gKey = $('s-gkey').value.trim(); settings.gCx = $('s-gcx').value.trim(); saveSettings();
+      settings.apiKey = $('s-key').value.trim(); settings.model = $('s-model').value.trim() || DEFAULTS.model; settings.gKey = $('s-gkey').value.trim(); settings.gCx = $('s-gcx').value.trim(); settings.dayStart = +$('s-daystart').value; saveSettings();
     }));
 
     // import
@@ -734,7 +759,7 @@ Rules — GRANULAR cards:
   }
 
   // ---------- boot ----------
-  const APP_VERSION = 'v2.1';
+  const APP_VERSION = 'v2.2';
   window.addEventListener('load', async () => {
     try { await load(); } catch (e) { toast('Storage unavailable: ' + e.message, 5000); }
     wire(); renderHome();
@@ -746,5 +771,6 @@ Rules — GRANULAR cards:
       }).catch(() => {});
     }
   });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && $('home').classList.contains('active')) renderHome(); });
+  const refreshHome = () => { if (!document.hidden && $('home').classList.contains('active')) renderHome(); };
+  document.addEventListener('visibilitychange', refreshHome); window.addEventListener('focus', refreshHome); window.addEventListener('pageshow', refreshHome); setInterval(refreshHome, 60000);
 })();

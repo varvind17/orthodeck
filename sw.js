@@ -1,6 +1,6 @@
 // OrthoDeck service worker. Bump CACHE_VERSION whenever you change app files
 // so installed phones pick up the update on next launch.
-const CACHE_VERSION = 'orthodeck-v6';
+const CACHE_VERSION = 'orthodeck-v7';
 const IMAGE_CACHE = 'orthodeck-images';
 const APP_SHELL = [
   './',

@@ -269,6 +269,10 @@
       <h2>Daily pace</h2>
       <label class="field"><span>New cards per day</span><input id="s-new" type="number" min="0" max="200" inputmode="numeric"></label>
       <label class="field"><span>Max reviews per session</span><input id="s-max" type="number" min="5" max="500" inputmode="numeric"></label>
+      <label class="field"><span>New day starts at</span><select id="s-daystart">
+        <option value="0">Midnight</option><option value="1">1:00 AM</option><option value="2">2:00 AM</option><option value="3">3:00 AM</option><option value="4">4:00 AM</option><option value="5">5:00 AM</option><option value="6">6:00 AM</option><option value="7">7:00 AM</option><option value="8">8:00 AM</option>
+      </select></label>
+      <p class="note">Reviews after midnight but before this hour count toward the previous day, so a late session doesn't use up tomorrow's new cards.</p>
     </div>
     <div class="section">
       <h2>Domains in rotation</h2>
@@ -367,7 +371,11 @@
   <div class="search" style="display:flex;gap:8px"><input id="img-q" type="search" placeholder="e.g. Garden classification femoral neck"><button class="secondary" id="btn-img-go">Search</button></div>
   <div class="chips" id="img-sources">
     <button class="chip on" data-src="commons">Wikimedia Commons</button>
-    <button class="chip" data-src="google">Google Images</button>
+    <button class="chip" data-src="google">Google API</button>
+  </div>
+  <div style="padding:0 16px 8px">
+    <div class="row" style="margin-top:0"><button class="secondary" id="btn-img-open-google">Open Google Images in Safari</button><button class="secondary" id="btn-img-paste">Paste image</button></div>
+    <p class="note">Easiest path for Google: open it in Safari, long-press the picture → Copy, come back and tap Paste image. Or Add to Photos, then use "Add from Photos" on the card.</p>
   </div>
   <div class="body" id="img-results" style="padding-top:4px"></div>
 </div>
@@ -398,10 +406,10 @@
     <label class="field" id="edit-domain-field"><span>Domain</span><select id="e-domain"></select></label>
     <label class="field"><span>Front</span><textarea id="e-q" class="q"></textarea></label>
     <label class="field"><span>Back</span><textarea id="e-a"></textarea></label>
-    <label class="field"><span>Your images (kept only on this phone)</span>
+    <label class="field"><span>Add from Photos or Files (kept only on this phone)</span>
       <input id="e-img" type="file" accept="image/*" multiple>
     </label>
-    <div class="row"><button class="secondary" id="btn-img-search">Search the web for an image</button></div>
+    <div class="row"><button class="secondary" id="btn-e-paste">Paste image</button><button class="secondary" id="btn-img-search">Find an image</button></div>
     <div class="thumbs" id="e-thumbs"></div>
     <p class="note">Add only de-identified images you have the right to use. Edits are yours alone — the built-in card text is untouched and you can revert any time.</p>
     <button class="danger hidden" id="btn-edit-revert">Revert to built-in card</button>

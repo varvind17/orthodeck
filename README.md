@@ -49,7 +49,7 @@ Chat needs a signal; studying does not. Usage is billed to your key at Anthropic
 - **Home** shows what's due. **Start studying** runs everything due; tapping a domain runs just that domain; **Quick 10** grabs ten cards (including cards not yet due) for a 2-minute gap.
 - **Tap** the card or **Show answer** to reveal. Rate with **Again / Hard / Good / Easy** — the little number under each is when you'll see the card next. **Swipe right = Good, swipe left = Again.**
 - **Undo** (curved arrow) takes back the last rating. **Skip** sends the card to the end of the session.
-- Cards are deliberately granular — one fact per card, a phrase per side — so expect fast reviews and a large daily count. Scheduling is an SM-2 variant with Anki-style learning steps (1 min → 10 min → 1 day; Easy jumps to 4 days). Lapses drop the ease factor. Default 20 new cards/day, adjustable in Settings.
+- Cards are deliberately granular — one fact per card, a phrase per side — so expect fast reviews and a large daily count. Scheduling is an SM-2 variant with Anki-style learning steps (1 min → 10 min → 1 day; Easy jumps to 4 days). Lapses drop the ease factor. Default 40 new cards/day, adjustable in Settings. **New day starts at** (Settings, default 4 AM) decides when the daily new-card allowance resets, so a late-night session doesn't spend tomorrow's cards.
 - New cards are drawn in proportion to the AAOS OITE blueprint (Hip & knee 19%, Pediatrics 12%, Trauma 11%, Basic science 10%, Foot & ankle 9%, Spine 9%, Shoulder & elbow 8%, Hand 7%, Oncology 7%, Sports 7%). Note the blueprint is anatomic: hip/femur/knee fractures and arthroplasty are in "Hip & knee".
 
 ## Part 5 — Editing cards and adding images
@@ -63,7 +63,8 @@ Chat needs a signal; studying does not. Usage is billed to your key at Anthropic
 Edit any card → **Search the web for an image**. The search box is prefilled from the card's front.
 
 - **Wikimedia Commons** works with no setup. Results are openly licensed and the credit/licence is shown under the image on the card.
-- **Google Images** needs two things you create once (free, ~5 minutes):
+- **Google via Safari (recommended, no setup)**: tap **Open Google Images in Safari**. Long-press the picture you want → **Copy**, return to OrthoDeck and tap **Paste image** (iOS will ask permission the first time). Or choose **Add to Photos** and then use **Add from Photos** on the card. Either way the picture itself is stored on the phone.
+- **Google API** needs two things you create once (free, ~5 minutes):
   1. console.cloud.google.com → create a project → **APIs & Services → Library** → enable **Custom Search API** → **Credentials → Create credentials → API key**. Copy the key.
   2. programmablesearchengine.google.com → **Add** → turn on **Search the entire web** and **Image search** → copy the **Search engine ID** (cx).
   3. Paste both into OrthoDeck → Settings → Image search.
