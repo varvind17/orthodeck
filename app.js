@@ -10,11 +10,12 @@
   const MIN = 60 * 1000, DAY = 24 * 60 * MIN;
   const LEARN_STEPS = [1, 10], RELEARN_STEPS = [10];
   const LEARN_AHEAD = 20 * MIN;
-  const APP_VERSION = 'v3.0';
+  const APP_VERSION = 'v4.0';
   const DEFAULTS = {
     id: 'main', newPerDay: 40, maxReviews: 200, domains: DOMAINS.map((d) => d.key),
     apiKey: '', model: 'claude-sonnet-4-6', gKey: '', gCx: '', dayStart: 4,
-    retention: 0.9, burySiblings: true, reverse: true, leechThreshold: 8, leechAction: 'suspend', examDate: ''
+    retention: 0.9, burySiblings: true, reverse: true, leechThreshold: 8, leechAction: 'suspend', examDate: '',
+    dbxKey: '', dbxRefresh: '', dbxFreq: 'weekly', dbxLastSync: 0, dbxLastSnapshot: 0, dbxRev: ''
   };
   const TYPES = { classification: 'Classification', anatomy: 'Anatomy / approach', diagnosis: 'Diagnosis', management: 'Management', cloze: 'Cloze' };
   const FLAGS = { '': 'None', verify: 'Verify against source', notboard: 'Not board-relevant', hard: 'Keeps tripping me', fix: 'Needs rewrite' };
@@ -282,6 +283,39 @@
 
   // ---------- browse ----------
   let browseFilter = null;
+  let selectMode = false, browseShown = [];
+  const selected = new Set();
+  function renderBulk() {
+    const bar = $('browse-bulk');
+    if (!bar) return;
+    bar.classList.toggle('hidden', !selectMode);
+    $('btn-browse-select').textContent = selectMode ? 'Done' : 'Select';
+    $('btn-browse-select').classList.toggle('on', selectMode);
+    $('bulk-count').textContent = selected.size + ' selected';
+  }
+  function setSelectMode(on) {
+    selectMode = on;
+    if (!on) selected.clear();
+    renderBrowse();
+  }
+  // One pass over the selection, then one redraw. `fn` gets the card.
+  async function bulkApply(fn, msg) {
+    const ids = Array.from(selected);
+    if (!ids.length) { toast('Nothing selected'); return; }
+    let n = 0;
+    for (const id of ids) { const c = cardById(id); if (c && (await fn(c)) !== false) n++; }
+    invalidate(); renderBrowse(); renderHome();
+    toast(msg.replace('%n', n), 3000);
+  }
+  function bulkExport() {
+    const cards = Array.from(selected).map(cardById).filter(Boolean);
+    if (!cards.length) { toast('Nothing selected'); return; }
+    const deck = { app: 'orthodeck-deck', version: APP_VERSION, name: cards.length + ' selected cards', exported: new Date().toISOString(), cards: cards.map((c) => ({ d: c.d, t: c.t, q: c.q, a: c.a, images: (c.images || []).filter((im) => typeof im !== 'string' || im.length < 400000), src: c.src || '' })) };
+    const blob = new Blob([JSON.stringify(deck)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `orthodeck-selection-${todayKey()}.json`; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast(cards.length + ' cards exported');
+  }
   function renderBrowse() {
     const chips = $('browse-chips'); chips.innerHTML = '';
     [{ key: null, name: 'All' }].concat(DOMAINS).concat([{ key: '__mine', name: 'Mine' }, { key: '__edited', name: 'Edited' }, { key: '__flag', name: 'Flagged' }, { key: '__susp', name: 'Suspended' }, { key: '__leech', name: 'Leeches' }, { key: '__cloze', name: 'Cloze' }]).forEach((d) => { const b = document.createElement('button'); b.className = 'chip' + (browseFilter === d.key ? ' on' : ''); b.textContent = d.name; b.onclick = () => { browseFilter = d.key; renderBrowse(); }; chips.appendChild(b); });
@@ -292,8 +326,26 @@
     else if (browseFilter) cards = cards.filter((c) => c.d === browseFilter);
     if (term) cards = cards.filter((c) => (clozePlain(c.q) + ' ' + c.a).toLowerCase().includes(term));
     const list = $('browse-list'); list.innerHTML = ''; const now = Date.now();
-    cards.slice(0, 300).forEach((c) => { const p = prog(c.id), b = document.createElement('button'); b.className = 'item'; const sched = p.suspended ? 'suspended' : p.state === 'new' ? 'new' : (p.due <= now ? 'due now' : 'due in ' + fmtIvl(p.due - now)); b.innerHTML = `<div class="iq">${isCloze(c) ? clozeFront(c.q) : esc(c.q)}</div><div class="im"><b>${DOMAIN_BY_KEY[c.d]?.name || 'Custom'}</b> · ${TYPES[c.t] || ''} · ${sched}${c.user ? ' · yours' : c.edited ? ' · edited' : ''}${p.flag ? ' · ' + FLAGS[p.flag] : ''}${p.leech ? ' · leech' : ''}</div>`; b.onclick = () => openPreview(c.id); list.appendChild(b); });
-    if (!cards.length) list.innerHTML = '<p class="note">No cards match.</p>'; else if (cards.length > 300) list.insertAdjacentHTML('beforeend', `<p class="note">Showing 300 of ${cards.length}.</p>`);
+    // A laptop can show far more than a phone, and a laptop is where you go to
+    // clean up the deck, so the cap and the column count both open up.
+    const cap = window.innerWidth >= 900 ? 1200 : 300;
+    browseShown = cards.map((c) => c.id);
+    cards.slice(0, cap).forEach((c) => {
+      const p = prog(c.id), b = document.createElement('button');
+      b.className = 'item' + (selected.has(c.id) ? ' sel' : '');
+      const sched = p.suspended ? 'suspended' : p.state === 'new' ? 'new' : (p.due <= now ? 'due now' : 'due in ' + fmtIvl(p.due - now));
+      const body = `<div class="iq">${isCloze(c) ? clozeFront(c.q) : esc(c.q)}</div><div class="im"><b>${DOMAIN_BY_KEY[c.d]?.name || 'Custom'}</b> · ${TYPES[c.t] || ''} · ${sched}${c.user ? ' · yours' : c.edited ? ' · edited' : ''}${p.flag ? ' · ' + FLAGS[p.flag] : ''}${p.leech ? ' · leech' : ''}</div>`;
+      b.innerHTML = selectMode ? `<div class="selrow"><span class="chk"></span><div>${body}</div></div>` : body;
+      b.onclick = () => {
+        if (!selectMode) return openPreview(c.id);
+        if (selected.has(c.id)) selected.delete(c.id); else selected.add(c.id);
+        b.classList.toggle('sel', selected.has(c.id));
+        renderBulk();
+      };
+      list.appendChild(b);
+    });
+    renderBulk();
+    if (!cards.length) list.innerHTML = '<p class="note">No cards match.</p>'; else if (cards.length > cap) list.insertAdjacentHTML('beforeend', `<p class="note">Showing ${cap} of ${cards.length}.</p>`);
   }
   function openPreview(id) {
     previewCard = cardById(id); if (!previewCard) return; const c = previewCard, p = prog(id), now = Date.now();
@@ -513,7 +565,7 @@ ${cloze ? '- Use cloze cards for sentences that carry one key term or number ("T
     $('s-retention').value = String(settings.retention); $('s-exam').value = settings.examDate || ''; $('s-bury').checked = !!settings.burySiblings; $('s-reverse').checked = !!settings.reverse; $('s-leech').value = settings.leechThreshold; $('s-leechaction').value = settings.leechAction;
     const d = $('s-domains'); d.innerHTML = '';
     DOMAINS.forEach((dm) => { const l = document.createElement('label'); l.className = 'toggle'; l.innerHTML = `<span>${dm.name} <span style="color:var(--muted);font-size:13px">${dm.weight}%</span></span><input type="checkbox" ${settings.domains.includes(dm.key) ? 'checked' : ''}>`; l.querySelector('input').onchange = (e) => { settings.domains = DOMAINS.map((x) => x.key).filter((k) => k === dm.key ? e.target.checked : settings.domains.includes(k)); saveSettings(); }; d.appendChild(l); });
-    renderDeckSelect();
+    renderDeckSelect(); renderSync();
     $('k-seed').textContent = SEED_CARDS.length; $('k-user').textContent = Object.keys(userCards).length; $('k-edited').textContent = Object.keys(overrides).length; $('k-reviews').textContent = Object.values(stats).reduce((s, x) => s + (x.reviews || 0), 0);
     $('about-text').textContent = `OrthoDeck ${APP_VERSION}. Seed deck weighted to the AAOS OITE blueprint. Scheduler: FSRS-5 with default parameters and 1 min / 10 min learning steps; intervals come from your target retention. Cards are one fact each. Built-in text is a starting point written for study, not a clinical reference.`;
   }
@@ -522,8 +574,64 @@ ${cloze ? '- Use cloze cards for sentences that carry one key term or number ("T
     settings.retention = +$('s-retention').value; settings.examDate = $('s-exam').value; settings.burySiblings = $('s-bury').checked; const rev = $('s-reverse').checked; if (rev !== settings.reverse) { settings.reverse = rev; invalidate(); } settings.leechThreshold = Math.max(3, +$('s-leech').value || 8); settings.leechAction = $('s-leechaction').value;
     saveSettings();
   }
-  async function exportBackup() { const data = { app: 'orthodeck', version: APP_VERSION, exported: new Date().toISOString(), progress: Object.values(progress), overrides: Object.values(overrides), usercards: Object.values(userCards), chats: await DB.getAll('chats'), stats: Object.values(stats), queue: Object.values(queue), log: await DB.getAll('log'), settings: { ...settings, apiKey: '', gKey: '' } }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `orthodeck-backup-${todayKey()}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
-  async function importBackup(file) { try { const data = JSON.parse(await file.text()); if (data.app !== 'orthodeck') throw new Error('Not an OrthoDeck backup'); await DB.putMany('progress', data.progress || []); await DB.putMany('overrides', data.overrides || []); await DB.putMany('usercards', data.usercards || []); await DB.putMany('chats', data.chats || []); await DB.putMany('stats', data.stats || []); await DB.putMany('queue', data.queue || []); await DB.putMany('log', data.log || []); if (data.settings) { settings = { ...settings, ...data.settings, apiKey: settings.apiKey, gKey: settings.gKey }; await saveSettings(); } progress = {}; overrides = {}; userCards = {}; stats = {}; queue = {}; await load(); renderSettings(); renderHome(); toast('Backup restored'); } catch (e) { toast('Import failed: ' + e.message, 4000); } }
+  async function exportBackup() { const data = { app: 'orthodeck', version: APP_VERSION, exported: new Date().toISOString(), progress: Object.values(progress), overrides: Object.values(overrides), usercards: Object.values(userCards), chats: await DB.getAll('chats'), stats: Object.values(stats), queue: Object.values(queue), log: await DB.getAll('log'), settings: { ...settings, apiKey: '', gKey: '', dbxKey: '', dbxRefresh: '', dbxRev: '', dbxLastSync: 0, dbxLastSnapshot: 0 } }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `orthodeck-backup-${todayKey()}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
+  async function importBackup(file) { try { const data = JSON.parse(await file.text()); if (data.app !== 'orthodeck') throw new Error('Not an OrthoDeck backup'); await DB.putMany('progress', data.progress || []); await DB.putMany('overrides', data.overrides || []); await DB.putMany('usercards', data.usercards || []); await DB.putMany('chats', data.chats || []); await DB.putMany('stats', data.stats || []); await DB.putMany('queue', data.queue || []); await DB.putMany('log', data.log || []); if (data.settings) { settings = { ...settings, ...data.settings, apiKey: settings.apiKey, gKey: settings.gKey, dbxKey: settings.dbxKey, dbxRefresh: settings.dbxRefresh, dbxRev: settings.dbxRev, dbxLastSync: settings.dbxLastSync, dbxLastSnapshot: settings.dbxLastSnapshot }; await saveSettings(); } progress = {}; overrides = {}; userCards = {}; stats = {}; queue = {}; await load(); renderSettings(); renderHome(); toast('Backup restored'); } catch (e) { toast('Import failed: ' + e.message, 4000); } }
+
+  // ---------- dropbox sync ----------
+  function syncSummary() {
+    if (!settings.dbxRefresh) return 'Not connected. Your deck lives only on this device.';
+    const t = settings.dbxLastSync || 0;
+    const when = !t ? 'never' : (Date.now() - t < 90000 ? 'just now' : fmtIvl(Date.now() - t) + ' ago');
+    return 'Connected. Last synced ' + when + '.';
+  }
+  function renderSync() {
+    if (!$('sync-section')) return;
+    $('sync-redirect').textContent = Sync.redirectUri();
+    $('s-dbxkey').value = settings.dbxKey || '';
+    $('s-dbxfreq').value = settings.dbxFreq || 'weekly';
+    const on = !!settings.dbxRefresh;
+    $('sync-setup').classList.toggle('hidden', on);
+    $('sync-connected').classList.toggle('hidden', !on);
+    $('sync-summary').textContent = syncSummary();
+  }
+  async function reloadAll() {
+    progress = {}; overrides = {}; userCards = {}; stats = {}; queue = {};
+    await load();
+    renderHome();
+    if ($('browse').classList.contains('active')) renderBrowse();
+    if ($('settings').classList.contains('active')) renderSettings();
+  }
+  async function doSync(manual) {
+    if (!settings.dbxRefresh) return;
+    try {
+      const r = await Sync.run();
+      renderSync();
+      if (manual) toast('Synced. ' + (r.counts.progress || 0) + ' cards tracked, ' + r.images + ' photos stored.', 3500);
+    } catch (e) {
+      $('sync-status').textContent = '';
+      toast((manual ? 'Sync failed: ' : 'Background sync failed: ') + e.message, 5000);
+    }
+  }
+  async function showRestoreOptions() {
+    const box = $('sync-snaps');
+    box.innerHTML = '<p class="note">Loading backups...</p>';
+    const mk = (label, path) => {
+      const row = document.createElement('div'); row.className = 'row';
+      const b = document.createElement('button'); b.className = 'secondary'; b.textContent = label;
+      b.onclick = async () => {
+        if (!confirm('Restore ' + label + '? Any card this device has changed since that backup goes back to the backed-up version.')) return;
+        try { const r = await Sync.restore(path); renderSettings(); toast('Restored ' + r.changed + ' records', 3500); }
+        catch (e) { toast('Restore failed: ' + e.message, 5000); }
+      };
+      row.appendChild(b); box.appendChild(row);
+    };
+    try {
+      const snaps = await Sync.snapshots();
+      box.innerHTML = '<p class="note">Restore pulls Dropbox over the top of this device. Use it after a wipe or a cache clear.</p>';
+      mk('the latest synced copy', null);
+      snaps.forEach((sn) => mk('the snapshot from ' + sn.name.replace('state-', '').replace('.json', ''), sn.path));
+    } catch (e) { box.innerHTML = ''; toast('Could not list backups: ' + e.message, 5000); }
+  }
 
   // ---------- wiring ----------
   function wire() {
@@ -584,16 +692,107 @@ ${cloze ? '- Use cloze cards for sentences that carry one key term or number ("T
     $('btn-q-discard-all').onclick = async () => { const ids = Object.keys(queue); if (!ids.length || !confirm(`Discard all ${ids.length} generated cards?`)) return; for (const id of ids) await discardQueueCard(id); renderImport(); };
     ['s-new', 's-max', 's-key', 's-model', 's-gkey', 's-gcx', 's-daystart', 's-retention', 's-exam', 's-bury', 's-reverse', 's-leech', 's-leechaction'].forEach((id) => ($(id).onchange = saveSettingsFromUI));
     $('btn-deck-export').onclick = exportDeck; $('btn-deck-import').onclick = () => $('deck-file').click(); $('deck-file').onchange = (e) => e.target.files[0] && importDeck(e.target.files[0]);
+    $('btn-browse-select').onclick = () => setSelectMode(!selectMode);
+    $('bulk-all').onclick = () => { browseShown.forEach((id) => selected.add(id)); renderBrowse(); };
+    $('bulk-none').onclick = () => { selected.clear(); renderBrowse(); };
+    $('bulk-suspend').onclick = () => bulkApply((c) => setSuspended(c, true), '%n cards suspended');
+    $('bulk-unsuspend').onclick = () => bulkApply((c) => setSuspended(c, false), '%n cards back in rotation');
+    $('bulk-flag').innerHTML = '<option value="__">Flag as…</option>' + Object.keys(FLAGS).map((k) => `<option value="${k}">${FLAGS[k]}</option>`).join('');
+    $('bulk-flag').onchange = async (e) => { const v = e.target.value; if (v === '__') return; e.target.value = '__'; await bulkApply((c) => setFlag(c, v), v ? '%n cards flagged' : 'Flags cleared on %n cards'); };
+    $('bulk-export').onclick = bulkExport;
+    $('bulk-reset').onclick = () => { if (!confirm('Reset scheduling on ' + selected.size + ' cards? They go back to new.')) return; bulkApply(async (c) => { delete progress[c.id]; await DB.del('progress', c.id); }, 'Progress reset on %n cards'); };
+    $('bulk-delete').onclick = () => {
+      const mine = Array.from(selected).map(cardById).filter((c) => c && c.user).length;
+      if (!mine) { toast('Only cards you made yourself can be deleted'); return; }
+      if (!confirm('Delete ' + mine + ' of your own cards? Built-in cards in the selection are left alone.')) return;
+      bulkApply(async (c) => { if (!c.user) return false; delete userCards[c.id]; await DB.del('usercards', c.id); delete progress[c.id]; await DB.del('progress', c.id); selected.delete(c.id); }, '%n cards deleted');
+    };
+    $('btn-dbx-connect').onclick = async () => { const k = $('s-dbxkey').value.trim(); if (!k) return toast('Paste your Dropbox app key first', 3000); settings.dbxKey = k; await saveSettings(); try { await Sync.connect(k); } catch (e) { toast(e.message, 4000); } };
+    $('btn-dbx-sync').onclick = () => doSync(true);
+    $('btn-dbx-restore').onclick = showRestoreOptions;
+    $('btn-dbx-disconnect').onclick = async () => { if (!confirm('Disconnect Dropbox? Everything already in Dropbox is kept.')) return; await Sync.disconnect(); renderSync(); toast('Dropbox disconnected'); };
+    $('s-dbxfreq').onchange = async () => { settings.dbxFreq = $('s-dbxfreq').value; await saveSettings(); };
     $('btn-export').onclick = exportBackup; $('btn-import').onclick = () => $('import-file').click(); $('import-file').onchange = (e) => e.target.files[0] && importBackup(e.target.files[0]);
     $('btn-reset-progress').onclick = async () => { if (!confirm('Reset ALL study progress and the review log? Edits and your own cards are kept.')) return; progress = {}; stats = {}; await DB.clear('progress'); await DB.clear('stats'); await DB.clear('log'); renderSettings(); toast('Progress reset'); };
-    document.addEventListener('keydown', (e) => { if (!$('study').classList.contains('active') || document.querySelector('.sheet.active')) return; if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); reveal(); } if (['1', '2', '3', '4'].includes(e.key)) rate(+e.key); });
+    document.addEventListener('keydown', (e) => { if (!$('study').classList.contains('active') || document.querySelector('.sheet.active')) return; if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); reveal(); } if (['1', '2', '3', '4'].includes(e.key)) rate(+e.key); if (e.key === 'u') undo(); if (e.key === 's') skip(); });
+  }
+
+  // ---------- service worker / updates ----------
+  // The old code announced an update whenever any worker reached "installed".
+  // iOS re-installs the *same* worker on its own (it evicts the stored script
+  // while keeping the registration), which is why "Update ready" kept appearing
+  // with no change shipped. Now the page asks each worker for its CACHE_VERSION
+  // and only speaks up when the incoming version really differs.
+  const SW_VER_KEY = 'od-sw-version';
+  let swReloading = false;
+  function swVersion(worker, ms = 5000) {
+    return new Promise((resolve) => {
+      if (!worker) return resolve(null);
+      let done = false;
+      const finish = (v) => { if (!done) { done = true; resolve(v || null); } };
+      try {
+        const ch = new MessageChannel();
+        ch.port1.onmessage = (e) => finish(e.data && e.data.version);
+        worker.postMessage({ type: 'VERSION' }, [ch.port2]);
+      } catch (e) { return finish(null); }
+      setTimeout(() => finish(null), ms);
+    });
+  }
+  function offerUpdate(worker) {
+    const t = $('toast');
+    t.textContent = 'Update ready. ';
+    const b = document.createElement('button');
+    b.className = 'toast-action'; b.textContent = 'Reload now';
+    b.onclick = () => { swReloading = true; b.textContent = 'Reloading…'; worker.postMessage({ type: 'SKIP_WAITING' }); setTimeout(() => location.reload(), 2000); };
+    t.appendChild(b);
+    t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 15000);
+  }
+  async function registerSW() {
+    if (!('serviceWorker' in navigator)) return;
+    let reg;
+    try { reg = await navigator.serviceWorker.register('sw.js'); } catch (e) { return; }
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (swReloading) location.reload(); });
+    // Remember the running build as soon as one is in control, so the check
+    // below still works if the worker is slow to answer later.
+    swVersion(navigator.serviceWorker.controller).then((v) => { if (v) { try { localStorage.setItem(SW_VER_KEY, v); } catch (e) {} } });
+    const consider = async (worker) => {
+      const ctrl = navigator.serviceWorker.controller;
+      if (!worker || !ctrl) return; // first ever install: nothing to announce
+      // Ask the *controller* here rather than at page load: a first visit starts
+      // uncontrolled, and reading the version too early is what made every later
+      // re-install of the same build look like a new one.
+      let running = await swVersion(ctrl);
+      if (!running) { try { running = localStorage.getItem(SW_VER_KEY); } catch (e) {} }
+      const v = await swVersion(worker);
+      if (!v) return;                 // can't tell which build it is — stay quiet
+      if (running && v === running) return; // same build re-installing: the old false alarm
+      offerUpdate(worker);
+    };
+    if (reg.waiting) consider(reg.waiting);
+    reg.addEventListener('updatefound', () => {
+      const w = reg.installing;
+      if (w) w.addEventListener('statechange', () => { if (w.state === 'installed') consider(w); });
+    });
+    setInterval(() => reg.update().catch(() => {}), 3600000);
   }
 
   // ---------- boot ----------
   window.addEventListener('load', async () => {
     try { await load(); } catch (e) { toast('Storage unavailable: ' + e.message, 5000); }
     wire(); renderHome();
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').then((reg) => { reg.addEventListener('updatefound', () => { const w = reg.installing; w && w.addEventListener('statechange', () => { if (w.state === 'installed' && navigator.serviceWorker.controller) toast('Update ready — close and reopen the app.', 5000); }); }); }).catch(() => {});
+    registerSW();
+    Sync.init({
+      settings: () => settings,
+      save: () => saveSettings(),
+      reload: reloadAll,
+      onStatus: (m) => { const el = $('sync-status'); if (el) el.textContent = m || ''; }
+    });
+    try {
+      const res = await Sync.handleRedirect();
+      if (res && res.refresh) { settings.dbxKey = res.appKey; settings.dbxRefresh = res.refresh; await saveSettings(); renderSync(); toast('Dropbox connected'); doSync(true); }
+      else if (res) toast('Dropbox did not return a lasting token - reconnect and allow access', 5000);
+    } catch (e) { toast('Dropbox: ' + e.message, 5000); }
+    if (Sync.due(settings)) doSync(false);
   });
   const refreshHome = () => { if (!document.hidden && $('home').classList.contains('active')) renderHome(); };
   document.addEventListener('visibilitychange', refreshHome); window.addEventListener('focus', refreshHome); window.addEventListener('pageshow', refreshHome); setInterval(refreshHome, 60000);

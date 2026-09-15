@@ -149,6 +149,17 @@
   /* browse */
   .search { margin: 4px 16px 8px; }
   .search input { width: 100%; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }
+  .bulkbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 16px 10px; padding: 10px 12px; background: var(--accent-soft); border-radius: 12px; }
+  .bulkbar .count { font-weight: 600; font-size: 13px; }
+  .bulkbar .sep { flex: 1 1 0; min-width: 0; }
+  .bulkbar button, .bulkbar select { font-size: 13px; padding: 7px 10px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+  .bulkbar button:hover, .bulkbar select:hover { border-color: var(--accent); }
+  .bulkbar .danger-lite { color: var(--again); }
+  .selrow { display: flex; gap: 10px; align-items: flex-start; }
+  .chk { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 2px; border: 1.5px solid var(--line); border-radius: 5px; background: var(--surface); position: relative; }
+  .item.sel .chk { background: var(--accent); border-color: var(--accent); }
+  .item.sel .chk::after { content: ""; position: absolute; left: 5px; top: 1px; width: 5px; height: 10px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .item.sel { background: var(--accent-soft); }
   .list { padding: 0 16px 24px; }
   .item { display: block; width: 100%; text-align: left; padding: 12px 0; border-top: 1px solid var(--line); }
   .item .iq { font-family: var(--serif); font-size: 17px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -166,6 +177,7 @@
 
   .toast { position: fixed; left: 50%; bottom: calc(24px + var(--sab)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; z-index: 50; display: none; max-width: 90%; text-align: center; }
   .toast.show { display: block; }
+  .toast-action { margin-left: 8px; background: var(--bg); color: var(--ink); border: 0; border-radius: 8px; padding: 5px 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
@@ -192,6 +204,37 @@
   .stat b { display: block; font-family: var(--serif); font-size: 26px; font-weight: 600; }
   .stat span { font-size: 13px; color: var(--muted); }
   .explain { white-space: pre-wrap; line-height: 1.5; font-size: 16px; }
+
+  /* ---------- laptop / desktop ---------- */
+  /* Same app, same data, roomier shape: the phone layout stretched to 1400px
+     wastes most of the screen and makes browsing 1,891 cards a scroll. */
+  @media (min-width: 900px) {
+    body { padding-top: 0; }
+    .screen { max-width: 1180px; width: 100%; margin: 0 auto; padding: 0 24px 48px; }
+    .bar { padding: 20px 0 8px; }
+    .search { margin: 4px 0 10px; }
+    .search input { font-size: 15px; padding: 12px 16px; }
+    .chips { padding: 4px 0 12px; overflow-x: visible; flex-wrap: wrap; }
+    .list { padding: 0; }
+    .bulkbar { margin: 0 0 12px; }
+    #browse .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(430px, 1fr)); gap: 0 32px; align-items: start; }
+    .item { padding: 12px 10px; border-radius: 8px; }
+    .item:hover { background: var(--accent-soft); }
+    .section { padding: 8px 0 20px; }
+    /* Sheets become centred panels instead of swallowing the whole window. */
+    .sheet { inset: auto; top: 4vh; left: 0; right: 0; margin: 0 auto; width: min(980px, 92vw); height: 88vh; border-radius: 18px; box-shadow: 0 24px 64px rgba(0, 0, 0, .28); border: 1px solid var(--line); padding-top: 0; }
+    /* Dim the page behind the panel so the card has the focus. */
+    .sheet.active::before { content: ""; position: fixed; inset: 0; background: rgba(18, 28, 34, .38); z-index: -1; }
+    .sheet .body { padding: 0 28px 28px; }
+    .sheet .bar { padding: 16px 28px 8px; }
+    #study .card { max-width: 780px; margin: 0 auto; }
+    /* Form controls stretched to 1180px look broken; keep a readable column. */
+    #settings .section, #stats .section, #home .section { max-width: 780px; margin-left: auto; margin-right: auto; }
+    #settings .bar, #stats .bar, #home .bar { max-width: 780px; margin: 0 auto; }
+    #home .row { max-width: 780px; margin-left: auto; margin-right: auto; }
+    .kbd-hint { display: block; }
+  }
+  .kbd-hint { display: none; font-size: 12px; color: var(--muted); margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -271,10 +314,25 @@
   <div class="bar">
     <button class="iconbtn" id="btn-browse-back" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div class="title">Cards</div>
-    <button class="iconbtn" id="btn-new-card" aria-label="New card"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="chip" id="btn-browse-select">Select</button>
+      <button class="iconbtn" id="btn-new-card" aria-label="New card"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    </div>
   </div>
   <div class="search"><input id="search" type="search" placeholder="Search classifications, nerves, anything…"></div>
   <div class="chips" id="browse-chips"></div>
+  <div class="bulkbar hidden" id="browse-bulk">
+    <span class="count" id="bulk-count">0 selected</span>
+    <button id="bulk-all">Select all shown</button>
+    <button id="bulk-none">Clear</button>
+    <span class="sep"></span>
+    <button id="bulk-suspend">Suspend</button>
+    <button id="bulk-unsuspend">Unsuspend</button>
+    <select id="bulk-flag"><option value="">Flag as…</option></select>
+    <button id="bulk-export">Export as deck</button>
+    <button id="bulk-reset">Reset progress</button>
+    <button id="bulk-delete" class="danger-lite">Delete my cards</button>
+  </div>
   <div class="list" id="browse-list"></div>
 </section>
 
@@ -342,6 +400,28 @@
       <div class="row"><button class="secondary" id="btn-deck-export">Export deck file</button><button class="secondary" id="btn-deck-import">Import a deck file</button></div>
       <input id="deck-file" type="file" accept="application/json" class="hidden">
       <p class="note">Deck files carry cards only (no progress). Co-residents import them and the cards join their rotation as their own cards; duplicates are skipped.</p>
+    </div>
+    <div class="section" id="sync-section">
+      <h2>Backup &amp; sync (Dropbox)</h2>
+      <p class="note" id="sync-summary">Not connected. Your deck lives only on this device.</p>
+      <div id="sync-setup">
+        <label class="field"><span>Dropbox app key</span><input id="s-dbxkey" type="text" autocomplete="off" spellcheck="false" placeholder="abcd1234efgh567"></label>
+        <p class="note">One-time setup: dropbox.com/developers/apps &rarr; Create app &rarr; <b>Scoped access</b> &rarr; <b>App folder</b> &rarr; name it OrthoDeck. On the app&rsquo;s Settings tab add this exact redirect URI: <code id="sync-redirect"></code>. On the Permissions tab tick <code>files.content.read</code> and <code>files.content.write</code> and submit. Copy the <b>App key</b> above &mdash; there is no secret to copy.</p>
+        <div class="row"><button class="primary" id="btn-dbx-connect">Connect Dropbox</button></div>
+      </div>
+      <div id="sync-connected" class="hidden">
+        <label class="field"><span>Sync automatically</span><select id="s-dbxfreq">
+          <option value="open">Every time the app opens</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="manual">Only when I tap Sync now</option>
+        </select></label>
+        <div class="row"><button class="primary" id="btn-dbx-sync">Sync now</button><button class="secondary" id="btn-dbx-restore">Restore from Dropbox</button></div>
+        <div class="row"><button class="secondary" id="btn-dbx-disconnect">Disconnect</button></div>
+        <p class="note">Sync merges rather than overwrites: the newer version of each card, rating and edit wins, so the phone and a laptop can both be used between syncs. Photos upload once. A dated snapshot is kept weekly (last 10) in <code>/Apps/OrthoDeck/snapshots</code> so a bad sync can be rolled back.</p>
+        <div id="sync-snaps"></div>
+      </div>
+      <p class="note" id="sync-status"></p>
     </div>
     <div class="section">
       <h2>Your data</h2>
@@ -525,6 +605,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="db.js"></script>
+<script src="sync.js"></script>
 <script src="cards.js"></script>
 <script src="app.js"></script>
 </body>

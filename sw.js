@@ -1,14 +1,28 @@
-// OrthoDeck service worker. Bump CACHE_VERSION whenever you change app files
-// so installed phones pick up the update on next launch.
-const CACHE_VERSION = 'orthodeck-v8';
+// OrthoDeck service worker.
+//
+// Bump CACHE_VERSION whenever you change app files so installed phones pick up
+// the update on the next launch. The page compares this version string against
+// the one it is already running and only announces an update when they differ,
+// so a worker that re-installs itself unchanged (which iOS does on its own when
+// it evicts the stored script) no longer produces a false "Update ready".
+const CACHE_VERSION = 'orthodeck-v9';
 const IMAGE_CACHE = 'orthodeck-images';
-const APP_SHELL = [
+
+// Assets the app cannot start without. If one of these fails the install fails.
+const CORE = [
   './',
   './index.html',
   './app.js',
   './db.js',
   './cards.js',
-  './manifest.json',
+  './sync.js',
+  './manifest.json'
+];
+// Nice to have offline. pdf.worker.min.mjs is 1.4 MB and a flaky connection
+// used to fail the whole install (cache.addAll is all-or-nothing), which left
+// the app re-installing the same worker over and over. These are cached
+// best-effort instead and fetched on demand later if they are missing.
+const OPTIONAL = [
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -17,9 +31,14 @@ const APP_SHELL = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_VERSION).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_VERSION);
+    await cache.addAll(CORE);
+    await Promise.all(OPTIONAL.map((u) => cache.add(u).catch(() => {})));
+    // Deliberately no skipWaiting() here. The new worker waits until the page
+    // asks for it (the "Reload now" button on the update toast) or until every
+    // tab is closed, so the "Update ready" notice is true when it is shown.
+  })());
 });
 
 self.addEventListener('activate', (event) => {
@@ -30,9 +49,22 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+self.addEventListener('message', (event) => {
+  const msg = event.data || {};
+  if (msg.type === 'VERSION') {
+    const reply = { type: 'VERSION', version: CACHE_VERSION };
+    if (event.ports && event.ports[0]) event.ports[0].postMessage(reply);
+    else if (event.source) event.source.postMessage(reply);
+  } else if (msg.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== 'GET') return;
+  // Never serve the Dropbox API from cache.
+  if (url.hostname.endsWith('dropboxapi.com') || url.hostname === 'www.dropbox.com') return;
   // Cross-origin images (card pictures found via web search): cache-first, opaque responses allowed.
   if (url.origin !== self.location.origin) {
     if (event.request.destination === 'image') {

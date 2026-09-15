@@ -8,6 +8,7 @@ Files in this folder:
 |---|---|
 | `index.html` | the app screen and styling |
 | `app.js` | spaced-repetition engine, sessions, editing, AI chat |
+| `sync.js` | Dropbox backup and phone/laptop sync |
 | `db.js` | on-device storage (IndexedDB) |
 | `cards.js` | the seed deck (1,891 granular cards, one fact each; spine includes Miller's ch. 8) |
 | `sw.js` | service worker — makes it work offline |
@@ -102,13 +103,55 @@ Tap a result to see it larger, then **Add to card** and **Save**. Images are sto
 
 Notes: scanned PDFs with no text layer will not work (you need a PDF where you can select text). The importer needs a signal and uses your API key; cost is roughly a few cents per chapter. The queue survives closing the app and is included in backups.
 
+## Part 7b — Backup and sync with Dropbox
+
+iOS can throw away a PWA's storage if the app sits unopened for weeks, and clearing Safari's data does it immediately. Dropbox sync is the answer to that, and it is also how the same deck follows you onto a laptop.
+
+**One-time setup (about five minutes).**
+
+1. Go to https://www.dropbox.com/developers/apps → **Create app**.
+2. Choose **Scoped access**, then **App folder** (not Full Dropbox), and name it `OrthoDeck`. The app can then only ever see `/Apps/OrthoDeck` — nothing else in your Dropbox.
+3. On the app's **Settings** tab, under *Redirect URIs*, add the exact address OrthoDeck shows you in Settings → Backup & sync (for example `https://YOURNAME.github.io/orthodeck/`). Add it once for each address you use — the phone and the laptop share one if you use the same URL.
+4. On the **Permissions** tab tick `files.content.read` and `files.content.write`, then **Submit**.
+5. Copy the **App key** from the Settings tab into OrthoDeck → Settings → **Backup & sync**, and tap **Connect Dropbox**. There is no app secret to copy; the app uses PKCE, which is the browser-safe half of the same flow.
+
+**What gets synced.** Progress, your own cards, your edits, the import queue, daily counts and study settings. API keys are never uploaded. Photos upload once each, as separate files, so a routine sync moves a few hundred kB rather than tens of megabytes.
+
+**How often.** Settings → *Sync automatically*: every open, daily, weekly (the default) or manual only. **Sync now** runs it on demand. Dropbox issues a refresh token that does not expire, so after connecting once the phone keeps syncing on its own; you only reconnect if you revoke access.
+
+**It merges, it does not overwrite.** Every record carries the time it was last changed and the newer side wins, per card. So you can review on the phone on the ward, edit cards on a laptop that evening, and sync both without either one wiping the other. Deletes are remembered as deletes, so a card you removed on the laptop does not come back from the phone.
+
+**If the app is wiped.** Reinstall it, put the app key back in, connect, and everything comes back on the first sync — a device with nothing on it simply receives the whole deck.
+
+**Snapshots.** Once a week the current state is also written to `/Apps/OrthoDeck/snapshots/state-YYYY-MM-DD.json`, last ten kept. Settings → **Restore from Dropbox** lists them, so a bad sync or an accidental mass delete can be rolled back to a known-good day. Restoring pulls the backup over the top of the device, so anything newer here is replaced.
+
+Export backup / Import backup still work and are worth doing before anything drastic; sync is the routine safety net, the JSON file is the belt-and-braces one.
+
+## Part 7c — Using it on a laptop
+
+The laptop is not a separate app — it is the same address in a desktop browser, with the same Dropbox account behind it. Open `https://YOURNAME.github.io/orthodeck/`, connect Dropbox in Settings with the same app key, and the deck appears.
+
+At 900px and wider the layout changes: cards browse in two columns, up to 1,200 at a time instead of 300, card and edit panels open as centred windows rather than full-screen sheets, and forms stop stretching across the whole monitor.
+
+**Selecting several cards at once** — the thing a phone is bad at. In **Cards**, click **Select**, then click any cards you want. Then:
+
+- **Suspend / Unsuspend** — pull a block of cards out of rotation, or bring them back
+- **Flag as…** — mark a batch to verify, or as not board-relevant
+- **Export as deck** — hand a selection to a co-resident
+- **Reset progress** — send cards back to new
+- **Delete my cards** — only ever touches cards you made yourself; built-in cards in the selection are left alone
+
+**Select all shown** takes whatever the current search and domain chips are showing, so "everything in Spine flagged as verify" is two clicks and then one action.
+
+While studying: **space** reveals, **1–4** rate, **u** undoes, **s** skips.
+
 ## Part 8 — Sharing decks
 
 Settings → **Share a deck**: pick "My own cards", your edited built-in cards, or a whole domain, then **Export deck file**. Send the file to a co-resident; they use **Import a deck file** and the cards join their rotation as their own cards (duplicates skipped, no progress carried).
 
 ## Part 9 — Updating the app later
 
-If you change any file (e.g. add cards to `cards.js`), also change `CACHE_VERSION` in `sw.js` (e.g. `orthodeck-v2`) before uploading to GitHub, or installed phones will keep the old cached copy. The app shows "Update ready — close and reopen" when it downloads the new version.
+If you change any file (e.g. add cards to `cards.js`), also change `CACHE_VERSION` in `sw.js` (e.g. `orthodeck-v2`) before uploading to GitHub, or installed phones will keep the old cached copy. The app shows "Update ready" with a **Reload now** button when it downloads a genuinely different version. It compares the version string rather than simply noticing that a worker installed, so re-installs of the same build (which iOS does on its own when it evicts the cached script) no longer produce a false alarm.
 
 When adding cards to `cards.js`, add them at the **end** of a domain block. Card IDs come from their position, so inserting in the middle would shift progress onto the wrong cards.
 
@@ -116,4 +159,4 @@ When adding cards to `cards.js`, add them at the **end** of a domain block. Card
 
 - The seed deck was written as a study aid, not a clinical reference. Numbers and thresholds drift between sources and years — verify anything you'd act on.
 - iOS can evict a PWA's stored data if the app isn't opened for several weeks and the phone runs low on space. Export a backup now and then.
-- Built: FSRS scheduler with target retention, seed deck (1,891 one-fact cards + reverse classification cards), per-card editing/images, AI chat, chapter importer with review queue, web image search (Commons/Google). Not built: subspecialty "advanced" tiers and the curated "What's new" PubMed feed.
+- Built: FSRS scheduler with target retention, seed deck (1,891 one-fact cards + reverse classification cards), per-card editing/images, AI chat, chapter importer with review queue, web image search (Commons/Google), Dropbox sync and backup, desktop layout with multi-select. Not built: subspecialty "advanced" tiers and the curated "What's new" PubMed feed.
