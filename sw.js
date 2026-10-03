@@ -1,87 +1,22 @@
-// OrthoDeck service worker.
-//
-// Bump CACHE_VERSION whenever you change app files so installed phones pick up
-// the update on the next launch. The page compares this version string against
-// the one it is already running and only announces an update when they differ,
-// so a worker that re-installs itself unchanged (which iOS does on its own when
-// it evicts the stored script) no longer produces a false "Update ready".
-const CACHE_VERSION = 'orthodeck-v9';
-const IMAGE_CACHE = 'orthodeck-images';
-
-// Assets the app cannot start without. If one of these fails the install fails.
-const CORE = [
-  './',
-  './index.html',
-  './app.js',
-  './db.js',
-  './cards.js',
-  './sync.js',
-  './manifest.json'
-];
-// Nice to have offline. pdf.worker.min.mjs is 1.4 MB and a flaky connection
-// used to fail the whole install (cache.addAll is all-or-nothing), which left
-// the app re-installing the same worker over and over. These are cached
-// best-effort instead and fetched on demand later if they are missing.
-const OPTIONAL = [
-  './icons/icon-180.png',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './vendor/pdf.min.mjs',
-  './vendor/pdf.worker.min.mjs'
-];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil((async () => {
-    const cache = await caches.open(CACHE_VERSION);
-    await cache.addAll(CORE);
-    await Promise.all(OPTIONAL.map((u) => cache.add(u).catch(() => {})));
-    // Deliberately no skipWaiting() here. The new worker waits until the page
-    // asks for it (the "Reload now" button on the update toast) or until every
-    // tab is closed, so the "Update ready" notice is true when it is shown.
-  })());
+/* Cellar Book service worker: lets the app open offline. Same-origin files are fetched fresh
+   when online (so updates show up right away) and served from the cache when offline. */
+const CACHE = 'cellar-book-v2.0.1';
+const SHELL = ['./', 'index.html', 'styles.css', 'manifest.webmanifest', 'js/core.js', 'js/sync.js', 'js/claude.js', 'js/app.js', 'js/features.js',
+  'lib/leaflet.js', 'lib/leaflet.css', 'lib/exifr.js', 'icons/icon-192.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png'];
+self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
-
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_VERSION && k !== IMAGE_CACHE).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener('message', (event) => {
-  const msg = event.data || {};
-  if (msg.type === 'VERSION') {
-    const reply = { type: 'VERSION', version: CACHE_VERSION };
-    if (event.ports && event.ports[0]) event.ports[0].postMessage(reply);
-    else if (event.source) event.source.postMessage(reply);
-  } else if (msg.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-});
-
-self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-  if (event.request.method !== 'GET') return;
-  // Never serve the Dropbox API from cache.
-  if (url.hostname.endsWith('dropboxapi.com') || url.hostname === 'www.dropbox.com') return;
-  // Cross-origin images (card pictures found via web search): cache-first, opaque responses allowed.
-  if (url.origin !== self.location.origin) {
-    if (event.request.destination === 'image') {
-      event.respondWith(
-        caches.open(IMAGE_CACHE).then((c) => c.match(event.request.url).then((hit) => hit || fetch(event.request.url, { mode: 'no-cors' }).then((r) => { c.put(event.request.url, r.clone()); return r; })))
-      );
+self.addEventListener('fetch', e => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.origin !== location.origin) {
+    if (/fonts\.(googleapis|gstatic)\.com$/.test(url.hostname)) {
+      e.respondWith(caches.open(CACHE).then(async c => (await c.match(req)) || fetch(req).then(r => { if (r.ok) c.put(req, r.clone()); return r; })));
     }
-    return;
+    return; // Claude, Dropbox, map tiles and place names always go to the network
   }
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((resp) => {
-        const copy = resp.clone();
-        caches.open(CACHE_VERSION).then((c) => c.put(event.request, copy));
-        return resp;
-      }).catch(() => caches.match('./index.html'));
-    })
-  );
+  e.respondWith(fetch(req).then(r => { if (r.ok) { const copy = r.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return r; })
+    .catch(() => caches.match(req).then(r => r || caches.match('index.html'))));
 });
