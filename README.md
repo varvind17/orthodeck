@@ -173,7 +173,11 @@ Settings → **Share a deck**: pick "My own cards", your edited built-in cards, 
 
 ## Part 9 — Updating the app later
 
-If you change any file (e.g. add cards to `cards.js`), also change `CACHE_VERSION` in `sw.js` (e.g. `orthodeck-v2`) before uploading to GitHub, or installed phones will keep the old cached copy. The app shows "Update ready" with a **Reload now** button when it downloads a genuinely different version. It compares the version string rather than simply noticing that a worker installed, so re-installs of the same build (which iOS does on its own when it evicts the cached script) no longer produce a false alarm.
+If an installed phone ever gets stuck on an old version, Settings → About → **Force update** throws away the cached copy of the app and downloads it again. Your cards, progress, edits and photos live in a different store and are not touched by it.
+
+If you change any file (e.g. add cards to `cards.js`), also change `CACHE_VERSION` in `sw.js` (e.g. `orthodeck-v2`) before uploading to GitHub, or installed phones will keep the old cached copy. The app checks for a new version whenever it comes back to the foreground (an installed PWA is resumed from the app switcher, not reloaded, so a check that only runs on page load may never run), at most once every ten minutes. When it finds one it shows a bar at the bottom that stays until you tap **Reload** or dismiss it, and it activates the new version straight away, so the next time you open the app cold you are on the new build whether or not you tapped anything. Settings → About → **Check for updates** forces a check and tells you which build you are running.
+
+The app shows the bar only when the version is genuinely different. It compares the version string rather than simply noticing that a worker installed, so re-installs of the same build (which iOS does on its own when it evicts the cached script) stay silent.
 
 When adding cards to `cards.js`, add them at the **end** of a domain block. Card IDs come from their position, so inserting in the middle would shift progress onto the wrong cards.
 

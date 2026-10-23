@@ -10,7 +10,7 @@
   const MIN = 60 * 1000, DAY = 24 * 60 * MIN;
   const LEARN_STEPS = [1, 10], RELEARN_STEPS = [10];
   const LEARN_AHEAD = 20 * MIN;
-  const APP_VERSION = 'v4.3';
+  const APP_VERSION = 'v4.5';
   const DEFAULTS = {
     id: 'main', newPerDay: 40, maxReviews: 200, domains: DOMAINS.map((d) => d.key),
     apiKey: '', model: 'claude-sonnet-4-6', gKey: '', gCx: '', dayStart: 4,
@@ -696,6 +696,7 @@ ${cloze ? '- Use cloze cards for sentences that carry one key term or number ("T
     DOMAINS.forEach((dm) => { const l = document.createElement('label'); l.className = 'toggle'; l.innerHTML = `<span>${dm.name} <span style="color:var(--muted);font-size:13px">${dm.weight}%</span></span><input type="checkbox" ${settings.domains.includes(dm.key) ? 'checked' : ''}>`; l.querySelector('input').onchange = (e) => { settings.domains = DOMAINS.map((x) => x.key).filter((k) => k === dm.key ? e.target.checked : settings.domains.includes(k)); saveSettings(); }; d.appendChild(l); });
     renderDeckSelect(); renderSync();
     $('k-seed').textContent = SEED_CARDS.length; $('k-user').textContent = Object.keys(userCards).length; $('k-edited').textContent = Object.keys(overrides).length; $('k-reviews').textContent = Object.values(stats).reduce((s, x) => s + (x.reviews || 0), 0);
+    $('update-note').textContent = `Running ${APP_VERSION}${swRunningVersion ? ' · ' + swRunningVersion : ''}.`;
     $('about-text').textContent = `OrthoDeck ${APP_VERSION}. Seed deck weighted to the AAOS OITE blueprint. Scheduler: FSRS-5 with default parameters and 1 min / 10 min learning steps; intervals come from your target retention. Cards are one fact each. Built-in text is a starting point written for study, not a clinical reference.`;
   }
   function saveSettingsFromUI() {
@@ -1187,6 +1188,10 @@ ${sibs.length ? sibs.map((s) => `[${s.id}] ${clozePlain(s.q)} >>> ${s.a}`).join(
     $('btn-q-discard-all').onclick = async () => { const ids = Object.keys(queue); if (!ids.length || !confirm(`Discard all ${ids.length} generated cards?`)) return; for (const id of ids) await discardQueueCard(id); renderImport(); };
     ['s-new', 's-max', 's-key', 's-model', 's-gkey', 's-gcx', 's-daystart', 's-retention', 's-exam', 's-bury', 's-reverse', 's-leech', 's-leechaction'].forEach((id) => ($(id).onchange = saveSettingsFromUI));
     $('btn-deck-export').onclick = exportDeck; $('btn-deck-import').onclick = () => $('deck-file').click(); $('deck-file').onchange = (e) => e.target.files[0] && importDeck(e.target.files[0]);
+    $('updbar-go').onclick = () => { swReloading = true; $('updbar-text').textContent = 'Reloading…'; setTimeout(() => location.reload(), 400); };
+    $('updbar-x').onclick = () => $('updbar').classList.add('hidden');
+    $('btn-check-update').onclick = checkForUpdate;
+    $('btn-force-update').onclick = forceUpdate;
     $('btn-qbank').onclick = () => { show('qbank'); renderQBank(); };
     $('btn-qb-back').onclick = () => show('home');
     $('btn-qb-setup').onclick = () => { renderQSetup(); openSheet('qsetup'); };
@@ -1237,7 +1242,7 @@ ${sibs.length ? sibs.map((s) => `[${s.id}] ${clozePlain(s.q)} >>> ${s.a}`).join(
   // with no change shipped. Now the page asks each worker for its CACHE_VERSION
   // and only speaks up when the incoming version really differs.
   const SW_VER_KEY = 'od-sw-version';
-  let swReloading = false;
+  let swReloading = false, swReg = null, swRunningVersion = '', swNewVersion = '';
   function swVersion(worker, ms = 5000) {
     return new Promise((resolve) => {
       if (!worker) return resolve(null);
@@ -1251,23 +1256,26 @@ ${sibs.length ? sibs.map((s) => `[${s.id}] ${clozePlain(s.q)} >>> ${s.a}`).join(
       setTimeout(() => finish(null), ms);
     });
   }
-  function offerUpdate(worker) {
-    const t = $('toast');
-    t.textContent = 'Update ready. ';
-    const b = document.createElement('button');
-    b.className = 'toast-action'; b.textContent = 'Reload now';
-    b.onclick = () => { swReloading = true; b.textContent = 'Reloading…'; worker.postMessage({ type: 'SKIP_WAITING' }); setTimeout(() => location.reload(), 2000); };
-    t.appendChild(b);
-    t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 15000);
+  // A 15-second toast was the wrong vehicle: on iOS the app is resumed from the
+  // switcher rather than reloaded, so the notice has to persist until it is
+  // acted on. The waiting worker is also activated immediately, so the next cold
+  // start is the new build even if this bar is dismissed — the old code left it
+  // waiting forever, which is how a phone sat on a stale version.
+  function offerUpdate(worker, version) {
+    try { worker.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
+    swNewVersion = version || '';
+    $('updbar-text').textContent = 'A new version of OrthoDeck is ready.';
+    $('updbar').classList.remove('hidden');
   }
   async function registerSW() {
     if (!('serviceWorker' in navigator)) return;
     let reg;
-    try { reg = await navigator.serviceWorker.register('sw.js'); } catch (e) { return; }
+    try { reg = await navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }); } catch (e) { return; }
+    swReg = reg;
     navigator.serviceWorker.addEventListener('controllerchange', () => { if (swReloading) location.reload(); });
     // Remember the running build as soon as one is in control, so the check
     // below still works if the worker is slow to answer later.
-    swVersion(navigator.serviceWorker.controller).then((v) => { if (v) { try { localStorage.setItem(SW_VER_KEY, v); } catch (e) {} } });
+    swVersion(navigator.serviceWorker.controller).then((v) => { if (v) { swRunningVersion = v; try { localStorage.setItem(SW_VER_KEY, v); } catch (e) {} } });
     const consider = async (worker) => {
       const ctrl = navigator.serviceWorker.controller;
       if (!worker || !ctrl) return; // first ever install: nothing to announce
@@ -1279,14 +1287,58 @@ ${sibs.length ? sibs.map((s) => `[${s.id}] ${clozePlain(s.q)} >>> ${s.a}`).join(
       const v = await swVersion(worker);
       if (!v) return;                 // can't tell which build it is — stay quiet
       if (running && v === running) return; // same build re-installing: the old false alarm
-      offerUpdate(worker);
+      offerUpdate(worker, v);
     };
     if (reg.waiting) consider(reg.waiting);
     reg.addEventListener('updatefound', () => {
       const w = reg.installing;
       if (w) w.addEventListener('statechange', () => { if (w.state === 'installed') consider(w); });
     });
-    setInterval(() => reg.update().catch(() => {}), 3600000);
+    // An installed PWA is resumed from the app switcher, not reloaded, so a
+    // check that only runs on page load may not run for weeks. Check whenever
+    // the app comes back to the foreground, at most once every ten minutes.
+    let lastCheck = Date.now();
+    const checkSoon = () => {
+      if (document.hidden || Date.now() - lastCheck < 10 * MIN) return;
+      lastCheck = Date.now();
+      reg.update().catch(() => {});
+    };
+    document.addEventListener('visibilitychange', checkSoon);
+    window.addEventListener('focus', checkSoon);
+    window.addEventListener('pageshow', checkSoon);
+    setInterval(checkSoon, 30 * MIN);
+  }
+  // Last resort when a phone is stuck on an old build. Service worker caches
+  // hold the app's own files; cards, ratings, edits and photos live in
+  // IndexedDB, which this does not touch.
+  async function forceUpdate() {
+    if (!confirm('Throw away the cached copy of the app and download it again?\n\nYour cards, progress, edits and photos are stored separately and are not affected.')) return;
+    $('update-note').textContent = 'Clearing…';
+    try {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((k) => k.indexOf('orthodeck-images') !== 0).map((k) => caches.delete(k)));
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+    } catch (e) { toast('Could not clear: ' + e.message, 4000); return; }
+    $('update-note').textContent = 'Reloading…';
+    setTimeout(() => location.reload(true), 600);
+  }
+
+  async function checkForUpdate() {
+    const note = $('update-note');
+    if (!swReg) { note.textContent = 'Updates are handled by the browser here.'; return; }
+    note.textContent = 'Checking…';
+    try { await swReg.update(); } catch (e) {}
+    await new Promise((r) => setTimeout(r, 2500));
+    const w = swReg.waiting || swReg.installing;
+    const incoming = w ? await swVersion(w) : null;
+    const running = (await swVersion(navigator.serviceWorker.controller)) || swRunningVersion;
+    if (incoming && incoming !== running) {
+      offerUpdate(w, incoming);
+      note.textContent = 'A new version is ready — tap Reload in the bar at the bottom.';
+    } else {
+      note.textContent = `Running ${APP_VERSION}${running ? ' · ' + running : ''} — up to date.`;
+    }
   }
 
   // ---------- boot ----------

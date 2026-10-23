@@ -5,7 +5,7 @@
 // the one it is already running and only announces an update when they differ,
 // so a worker that re-installs itself unchanged (which iOS does on its own when
 // it evicts the stored script) no longer produces a false "Update ready".
-const CACHE_VERSION = 'orthodeck-v12';
+const CACHE_VERSION = 'orthodeck-v14';
 const IMAGE_CACHE = 'orthodeck-images';
 
 // Assets the app cannot start without. If one of these fails the install fails.
@@ -30,14 +30,21 @@ const OPTIONAL = [
   './vendor/pdf.worker.min.mjs'
 ];
 
+// Install must never fail. cache.addAll is all-or-nothing, so one slow fetch on
+// a weak signal used to fail the whole install: the worker went redundant, the
+// page was told nothing, and the phone sat on the old build through any number
+// of restarts. Everything is cached best-effort now and the fetch handler falls
+// back to the network for anything that did not make it.
+let missed = [];
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_VERSION);
-    await cache.addAll(CORE);
-    await Promise.all(OPTIONAL.map((u) => cache.add(u).catch(() => {})));
-    // Deliberately no skipWaiting() here. The new worker waits until the page
-    // asks for it (the "Reload now" button on the update toast) or until every
-    // tab is closed, so the "Update ready" notice is true when it is shown.
+    missed = [];
+    for (const url of CORE.concat(OPTIONAL)) {
+      try { await cache.add(url); } catch (e) { missed.push(url); }
+    }
+    // Deliberately no skipWaiting() here. The page activates a genuinely new
+    // version itself once it has compared versions, so the notice stays true.
   })());
 });
 
@@ -52,7 +59,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('message', (event) => {
   const msg = event.data || {};
   if (msg.type === 'VERSION') {
-    const reply = { type: 'VERSION', version: CACHE_VERSION };
+    const reply = { type: 'VERSION', version: CACHE_VERSION, missed: missed.slice() };
     if (event.ports && event.ports[0]) event.ports[0].postMessage(reply);
     else if (event.source) event.source.postMessage(reply);
   } else if (msg.type === 'SKIP_WAITING') {
