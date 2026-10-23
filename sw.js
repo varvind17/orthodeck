@@ -5,7 +5,7 @@
 // the one it is already running and only announces an update when they differ,
 // so a worker that re-installs itself unchanged (which iOS does on its own when
 // it evicts the stored script) no longer produces a false "Update ready".
-const CACHE_VERSION = 'orthodeck-v11';
+const CACHE_VERSION = 'orthodeck-v12';
 const IMAGE_CACHE = 'orthodeck-images';
 
 // Assets the app cannot start without. If one of these fails the install fails.

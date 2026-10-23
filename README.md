@@ -163,6 +163,8 @@ While studying: **space** reveals, **1–4** rate, **u** undoes, **s** skips.
 
 **Review missed** replays the questions you got wrong, up to 20 at a time.
 
+**If a set fails to generate**, the Questions screen shows exactly what the model sent back — which model answered, why it stopped, and the raw reply — under "What the model actually sent back". Most failures are the model ignoring the JSON format or spending its whole token budget thinking; the app retries once with a stricter instruction, salvages whatever complete questions are in a cut-off reply, and only then gives up. If the reply shows thinking blocks and no text, change the model in Settings.
+
 Questions are generated fresh for each set, which costs roughly a cent for ten, and the last 200 are kept so you can revisit misses without seeing the same stems again. They need a signal; studying does not. Questions sync to Dropbox with everything else.
 
 ## Part 8 — Sharing decks

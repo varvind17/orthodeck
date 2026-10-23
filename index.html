@@ -194,6 +194,9 @@
   .qq-prov button { display: block; width: 100%; text-align: left; font: inherit; font-size: 13.5px; color: var(--ink); background: none; border: 0; border-top: 1px solid var(--line); padding: 9px 0; }
   .qq-prov button b { color: var(--accent); }
   .qd-row { display: flex; gap: 10px; align-items: baseline; font-size: 14px; padding: 11px 0; border-top: 1px solid var(--line); }
+  .qb-diag { margin-top: 16px; }
+  .qb-diag summary { font-size: 13.5px; color: var(--again); cursor: pointer; }
+  .qb-diag pre { white-space: pre-wrap; word-break: break-word; font-size: 12px; line-height: 1.45; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; max-height: 280px; overflow: auto; margin: 8px 0; }
   .qb-busy-text { font-family: var(--serif); font-size: 18px; margin: 28px 0 12px; }
   .qb-bar { height: 8px; border-radius: 5px; background: var(--line); overflow: hidden; margin-bottom: 14px; }
   .qb-bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
@@ -408,6 +411,12 @@
       <button class="primary" id="btn-qb-start">Start</button>
       <div class="row"><button class="secondary" id="btn-qb-change">Change today's set</button><button class="secondary" id="btn-qb-missed">Review missed</button></div>
       <p class="note" id="qb-foot">Questions are written by Claude from cards already in your deck, using your API key. They need a signal; studying does not.</p>
+      <details class="qb-diag hidden" id="qb-diag">
+        <summary>What the model actually sent back</summary>
+        <p class="note" id="qb-diag-meta"></p>
+        <pre id="qb-diag-text"></pre>
+        <button class="secondary" id="btn-qb-copy">Copy this reply</button>
+      </details>
     </div>
 
     <div id="qb-quiz" class="hidden">

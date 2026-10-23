@@ -10,7 +10,7 @@
   const MIN = 60 * 1000, DAY = 24 * 60 * MIN;
   const LEARN_STEPS = [1, 10], RELEARN_STEPS = [10];
   const LEARN_AHEAD = 20 * MIN;
-  const APP_VERSION = 'v4.2';
+  const APP_VERSION = 'v4.3';
   const DEFAULTS = {
     id: 'main', newPerDay: 40, maxReviews: 200, domains: DOMAINS.map((d) => d.key),
     apiKey: '', model: 'claude-sonnet-4-6', gKey: '', gCx: '', dayStart: 4,
@@ -483,12 +483,20 @@
   async function addSelectedImage() { if (!imgSel) return; const rec = { url: imgSel.url, thumb: imgSel.thumb || '', credit: imgSel.credit || '', page: imgSel.page || '', title: imgSel.title || '' }; editImages.push(rec); renderThumbs(); try { const c = await caches.open('orthodeck-images'); for (const u of [rec.url, rec.thumb].filter(Boolean)) { const r = await fetch(u, { mode: 'no-cors' }); await c.put(u, r); } } catch (e) {} closeSheet('imgpreview'); closeSheet('imgsearch'); toast('Image added — tap Save to keep it'); }
 
   // ---------- Anthropic helper ----------
-  async function claude(system, messages, maxTokens = 1000) {
+  async function claudeFull(system, messages, maxTokens = 1000) {
     if (!settings.apiKey) throw new Error('Add your Anthropic API key in Settings first.');
-    const resp = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': settings.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }, body: JSON.stringify({ model: settings.model || DEFAULTS.model, max_tokens: maxTokens, system, messages }) });
+    const model = settings.model || DEFAULTS.model;
+    const resp = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': settings.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }, body: JSON.stringify({ model, max_tokens: maxTokens, system, messages }) });
     const data = await resp.json(); if (!resp.ok) throw new Error(data.error?.message || ('HTTP ' + resp.status));
-    return (data.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('\n').trim();
+    const blocks = data.content || [];
+    return {
+      text: blocks.filter((b) => b.type === 'text').map((b) => b.text).join('\n').trim(),
+      stop: data.stop_reason || '',
+      model: data.model || model,
+      kinds: [...new Set(blocks.map((b) => b.type))].join(', ')
+    };
   }
+  const claude = (system, messages, maxTokens) => claudeFull(system, messages, maxTokens).then((r) => r.text);
 
   // ---------- chat ----------
   let chatHistory = [];
@@ -705,7 +713,7 @@ ${cloze ? '- Use cloze cards for sentences that carry one key term or number ("T
   // is worth more than an invented one; the model writes an option only where no
   // sibling makes a useful one, and those are marked in the explanation.
   const Q_KEEP = 200;              // questions retained for review
-  const Q_BATCH = 5;               // questions per API request
+  const Q_BATCH = 3;               // questions per API request
   const Q_STYLES = { vignette: 'Vignette', applied: 'Applied', recall: 'Recall' };
   let qbank = {};                  // id -> question record
   let qSet = [], qIdx = 0, qCancel = false;
@@ -815,10 +823,25 @@ ${sibs.length ? sibs.map((s) => `[${s.id}] ${clozePlain(s.q)} >>> ${s.a}`).join(
     }).join('\n\n');
   }
 
-  function qParse(text, targets, styles) {
-    const a = text.indexOf('['), b = text.lastIndexOf(']');
-    if (a < 0 || b < a) throw new Error('No questions came back');
-    const raw = JSON.parse(text.slice(a, b + 1));
+  // Models wrap JSON in prose or code fences, and a long reply can be cut off
+  // mid-array. Take the array if it parses, otherwise salvage whatever complete
+  // objects are in there, so a truncated reply still yields usable questions.
+  function qExtract(text) {
+    let t = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+    const a = t.indexOf('['), b = t.lastIndexOf(']');
+    if (a >= 0 && b > a) { try { return JSON.parse(t.slice(a, b + 1)); } catch (e) { /* fall through */ } }
+    const objs = [];
+    let depth = 0, start = -1, inStr = false, escNext = false;
+    for (let i = 0; i < t.length; i++) {
+      const ch = t[i];
+      if (inStr) { if (escNext) escNext = false; else if (ch === '\\') escNext = true; else if (ch === '"') inStr = false; continue; }
+      if (ch === '"') { inStr = true; continue; }
+      if (ch === '{') { if (depth === 0) start = i; depth++; }
+      else if (ch === '}') { depth--; if (depth === 0 && start >= 0) { try { objs.push(JSON.parse(t.slice(start, i + 1))); } catch (e) {} start = -1; } }
+    }
+    return objs.length ? objs : null;
+  }
+  function qParse(raw, targets, styles) {
     const out = [];
     raw.forEach((r) => {
       const t = targets[(+r.n || out.length + 1) - 1] || targets[out.length];
@@ -839,8 +862,31 @@ ${sibs.length ? sibs.map((s) => `[${s.id}] ${clozePlain(s.q)} >>> ${s.a}`).join(
         src: [...new Set(src)].slice(0, 6), created: Date.now(), answered: 0, picked: null, right: false
       });
     });
-    if (!out.length) throw new Error('No usable questions came back');
     return out;
+  }
+
+  // One request for one batch, with a single stricter retry. Whatever came back
+  // is kept in qLastReply so the Questions screen can show it when parsing fails
+  // — a silent "nothing came back" is impossible to act on.
+  let qLastReply = null;
+  async function qAsk(slice, st) {
+    const msgs = [{ role: 'user', content: qPrompt(slice, st) }];
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const r = await claudeFull(Q_SYSTEM, msgs, 2000 * slice.length);
+      qLastReply = r;
+      const raw = qExtract(r.text);
+      const parsed = raw ? qParse(raw, slice, st) : [];
+      if (parsed.length) return parsed;
+      if (attempt === 0) {
+        msgs.push({ role: 'assistant', content: r.text || '(empty)' });
+        msgs.push({ role: 'user', content: 'That was not usable. Reply with the JSON array only — no explanation before or after it, starting with [ and ending with ].' });
+        continue;
+      }
+      if (r.stop === 'max_tokens') throw new Error('The reply was cut off before any question finished. Try a smaller set in the gear, or a different model.');
+      if (!r.text) throw new Error(`${r.model} sent back ${r.kinds || 'nothing'} and no text. If that says "thinking", the model spent its whole budget thinking — pick a different model in Settings.`);
+      throw new Error(`${r.model} did not return questions. It said: "${r.text.slice(0, 120).replace(/\s+/g, ' ')}…"`);
+    }
+    return [];
   }
 
   async function qGenerate(n) {
@@ -854,10 +900,10 @@ ${sibs.length ? sibs.map((s) => `[${s.id}] ${clozePlain(s.q)} >>> ${s.a}`).join(
       const slice = targets.slice(i, i + Q_BATCH), st = styles.slice(i, i + Q_BATCH);
       $('qb-busy-text').textContent = `Writing questions… ${made.length} of ${targets.length}`;
       $('qb-bar-fill').style.width = Math.round(100 * made.length / targets.length) + '%';
-      const text = await claude(Q_SYSTEM, [{ role: 'user', content: qPrompt(slice, st) }], 1200 * slice.length);
-      made.push(...qParse(text, slice, st));
+      const batch = await qAsk(slice, st);
+      made.push(...batch);
     }
-    if (!made.length) throw new Error('Nothing came back');
+    if (!made.length) throw new Error('Nothing usable came back');
     made.forEach((q) => { qbank[q.id] = q; });
     await DB.putMany('questions', made);
     await qPrune();
@@ -897,6 +943,15 @@ ${sibs.length ? sibs.map((s) => `[${s.id}] ${clozePlain(s.q)} >>> ${s.a}`).join(
     qShow('qb-today');
   }
 
+  function qShowDiag(err) {
+    const d = $('qb-diag');
+    if (!qLastReply) { d.classList.add('hidden'); return; }
+    d.classList.remove('hidden');
+    d.open = true;
+    $('qb-diag-meta').textContent = `${qLastReply.model} · stopped: ${qLastReply.stop || 'unknown'} · blocks: ${qLastReply.kinds || 'none'} · ${qLastReply.text.length} characters`;
+    $('qb-diag-text').textContent = qLastReply.text || '(the model returned no text at all)';
+  }
+
   async function qStart(existing) {
     if (existing) { qSet = existing; }
     else {
@@ -904,11 +959,13 @@ ${sibs.length ? sibs.map((s) => `[${s.id}] ${clozePlain(s.q)} >>> ${s.a}`).join(
       try { qSet = await qGenerate(settings.qPerDay || 10); }
       catch (e) {
         qShow('qb-today');
-        toast(/Failed to fetch/i.test(e.message) ? 'No connection. Questions need a signal; studying does not.' : 'Could not write questions: ' + e.message, 5000);
+        qShowDiag(e);
+        toast(/Failed to fetch/i.test(e.message) ? 'No connection. Questions need a signal; studying does not.' : 'Could not write questions: ' + e.message, 6000);
         return;
       }
     }
     if (qCancel) { qShow('qb-today'); return; }
+    $('qb-diag').classList.add('hidden');
     qIdx = 0; qShow('qb-quiz'); renderQ();
   }
 
@@ -1136,6 +1193,7 @@ ${sibs.length ? sibs.map((s) => `[${s.id}] ${clozePlain(s.q)} >>> ${s.a}`).join(
     $('btn-qb-change').onclick = () => { renderQSetup(); openSheet('qsetup'); };
     $('btn-qb-start').onclick = () => qStart();
     $('btn-qb-missed').onclick = qReviewMissed;
+    $('btn-qb-copy').onclick = async () => { try { await navigator.clipboard.writeText(($('qb-diag-meta').textContent || '') + '\n\n' + ($('qb-diag-text').textContent || '')); toast('Copied'); } catch (e) { toast('Could not copy — select the text instead', 3500); } };
     $('btn-qb-cancel').onclick = () => { qCancel = true; qShow('qb-today'); };
     $('btn-qq-next').onclick = () => { qIdx++; if (qIdx >= qSet.length) renderQDone(); else renderQ(); };
     $('btn-qq-chat').onclick = () => { const q = qSet[qIdx]; if (q) openQChat(q); };
