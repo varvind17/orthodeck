@@ -59,6 +59,8 @@ Chat needs a signal; studying does not. Usage is billed to your key at Anthropic
 
 **Cloze cards:** write `The {{c1::deep deltoid}} resists lateral talar shift` in the front. The importer makes these for list-heavy text.
 
+**Missed a day?** The red **Postpone today's reviews** button on the home screen moves the whole due pile across the next three days, most-at-risk cards first, and respects your daily review cap — if the backlog is bigger than three days at that cap, it spreads over as many days as it needs. Nothing is rated, so stability, difficulty, reps and lapses are untouched: FSRS never learns that a card was hard when the truth was that you were in the OR. (Auto-rating a skipped card as "Hard" would do the opposite — difficulty climbs, intervals shorten, and next month's load goes up.)
+
 **Cram mode** (home screen) ignores scheduling and shows everything you've seen in a domain — for the last days before the exam.
 
 **After a session** with any misses: **Explain my misses** groups the failed cards by concept and explains the underlying idea (uses your API key).
@@ -145,6 +147,24 @@ At 900px and wider the layout changes: cards browse in two columns, up to 1,200 
 
 While studying: **space** reveals, **1–4** rate, **u** undoes, **s** skips.
 
+## Part 7d — The question bank
+
+**Question bank** on the home screen writes board-style multiple-choice questions from cards already in your deck, using your API key.
+
+**Ten a day by default**, aimed by default at the sections costing you the most: accuracy over the last 30 days ranked against OITE weight, so a weak section worth 19% outranks an equally weak section worth 7%. Until you have answered about ten questions there is no accuracy to rank, so it ranks on blueprint weight alone and says so. The gear on the Questions screen sets the count (5 to 30), the style (mixed, vignettes, applied, or direct recall) and whether sections are chosen automatically or by you.
+
+**Where the options come from.** Each question is built around one target card, and the model is given that card plus up to eight siblings — classification grades of the same system, cards sharing key terms, and the cards written either side of it in the deck, which are usually the same subject. Distractors are drawn from those siblings wherever one makes a genuinely tempting wrong answer, so a miss teaches a second real card. The model writes an option only when no sibling works, and those are marked **written** in the explanation. The line above the source cards tells you how many of the five came from your deck.
+
+**Every option gets a rationale**, right and wrong, and the source cards are listed underneath — tap one to open the card. A question is only as accurate as the cards behind it, so if a card is wrong, fix it once and every future question built from it is right.
+
+**Ask about this question** opens the same chat you have on cards, but it already knows the stem, the options, which one you picked, the answer key and the source cards. "Why not my answer?" needs no setup.
+
+**Missing a question lapses its card** — the card behind it is rated Again and comes back in tomorrow's review, so the question bank feeds the scheduler rather than keeping a second set of progress. Turn it off in the gear if you would rather questions stayed separate.
+
+**Review missed** replays the questions you got wrong, up to 20 at a time.
+
+Questions are generated fresh for each set, which costs roughly a cent for ten, and the last 200 are kept so you can revisit misses without seeing the same stems again. They need a signal; studying does not. Questions sync to Dropbox with everything else.
+
 ## Part 8 — Sharing decks
 
 Settings → **Share a deck**: pick "My own cards", your edited built-in cards, or a whole domain, then **Export deck file**. Send the file to a co-resident; they use **Import a deck file** and the cards join their rotation as their own cards (duplicates skipped, no progress carried).
@@ -159,4 +179,4 @@ When adding cards to `cards.js`, add them at the **end** of a domain block. Card
 
 - The seed deck was written as a study aid, not a clinical reference. Numbers and thresholds drift between sources and years — verify anything you'd act on.
 - iOS can evict a PWA's stored data if the app isn't opened for several weeks and the phone runs low on space. Export a backup now and then.
-- Built: FSRS scheduler with target retention, seed deck (1,891 one-fact cards + reverse classification cards), per-card editing/images, AI chat, chapter importer with review queue, web image search (Commons/Google), Dropbox sync and backup, desktop layout with multi-select. Not built: subspecialty "advanced" tiers and the curated "What's new" PubMed feed.
+- Built: FSRS scheduler with target retention, seed deck (1,891 one-fact cards + reverse classification cards), per-card editing/images, AI chat, chapter importer with review queue, web image search (Commons/Google), Dropbox sync and backup, desktop layout with multi-select, one-tap postpone, and a question bank with per-option explanations and chat. Not built: subspecialty "advanced" tiers and the curated "What's new" PubMed feed.

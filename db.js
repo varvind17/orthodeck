@@ -7,10 +7,10 @@
 // writing records that already carry a timestamp from the other device.
 const DB = (() => {
   const NAME = 'orthodeck';
-  const VERSION = 4;
-  const STORES = ['progress', 'overrides', 'usercards', 'settings', 'chats', 'stats', 'queue', 'log', 'tombstones'];
+  const VERSION = 5;
+  const STORES = ['progress', 'overrides', 'usercards', 'settings', 'chats', 'stats', 'queue', 'log', 'tombstones', 'questions'];
   // 'log' is append-only and 'chats' are device-local, so neither needs stamping.
-  const SYNCED = ['progress', 'overrides', 'usercards', 'settings', 'stats', 'queue'];
+  const SYNCED = ['progress', 'overrides', 'usercards', 'settings', 'stats', 'queue', 'questions'];
   let dbp = null;
 
   function open() {

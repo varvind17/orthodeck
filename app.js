@@ -10,12 +10,13 @@
   const MIN = 60 * 1000, DAY = 24 * 60 * MIN;
   const LEARN_STEPS = [1, 10], RELEARN_STEPS = [10];
   const LEARN_AHEAD = 20 * MIN;
-  const APP_VERSION = 'v4.0';
+  const APP_VERSION = 'v4.2';
   const DEFAULTS = {
     id: 'main', newPerDay: 40, maxReviews: 200, domains: DOMAINS.map((d) => d.key),
     apiKey: '', model: 'claude-sonnet-4-6', gKey: '', gCx: '', dayStart: 4,
     retention: 0.9, burySiblings: true, reverse: true, leechThreshold: 8, leechAction: 'suspend', examDate: '',
-    dbxKey: '', dbxRefresh: '', dbxFreq: 'weekly', dbxLastSync: 0, dbxLastSnapshot: 0, dbxRev: ''
+    dbxKey: '', dbxRefresh: '', dbxFreq: 'weekly', dbxLastSync: 0, dbxLastSnapshot: 0, dbxRev: '',
+    qPerDay: 10, qMode: 'auto', qSections: [], qStyle: 'mixed', qLapse: true
   };
   const TYPES = { classification: 'Classification', anatomy: 'Anatomy / approach', diagnosis: 'Diagnosis', management: 'Management', cloze: 'Cloze' };
   const FLAGS = { '': 'None', verify: 'Verify against source', notboard: 'Not board-relevant', hard: 'Keeps tripping me', fix: 'Needs rewrite' };
@@ -167,6 +168,7 @@
     (await DB.getAll('usercards')).forEach((c) => (userCards[c.id] = c));
     (await DB.getAll('stats')).forEach((s) => (stats[s.id] = s));
     (await DB.getAll('queue')).forEach((q) => (queue[q.id] = q));
+    (await DB.getAll('questions')).forEach((q) => (qbank[q.id] = q));
     if (!settings.statsLocalDay) { const tk = todayKey(); for (const k of Object.keys(stats)) if (k >= tk) { delete stats[k]; await DB.del('stats', k); } settings.statsLocalDay = true; await DB.put('settings', settings); }
     invalidate();
   }
@@ -191,10 +193,67 @@
     const qn = Object.keys(queue).length; $('queue-note').classList.toggle('hidden', !qn);
     $('queue-note').innerHTML = qn ? `<b style="color:var(--accent)">${qn}</b> generated ${qn === 1 ? 'card is' : 'cards are'} waiting for your review.` : '';
     if (settings.examDate) { const days = Math.ceil((new Date(settings.examDate + 'T00:00') - Date.now()) / DAY); const unseen = allCards().filter((c) => active(c) && settings.domains.includes(c.d) && prog(c.id).state === 'new').length; const perDay = settings.newPerDay || 1; const need = Math.ceil(unseen / perDay); $('exam-note').classList.remove('hidden'); $('exam-note').innerHTML = days >= 0 ? `<b style="color:var(--accent)">${days}</b> days to the exam · ${unseen} unseen cards ≈ ${need} days at ${perDay}/day${need > days ? ' — raise new cards/day to finish in time' : ''}.` : 'Exam date has passed — update it in Settings.'; } else $('exam-note').classList.add('hidden');
+    const backlog = c.due + c.learn;
+    $('btn-postpone').classList.toggle('hidden', !backlog);
+    $('postpone-note').classList.toggle('hidden', !backlog);
+    if (backlog) {
+      $('btn-postpone').textContent = `Postpone today's reviews (${backlog})`;
+      $('postpone-note').textContent = `Moves them across the next ${POSTPONE_DAYS} days, most urgent first. Nothing is rated, so your scheduling is unaffected.`;
+    }
     $('btn-start').disabled = !(c.due + c.learn + c.fresh);
     $('btn-start').textContent = (c.due + c.learn + c.fresh) ? `Start studying (${c.due + c.learn + c.fresh})` : 'Nothing due';
     const list = $('domain-list'); list.innerHTML = '';
     DOMAINS.forEach((d) => { const dc = counts(d.key), on = settings.domains.includes(d.key), b = document.createElement('button'); b.className = 'domain' + (on ? '' : ' off'); const pct = dc.total ? Math.round(100 * dc.seen / dc.total) : 0; b.innerHTML = `<span class="name">${d.name}</span><span class="due">${dc.due + dc.learn ? (dc.due + dc.learn) + ' due' : ''}</span><span class="meta">${d.weight}% of OITE · ${dc.seen}/${dc.total} seen${on ? '' : ' · paused'}</span><span class="meta"></span><span class="prog"><i style="width:${pct}%"></i></span>`; b.onclick = () => startSession(d.key); list.appendChild(b); });
+  }
+
+  // ---------- postpone ----------
+  // A day lost to the OR should not turn into a 400-card wall the next morning.
+  // Postponing moves due dates only: no rating is recorded, so stability,
+  // difficulty, reps and lapses are untouched and FSRS never learns that these
+  // cards were "hard" when the truth is that you were operating.
+  const POSTPONE_DAYS = 3;
+  function dueBacklog(now) {
+    return allCards().filter((c) => { const p = prog(c.id); return !p.suspended && p.state !== 'new' && p.due <= now; })
+      .map((c) => progress[c.id] || prog(c.id));
+  }
+  function startOfDay(offsetDays) {
+    const d = new Date(); d.setHours(settings.dayStart ?? 4, 0, 0, 0);
+    if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
+    d.setDate(d.getDate() + (offsetDays - 1));
+    return d.getTime();
+  }
+  async function postponeToday() {
+    const now = Date.now();
+    const backlog = dueBacklog(now);
+    if (!backlog.length) { toast('Nothing due to postpone'); return; }
+    if (!confirm(`Postpone ${backlog.length} due ${backlog.length === 1 ? 'card' : 'cards'} across the next ${POSTPONE_DAYS} days?\n\nNo ratings are recorded, so your scheduling is unaffected — only the due dates move.`)) return;
+    // Most at risk of being forgotten goes first, so the earliest slot buys the most.
+    backlog.forEach((p) => { p._r = retr(Math.max(0.01, (now - (p.last || now)) / DAY), Math.max(p.S || 0.1, 0.1)); });
+    backlog.sort((a, b) => a._r - b._r);
+    // Respect the daily review cap, counting what is already booked for each day.
+    const cap = Math.max(5, settings.maxReviews || 200);
+    const load = {};
+    allCards().forEach((c) => {
+      const p = prog(c.id);
+      if (p.suspended || p.state === 'new' || p.due <= now) return;
+      const k = Math.ceil((p.due - now) / DAY);
+      if (k >= 1) load[k] = (load[k] || 0) + 1;
+    });
+    const per = Math.ceil(backlog.length / POSTPONE_DAYS);
+    const spread = {};
+    backlog.forEach((p, i) => {
+      let day = Math.min(POSTPONE_DAYS, Math.floor(i / per) + 1), guard = 0;
+      while ((load[day] || 0) >= cap && guard++ < 60) day++;
+      load[day] = (load[day] || 0) + 1;
+      spread[day] = (spread[day] || 0) + 1;
+      delete p._r;
+      p.due = startOfDay(day) + Math.floor(Math.random() * 2 * 3600000);
+      progress[p.id] = p;
+    });
+    await DB.putMany('progress', backlog);
+    invalidate(); renderHome();
+    const shape = Object.keys(spread).sort((a, b) => a - b).map((d) => spread[d]).join(' / ');
+    toast(`${backlog.length} cards postponed — ${shape} over the next ${Object.keys(spread).length} days`, 4000);
   }
 
   // ---------- study ----------
@@ -433,14 +492,76 @@
 
   // ---------- chat ----------
   let chatHistory = [];
-  async function openChat(card) { chatCard = card; const saved = await DB.get('chats', card.id); chatHistory = saved ? saved.messages : []; renderChat(); openSheet('chat'); if (!settings.apiKey) toast('Add your Anthropic API key in Settings to use chat.', 3500); }
-  function renderChat() { const l = $('chat-list'); l.innerHTML = ''; const sys = document.createElement('div'); sys.className = 'msg sys'; sys.textContent = 'Answers are grounded in this card and may be wrong. Verify management details against primary sources.'; l.appendChild(sys); chatHistory.forEach((m) => { const d = document.createElement('div'); d.className = 'msg ' + (m.role === 'user' ? 'user' : 'ai'); d.textContent = m.content; l.appendChild(d); }); l.scrollTop = l.scrollHeight; }
+  // One chat sheet, two contexts: a card, or a question you just answered.
+  let chatCtx = null;
+  const CARD_CHIPS = [
+    ['Mechanism', 'Explain the mechanism behind this in a few sentences.'],
+    ['Why not X?', 'Why not the alternatives? Compare this with the closest wrong answers a board question would offer.'],
+    ['Mnemonic', 'Give me a mnemonic or memory hook for this card.'],
+    ['Quiz me', 'Write one OITE-style vignette question testing this card, then give the answer with a one-line explanation.'],
+    ['Related', 'What related classification systems or numbers get confused with this one?']
+  ];
+  async function openChatCtx(ctx) {
+    chatCtx = ctx; chatCard = ctx.card || null;
+    const saved = await DB.get('chats', ctx.id);
+    chatHistory = saved ? saved.messages : [];
+    $('chat-title').textContent = ctx.title;
+    const box = $('chat-chips'); box.innerHTML = '';
+    ctx.chips.forEach(([label, prompt]) => {
+      const b = document.createElement('button');
+      b.className = 'chip'; b.textContent = label;
+      b.onclick = () => sendChat(prompt);
+      box.appendChild(b);
+    });
+    $('chat-text').placeholder = ctx.placeholder;
+    renderChat(); openSheet('chat');
+    if (!settings.apiKey) toast('Add your Anthropic API key in Settings to use chat.', 3500);
+  }
+  const openChat = (card) => openChatCtx({
+    id: card.id, card, title: 'Ask about this card', chips: CARD_CHIPS,
+    placeholder: 'Ask anything about this card…',
+    note: 'Answers are grounded in this card and may be wrong. Verify management details against primary sources.',
+    system: systemPrompt(card)
+  });
+  function openQChat(q) {
+    const mine = q.picked !== null && q.picked !== undefined ? q.opts[q.picked] : null;
+    const chips = [];
+    if (mine && q.picked !== q.correct) chips.push(['Why not my answer?', `I chose "${mine.t}". Walk me through why that is wrong and why "${q.opts[q.correct].t}" is right.`]);
+    chips.push(['Teach the concept', 'Teach me the underlying concept this question is testing, not just the answer.']);
+    chips.push(['Mnemonic', 'Give me a memory hook for this.']);
+    chips.push(['Harder version', 'Ask me a harder version of this question, then wait for my answer before telling me if I am right.']);
+    chips.push(['Quiz the siblings', 'Quiz me one at a time on the other source cards behind this question.']);
+    return openChatCtx({
+      id: 'qc_' + q.id, title: 'Ask about this question', chips,
+      placeholder: 'Ask anything about this question…',
+      note: 'Answers are grounded in this question and the cards behind it, and may be wrong. Verify management details against primary sources.',
+      system: qSystemPrompt(q)
+    });
+  }
+  function qSystemPrompt(q) {
+    const cards = q.src.map(cardById).filter(Boolean);
+    const mine = q.picked !== null && q.picked !== undefined ? q.opts[q.picked] : null;
+    return `You are a study tutor inside OrthoDeck, an orthopaedic surgery board-prep app (OITE / ABOS Part I level). The user has just answered the multiple-choice question below on a phone, so be concise: short paragraphs, plain text, no markdown headers.
+
+Ground everything in this question and the cards behind it. If the user asks why an option is wrong, teach the fact that option represents rather than only dismissing it. If a card looks outdated or you are unsure, say so. This is a study aid, not a clinical reference: when you give management details, end with a one-line reminder to verify against primary sources. Do not invent citations.
+
+Section: ${DOMAIN_BY_KEY[q.d]?.name || 'Custom'}
+${q.stem ? 'Stem: ' + q.stem + '\n' : ''}Question: ${q.lead}
+Options:
+${q.opts.map((o, i) => `${'ABCDE'[i]}. ${o.t}${i === q.correct ? '  [correct]' : ''} — ${o.why}`).join('\n')}
+The user answered: ${mine ? mine.t + (q.picked === q.correct ? ' (correct)' : ' (incorrect)') : 'not yet'}
+Teaching point: ${q.teach}
+
+Source cards from the user's deck:
+${cards.map((c) => `[${c.id}] ${clozePlain(c.q)} >>> ${c.a}`).join('\n')}`;
+  }
+  function renderChat() { const l = $('chat-list'); l.innerHTML = ''; const sys = document.createElement('div'); sys.className = 'msg sys'; sys.textContent = (chatCtx && chatCtx.note) || 'Answers may be wrong. Verify management details against primary sources.'; l.appendChild(sys); chatHistory.forEach((m) => { const d = document.createElement('div'); d.className = 'msg ' + (m.role === 'user' ? 'user' : 'ai'); d.textContent = m.content; l.appendChild(d); }); l.scrollTop = l.scrollHeight; }
   const systemPrompt = (card) => `You are a study tutor inside OrthoDeck, an orthopaedic surgery board-prep flashcard app (OITE / ABOS Part I level). The user is looking at one flashcard and reads your answers on a phone screen, so be concise: short paragraphs, plain text, no markdown headers.\n\nGround everything in the card below. Explain mechanism, compare against plausible wrong answers, connect related classification systems, offer memory hooks when asked. If the card looks outdated or you are unsure, say so. This is a study aid, not a clinical reference: when you give management details, end with a one-line reminder to verify against primary sources. Do not invent citations.\n\nDomain: ${DOMAIN_BY_KEY[card.d]?.name || 'Custom'}\nCard type: ${TYPES[card.t] || 'general'}\nFront: ${clozePlain(card.q)}\nBack: ${card.a}`;
   async function sendChat(text) {
-    text = (text || $('chat-text').value).trim(); if (!text || !chatCard) return; if (!settings.apiKey) { toast('Add your Anthropic API key in Settings first.'); return; }
+    text = (text || $('chat-text').value).trim(); if (!text || !chatCtx) return; if (!settings.apiKey) { toast('Add your Anthropic API key in Settings first.'); return; }
     $('chat-text').value = ''; $('chat-text').style.height = 'auto'; chatHistory.push({ role: 'user', content: text }); renderChat();
     const thinking = document.createElement('div'); thinking.className = 'msg ai'; thinking.textContent = '…'; $('chat-list').appendChild(thinking);
-    try { const reply = await claude(systemPrompt(chatCard), chatHistory.slice(-12), 800); chatHistory.push({ role: 'assistant', content: reply || '(no reply)' }); await DB.put('chats', { id: chatCard.id, messages: chatHistory }); }
+    try { const reply = await claude(chatCtx.system, chatHistory.slice(-12), 800); chatHistory.push({ role: 'assistant', content: reply || '(no reply)' }); await DB.put('chats', { id: chatCtx.id, messages: chatHistory }); }
     catch (e) { chatHistory.pop(); renderChat(); $('chat-text').value = text; toast(/Failed to fetch/i.test(e.message) ? 'No connection. Chat needs a signal; studying does not.' : 'Chat failed: ' + e.message, 4500); return; }
     renderChat();
   }
@@ -577,6 +698,324 @@ ${cloze ? '- Use cloze cards for sentences that carry one key term or number ("T
   async function exportBackup() { const data = { app: 'orthodeck', version: APP_VERSION, exported: new Date().toISOString(), progress: Object.values(progress), overrides: Object.values(overrides), usercards: Object.values(userCards), chats: await DB.getAll('chats'), stats: Object.values(stats), queue: Object.values(queue), log: await DB.getAll('log'), settings: { ...settings, apiKey: '', gKey: '', dbxKey: '', dbxRefresh: '', dbxRev: '', dbxLastSync: 0, dbxLastSnapshot: 0 } }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `orthodeck-backup-${todayKey()}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
   async function importBackup(file) { try { const data = JSON.parse(await file.text()); if (data.app !== 'orthodeck') throw new Error('Not an OrthoDeck backup'); await DB.putMany('progress', data.progress || []); await DB.putMany('overrides', data.overrides || []); await DB.putMany('usercards', data.usercards || []); await DB.putMany('chats', data.chats || []); await DB.putMany('stats', data.stats || []); await DB.putMany('queue', data.queue || []); await DB.putMany('log', data.log || []); if (data.settings) { settings = { ...settings, ...data.settings, apiKey: settings.apiKey, gKey: settings.gKey, dbxKey: settings.dbxKey, dbxRefresh: settings.dbxRefresh, dbxRev: settings.dbxRev, dbxLastSync: settings.dbxLastSync, dbxLastSnapshot: settings.dbxLastSnapshot }; await saveSettings(); } progress = {}; overrides = {}; userCards = {}; stats = {}; queue = {}; await load(); renderSettings(); renderHome(); toast('Backup restored'); } catch (e) { toast('Import failed: ' + e.message, 4000); } }
 
+
+  // ---------- question bank ----------
+  // Questions are written by Claude from cards already in the deck. Distractors
+  // prefer sibling cards, because a wrong answer that teaches a second real card
+  // is worth more than an invented one; the model writes an option only where no
+  // sibling makes a useful one, and those are marked in the explanation.
+  const Q_KEEP = 200;              // questions retained for review
+  const Q_BATCH = 5;               // questions per API request
+  const Q_STYLES = { vignette: 'Vignette', applied: 'Applied', recall: 'Recall' };
+  let qbank = {};                  // id -> question record
+  let qSet = [], qIdx = 0, qCancel = false;
+
+  const qStyleFor = (i) => {
+    if (settings.qStyle && settings.qStyle !== 'mixed') return settings.qStyle;
+    return i % 5 === 4 ? 'recall' : (i % 5 === 2 ? 'applied' : 'vignette');
+  };
+
+  // Accuracy over the last 30 days, by section.
+  function qAccuracy() {
+    const cut = Date.now() - 30 * DAY, by = {};
+    Object.values(qbank).forEach((q) => {
+      if (!q.answered || q.answered < cut) return;
+      const b = (by[q.d] = by[q.d] || { n: 0, ok: 0 });
+      b.n++; if (q.right) b.ok++;
+    });
+    return by;
+  }
+  // Sections ranked by what a weak score actually costs: a section worth 19% of
+  // the exam outranks an equally weak section worth 7%. Sections without enough
+  // answers sit at a neutral 60% so the ranking starts on blueprint weight.
+  function qRank() {
+    const acc = qAccuracy();
+    return DOMAINS.filter((d) => settings.domains.includes(d.key)).map((d) => {
+      const b = acc[d.key];
+      const pct = b && b.n >= 3 ? Math.round(100 * b.ok / b.n) : null;
+      return { key: d.key, name: d.name, weight: d.weight, pct, n: b ? b.n : 0, score: (100 - (pct === null ? 60 : pct)) * d.weight };
+    }).sort((a, b) => b.score - a.score);
+  }
+  function qSections() {
+    if (settings.qMode === 'pick' && (settings.qSections || []).length) {
+      return settings.qSections.filter((k) => settings.domains.includes(k));
+    }
+    return qRank().slice(0, 3).map((r) => r.key);
+  }
+
+  // Cards to build questions from: the ones you have actually struggled with,
+  // skipping anything used in a recent question so sets do not repeat.
+  function qTargets(sections, n) {
+    const recent = new Set(Object.values(qbank).sort((a, b) => b.created - a.created).slice(0, 60).map((q) => q.src[0]));
+    const now = Date.now();
+    const pick = [];
+    const per = Math.ceil(n / sections.length);
+    sections.forEach((sec) => {
+      let pool = allCards().filter((c) => c.d === sec && !c.reverse && !prog(c.id).suspended && !recent.has(c.id));
+      let seen = pool.filter((c) => prog(c.id).state !== 'new');
+      if (seen.length < per) seen = pool;                 // nothing studied here yet
+      seen = seen.map((c) => {
+        const p = prog(c.id);
+        const weight = 1 + (p.lapses || 0) * 3 + (p.leech ? 5 : 0) + (p.flag === 'hard' ? 2 : 0) + (p.due && p.due <= now ? 1 : 0);
+        return { c, weight };
+      });
+      // Weighted sample without replacement.
+      for (let k = 0; k < per && seen.length; k++) {
+        let total = seen.reduce((s, x) => s + x.weight, 0), r = Math.random() * total, i = 0;
+        for (; i < seen.length; i++) { r -= seen[i].weight; if (r <= 0) break; }
+        pick.push(seen[Math.min(i, seen.length - 1)].c);
+        seen.splice(Math.min(i, seen.length - 1), 1);
+      }
+    });
+    return shuffle(pick).slice(0, n);
+  }
+
+  // The UI's "related" list is deliberately conservative — only 143 of the 1,891
+  // cards have classification siblings, so on its own most questions would end
+  // up with model-written distractors. Question writing wants a wider net, so
+  // this also pulls the cards written either side of this one: the seed deck is
+  // authored in topic blocks, which makes neighbouring IDs the same subject.
+  function qSiblings(card) {
+    const out = [], seen = new Set([card.id, card.parent]);
+    const push = (c) => { if (c && !seen.has(c.id) && !c.reverse) { seen.add(c.id); out.push(c); } };
+    related(card).forEach(push);
+    const sameDomain = allCards().filter((c) => c.d === card.d && !c.reverse);
+    const i = sameDomain.findIndex((c) => c.id === card.id);
+    if (i >= 0) for (let k = 1; k <= 5; k++) { push(sameDomain[i - k]); push(sameDomain[i + k]); }
+    return out.slice(0, 8);
+  }
+
+  const Q_SYSTEM = `You write board-style multiple-choice questions for OrthoDeck, an orthopaedic surgery flashcard app at OITE / ABOS Part I level. The user is a resident reading on a phone.
+
+For each TARGET CARD you are given, write one question whose correct answer is the fact on that card.
+
+Rules:
+- Exactly five options. Exactly one is correct.
+- Build distractors from the SIBLING CARDS wherever one makes a genuinely tempting wrong answer, and set "from" to that card's ID. Write your own option only when no sibling works, and set "from" to null.
+- Every option needs a "why": one sentence. For the correct option say what makes it right. For a wrong option, teach the fact that option actually represents, so a miss is still worth something.
+- Style "vignette": a short clinical presentation (under 80 words) whose details make the target fact the answer, then a direct question in "lead". Style "applied": include numbers the resident must combine or compute. Style "recall": leave "stem" empty and put the whole question in "lead".
+- "teach": one or two sentences on the principle, not a restatement of the answer.
+- "mnem": a short memory hook, or "" if nothing honest fits.
+- Plain text only. No markdown, no citations, no references, no invented trial names.
+- Do not reveal the answer in the stem. Vary which position is correct.
+- If a card looks wrong or out of date, still write the question from it, and say so in the correct option's "why".
+
+Return ONLY a JSON array, one object per question, no prose around it:
+[{"n":1,"style":"vignette","stem":"...","lead":"...","options":[{"text":"...","from":"hk_011","why":"..."},...5 total],"correct":0,"teach":"...","mnem":"..."}]`;
+
+  function qPrompt(targets, styles) {
+    return targets.map((c, i) => {
+      const sibs = qSiblings(c);
+      return `### QUESTION ${i + 1} (style: ${styles[i]})
+TARGET CARD [${c.id}] — ${DOMAIN_BY_KEY[c.d]?.name || 'Custom'}, ${TYPES[c.t] || 'general'}
+Front: ${clozePlain(c.q)}
+Back: ${c.a}
+SIBLING CARDS:
+${sibs.length ? sibs.map((s) => `[${s.id}] ${clozePlain(s.q)} >>> ${s.a}`).join('\n') : '(none — write your own distractors)'}`;
+    }).join('\n\n');
+  }
+
+  function qParse(text, targets, styles) {
+    const a = text.indexOf('['), b = text.lastIndexOf(']');
+    if (a < 0 || b < a) throw new Error('No questions came back');
+    const raw = JSON.parse(text.slice(a, b + 1));
+    const out = [];
+    raw.forEach((r) => {
+      const t = targets[(+r.n || out.length + 1) - 1] || targets[out.length];
+      if (!t || !Array.isArray(r.options) || r.options.length < 4) return;
+      const opts = r.options.slice(0, 5).map((o) => ({ t: String(o.text || '').trim(), why: String(o.why || '').trim(), from: o.from || null }));
+      if (opts.some((o) => !o.t)) return;
+      let correct = Math.max(0, Math.min(opts.length - 1, +r.correct || 0));
+      // Shuffle so the model's position habits cannot be learned.
+      const order = shuffle(opts.map((_, i) => i));
+      const shuffled = order.map((i) => opts[i]);
+      correct = order.indexOf(correct);
+      const src = [t.id].concat(opts.map((o) => o.from).filter((x) => x && x !== t.id));
+      out.push({
+        id: 'q_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        d: t.d, style: styles[targets.indexOf(t)] || 'vignette',
+        stem: String(r.stem || '').trim(), lead: String(r.lead || '').trim(),
+        opts: shuffled, correct, teach: String(r.teach || '').trim(), mnem: String(r.mnem || '').trim(),
+        src: [...new Set(src)].slice(0, 6), created: Date.now(), answered: 0, picked: null, right: false
+      });
+    });
+    if (!out.length) throw new Error('No usable questions came back');
+    return out;
+  }
+
+  async function qGenerate(n) {
+    const sections = qSections();
+    const targets = qTargets(sections, n);
+    if (!targets.length) throw new Error('No cards to build questions from in those sections');
+    const styles = targets.map((_, i) => qStyleFor(i));
+    const made = [];
+    qCancel = false;
+    for (let i = 0; i < targets.length && !qCancel; i += Q_BATCH) {
+      const slice = targets.slice(i, i + Q_BATCH), st = styles.slice(i, i + Q_BATCH);
+      $('qb-busy-text').textContent = `Writing questions… ${made.length} of ${targets.length}`;
+      $('qb-bar-fill').style.width = Math.round(100 * made.length / targets.length) + '%';
+      const text = await claude(Q_SYSTEM, [{ role: 'user', content: qPrompt(slice, st) }], 1200 * slice.length);
+      made.push(...qParse(text, slice, st));
+    }
+    if (!made.length) throw new Error('Nothing came back');
+    made.forEach((q) => { qbank[q.id] = q; });
+    await DB.putMany('questions', made);
+    await qPrune();
+    return made;
+  }
+
+  async function qPrune() {
+    const all = Object.values(qbank).sort((a, b) => b.created - a.created);
+    for (const q of all.slice(Q_KEEP)) { delete qbank[q.id]; await DB.del('questions', q.id); }
+  }
+
+  // ---------- question bank: screens ----------
+  function qShow(view) {
+    ['qb-today', 'qb-quiz', 'qb-done', 'qb-busy'].forEach((v) => $(v).classList.toggle('hidden', v !== view));
+  }
+  function renderQBank() {
+    const n = settings.qPerDay || 10, secs = qSections(), rank = qRank(), acc = qAccuracy();
+    $('qb-count').textContent = n;
+    $('qb-aim').textContent = settings.qMode === 'pick' ? 'From the sections you picked.' : 'Aimed at the sections costing you the most.';
+    const per = Math.ceil(n / Math.max(1, secs.length));
+    $('qb-mix').innerHTML = secs.map((k, i) => `<span class="qb-pill">${DOMAIN_BY_KEY[k]?.name || k} ${Math.min(per, n - i * per)}</span>`).join('');
+    const answered = Object.values(qbank).filter((q) => q.answered).length;
+    $('qb-why-note').textContent = answered < 10
+      ? `Ranked by OITE weight for now — after about ten answered questions this switches to your own accuracy. ${answered} answered so far.`
+      : 'Accuracy over the last 30 days, ranked against OITE weight, so a weak section worth 19% outranks a weak section worth 7%.';
+    $('qb-acc').innerHTML = rank.map((r) => {
+      const on = secs.includes(r.key), pct = r.pct === null ? null : r.pct;
+      return `<div class="qb-accrow"><span class="nm${on ? ' on' : ''}">${r.name}</span>`
+        + `<span class="qb-track"><i class="${pct !== null && pct < 70 ? 'low' : ''}" style="width:${pct === null ? 0 : pct}%"></i></span>`
+        + `<span class="pc">${pct === null ? (r.n ? r.n + ' ans' : '—') : pct + '%'}</span></div>`;
+    }).join('');
+    const missed = Object.values(qbank).filter((q) => q.answered && !q.right).length;
+    $('btn-qb-missed').classList.toggle('hidden', !missed);
+    $('btn-qb-missed').textContent = `Review missed (${missed})`;
+    $('btn-qb-start').textContent = settings.apiKey ? `Start ${n} questions` : 'Add an API key in Settings';
+    $('btn-qb-start').disabled = !settings.apiKey;
+    qShow('qb-today');
+  }
+
+  async function qStart(existing) {
+    if (existing) { qSet = existing; }
+    else {
+      qShow('qb-busy');
+      try { qSet = await qGenerate(settings.qPerDay || 10); }
+      catch (e) {
+        qShow('qb-today');
+        toast(/Failed to fetch/i.test(e.message) ? 'No connection. Questions need a signal; studying does not.' : 'Could not write questions: ' + e.message, 5000);
+        return;
+      }
+    }
+    if (qCancel) { qShow('qb-today'); return; }
+    qIdx = 0; qShow('qb-quiz'); renderQ();
+  }
+
+  function renderQ() {
+    const q = qSet[qIdx];
+    if (!q) return renderQDone();
+    const answered = q.picked !== null && q.picked !== undefined;
+    $('qq-dom').textContent = DOMAIN_BY_KEY[q.d]?.name || 'Custom';
+    $('qq-style').textContent = Q_STYLES[q.style] || 'Question';
+    $('qq-count').textContent = `${qIdx + 1} / ${qSet.length}`;
+    $('qq-stem').textContent = q.stem; $('qq-stem').classList.toggle('hidden', !q.stem);
+    $('qq-lead').textContent = q.lead;
+    const box = $('qq-opts'); box.innerHTML = '';
+    q.opts.forEach((o, i) => {
+      const b = document.createElement('button');
+      b.className = 'qq-opt' + (answered && i === q.correct ? ' ok' : '') + (answered && i === q.picked && i !== q.correct ? ' bad' : '');
+      b.innerHTML = `<span class="ltr">${'ABCDE'[i]}</span><span class="txt">${esc(o.t)}</span>`;
+      b.disabled = answered;
+      b.onclick = () => qAnswer(i);
+      box.appendChild(b);
+    });
+    $('qq-fb').classList.toggle('hidden', !answered);
+    if (answered) {
+      $('qq-why').innerHTML = q.opts.map((o, i) =>
+        `<div class="qq-why-r${i === q.correct ? ' key' : ''}"><span class="l">${'ABCDE'[i]}</span>`
+        + `<span class="x"><b>${esc(o.t)}.</b> ${esc(o.why)}${o.from ? '' : ' <span class="qq-written">written</span>'}</span></div>`).join('');
+      $('qq-teach').textContent = q.teach + (q.mnem ? '  ' + q.mnem : '');
+      const cards = q.src.map(cardById).filter(Boolean);
+      $('qq-prov-h').textContent = `${q.opts.filter((o) => o.from).length} of ${q.opts.length} options came from these cards`;
+      const prov = $('qq-prov'); prov.innerHTML = '';
+      cards.forEach((c) => {
+        const b = document.createElement('button');
+        b.innerHTML = `<b>${esc(c.id)}</b> — ${esc(clozePlain(c.q))}`;
+        b.onclick = () => openPreview(c.id);
+        prov.appendChild(b);
+      });
+      $('btn-qq-next').textContent = qIdx === qSet.length - 1 ? 'Finish' : 'Next';
+    }
+    window.scrollTo(0, 0);
+  }
+
+  async function qAnswer(i) {
+    const q = qSet[qIdx];
+    if (q.picked !== null && q.picked !== undefined) return;
+    q.picked = i; q.right = i === q.correct; q.answered = Date.now();
+    qbank[q.id] = q;
+    await DB.put('questions', q);
+    // A miss is real evidence, so the card behind it goes back into rotation.
+    if (!q.right && settings.qLapse !== false) {
+      const card = cardById(q.src[0]);
+      if (card && prog(card.id).state !== 'new') {
+        const after = schedule(prog(card.id), 1, Date.now());
+        progress[card.id] = after;
+        await DB.put('progress', after);
+      }
+    }
+    renderQ();
+  }
+
+  function renderQDone() {
+    const answered = qSet.filter((q) => q.answered), right = answered.filter((q) => q.right).length;
+    $('qd-score').textContent = `${right} of ${answered.length} correct`;
+    const wrong = answered.filter((q) => !q.right);
+    $('qd-note').textContent = wrong.length
+      ? (settings.qLapse !== false ? 'The card behind each miss is back in tomorrow’s review:' : 'You missed these. Card scheduling was left alone.')
+      : 'Nothing to send back. Every card stays on its current schedule.';
+    const list = $('qd-list'); list.innerHTML = '';
+    wrong.forEach((q) => {
+      const c = cardById(q.src[0]);
+      const d = document.createElement('div'); d.className = 'qd-row';
+      d.innerHTML = `<b style="color:var(--accent)">${esc(q.src[0])}</b><span>${esc(c ? clozePlain(c.q) : q.lead)}</span>`;
+      list.appendChild(d);
+    });
+    qShow('qb-done');
+  }
+
+  function qReviewMissed() {
+    const missed = Object.values(qbank).filter((q) => q.answered && !q.right).sort((a, b) => b.answered - a.answered).slice(0, 20);
+    if (!missed.length) { toast('No missed questions yet'); return; }
+    missed.forEach((q) => { q.picked = null; q.answered = 0; });
+    qStart(missed);
+  }
+
+  // ---------- question bank: setup sheet ----------
+  function renderQSetup() {
+    $('qs-per').value = String(settings.qPerDay || 10);
+    $('qs-style').value = settings.qStyle || 'mixed';
+    $('qs-mode').value = settings.qMode || 'auto';
+    $('qs-lapse').checked = settings.qLapse !== false;
+    $('qs-secwrap').classList.toggle('hidden', (settings.qMode || 'auto') !== 'pick');
+    const picked = settings.qSections || [];
+    $('qs-secs').innerHTML = '';
+    DOMAINS.forEach((d) => {
+      const b = document.createElement('button');
+      b.className = 'chip' + (picked.includes(d.key) ? ' on' : '');
+      b.textContent = d.name;
+      b.onclick = async () => {
+        const list = (settings.qSections || []).slice();
+        const i = list.indexOf(d.key);
+        if (i >= 0) list.splice(i, 1); else list.push(d.key);
+        settings.qSections = list.length ? list : [d.key];
+        await saveSettings(); renderQSetup();
+      };
+      $('qs-secs').appendChild(b);
+    });
+  }
+
   // ---------- dropbox sync ----------
   function syncSummary() {
     if (!settings.dbxRefresh) return 'Not connected. Your deck lives only on this device.';
@@ -595,7 +1034,7 @@ ${cloze ? '- Use cloze cards for sentences that carry one key term or number ("T
     $('sync-summary').textContent = syncSummary();
   }
   async function reloadAll() {
-    progress = {}; overrides = {}; userCards = {}; stats = {}; queue = {};
+    progress = {}; overrides = {}; userCards = {}; stats = {}; queue = {}; qbank = {};
     await load();
     renderHome();
     if ($('browse').classList.contains('active')) renderBrowse();
@@ -675,9 +1114,8 @@ ${cloze ? '- Use cloze cards for sentences that carry one key term or number ("T
     document.querySelectorAll('#img-sources .chip').forEach((b) => (b.onclick = () => { imgSource = b.dataset.src; document.querySelectorAll('#img-sources .chip').forEach((x) => x.classList.toggle('on', x === b)); if ($('img-q').value) runImageSearch(false); }));
     $('btn-img-open-google').onclick = () => { const q = cleanQuery($('img-q').value); if (q) window.open('https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(q), '_blank'); };
     $('btn-img-paste').onclick = pasteImage; $('btn-imgp-back').onclick = () => closeSheet('imgpreview'); $('btn-imgp-add').onclick = addSelectedImage;
-    $('btn-chat-close').onclick = () => closeSheet('chat'); $('btn-chat-clear').onclick = async () => { if (!chatCard) return; chatHistory = []; await DB.del('chats', chatCard.id); renderChat(); };
+    $('btn-chat-close').onclick = () => closeSheet('chat'); $('btn-chat-clear').onclick = async () => { if (!chatCtx) return; chatHistory = []; await DB.del('chats', chatCtx.id); renderChat(); };
     $('btn-chat-send').onclick = () => sendChat(); $('chat-text').addEventListener('input', (e) => { e.target.style.height = 'auto'; e.target.style.height = Math.min(120, e.target.scrollHeight) + 'px'; });
-    document.querySelectorAll('#chat-chips .chip').forEach((b) => (b.onclick = () => sendChat(b.dataset.p)));
     const goImport = () => { show('import'); renderImport(); updateWords(); };
     $('btn-import-home').onclick = goImport; $('btn-import-settings').onclick = () => { saveSettingsFromUI(); goImport(); };
     $('btn-import-back').onclick = () => { if (importJob) { importJob.cancel = true; toast('Import will stop after this section.'); } show('home'); renderHome(); };
@@ -692,6 +1130,23 @@ ${cloze ? '- Use cloze cards for sentences that carry one key term or number ("T
     $('btn-q-discard-all').onclick = async () => { const ids = Object.keys(queue); if (!ids.length || !confirm(`Discard all ${ids.length} generated cards?`)) return; for (const id of ids) await discardQueueCard(id); renderImport(); };
     ['s-new', 's-max', 's-key', 's-model', 's-gkey', 's-gcx', 's-daystart', 's-retention', 's-exam', 's-bury', 's-reverse', 's-leech', 's-leechaction'].forEach((id) => ($(id).onchange = saveSettingsFromUI));
     $('btn-deck-export').onclick = exportDeck; $('btn-deck-import').onclick = () => $('deck-file').click(); $('deck-file').onchange = (e) => e.target.files[0] && importDeck(e.target.files[0]);
+    $('btn-qbank').onclick = () => { show('qbank'); renderQBank(); };
+    $('btn-qb-back').onclick = () => show('home');
+    $('btn-qb-setup').onclick = () => { renderQSetup(); openSheet('qsetup'); };
+    $('btn-qb-change').onclick = () => { renderQSetup(); openSheet('qsetup'); };
+    $('btn-qb-start').onclick = () => qStart();
+    $('btn-qb-missed').onclick = qReviewMissed;
+    $('btn-qb-cancel').onclick = () => { qCancel = true; qShow('qb-today'); };
+    $('btn-qq-next').onclick = () => { qIdx++; if (qIdx >= qSet.length) renderQDone(); else renderQ(); };
+    $('btn-qq-chat').onclick = () => { const q = qSet[qIdx]; if (q) openQChat(q); };
+    $('btn-qd-more').onclick = () => qStart();
+    $('btn-qd-home').onclick = () => { renderQBank(); show('home'); renderHome(); };
+    $('btn-qs-close').onclick = $('btn-qs-done').onclick = () => { closeSheet('qsetup'); renderQBank(); };
+    $('qs-per').onchange = async () => { settings.qPerDay = +$('qs-per').value; await saveSettings(); };
+    $('qs-style').onchange = async () => { settings.qStyle = $('qs-style').value; await saveSettings(); };
+    $('qs-mode').onchange = async () => { settings.qMode = $('qs-mode').value; if (settings.qMode === 'pick' && !(settings.qSections || []).length) settings.qSections = qRank().slice(0, 3).map((r) => r.key); await saveSettings(); renderQSetup(); };
+    $('qs-lapse').onchange = async () => { settings.qLapse = $('qs-lapse').checked; await saveSettings(); };
+    $('btn-postpone').onclick = postponeToday;
     $('btn-browse-select').onclick = () => setSelectMode(!selectMode);
     $('bulk-all').onclick = () => { browseShown.forEach((id) => selected.add(id)); renderBrowse(); };
     $('bulk-none').onclick = () => { selected.clear(); renderBrowse(); };
@@ -796,5 +1251,5 @@ ${cloze ? '- Use cloze cards for sentences that carry one key term or number ("T
   });
   const refreshHome = () => { if (!document.hidden && $('home').classList.contains('active')) renderHome(); };
   document.addEventListener('visibilitychange', refreshHome); window.addEventListener('focus', refreshHome); window.addEventListener('pageshow', refreshHome); setInterval(refreshHome, 60000);
-  window.__od = { schedule, prog, settings: () => settings, allCards: () => allCards() };
+  window.__od = { schedule, prog, settings: () => settings, allCards: () => allCards(), qSiblings };
 })();

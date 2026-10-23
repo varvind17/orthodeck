@@ -26,7 +26,7 @@ const Sync = (() => {
   const SNAP_KEEP = 10;
   const SNAP_EVERY = 7 * 24 * 3600 * 1000;
   const TOMB_TTL = 90 * 24 * 3600 * 1000;
-  const STORES = ['progress', 'overrides', 'usercards', 'stats', 'queue', 'settings'];
+  const STORES = ['progress', 'overrides', 'usercards', 'stats', 'queue', 'settings', 'questions'];
   // Kept on this device only: credentials, and the sync bookkeeping itself.
   const LOCAL_ONLY = ['apiKey', 'gKey', 'gCx', 'dbxKey', 'dbxRefresh', 'dbxRev', 'dbxLastSync', 'dbxLastSnapshot', 'dbxFreq', 'statsLocalDay'];
   const LS_VERIFIER = 'od-dbx-verifier', LS_STATE = 'od-dbx-state', LS_KEY = 'od-dbx-key';

@@ -23,6 +23,7 @@
     --accent: #0E6E66;
     --accent-soft: #D9EDEA;
     --again: #B23A3A;
+    --again-soft: #F6E3E3;
     --hard: #A8690F;
     --good: #0E6E66;
     --easy: #2C6AA0;
@@ -34,7 +35,7 @@
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #101817; --surface: #182220; --ink: #ECF1EF; --muted: #9AA9A5; --line: #2A3835;
-      --accent: #4FB8AE; --accent-soft: #1E3634; --again: #E06A6A; --hard: #D9A04C; --good: #4FB8AE; --easy: #7FB1E0;
+      --accent: #4FB8AE; --accent-soft: #1E3634; --again: #E06A6A; --again-soft: #351F1F; --hard: #D9A04C; --good: #4FB8AE; --easy: #7FB1E0;
     }
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -149,6 +150,56 @@
   /* browse */
   .search { margin: 4px 16px 8px; }
   .search input { width: 100%; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }
+  /* ---------- question bank ---------- */
+  .qb-body { padding: 0 16px 28px; }
+  .qb-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .qb-big { font-family: var(--serif); font-size: 40px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+  .qb-h { font-family: var(--serif); font-size: 19px; font-weight: 600; margin: 0; }
+  .qb-mix { display: flex; gap: 7px; flex-wrap: wrap; margin: 14px 0 4px; }
+  .qb-pill { font-size: 12.5px; padding: 5px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .qb-why { margin: 10px 0 18px; }
+  .qb-why summary { font-size: 13.5px; color: var(--accent); cursor: pointer; }
+  .qb-acc { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }
+  .qb-accrow { display: grid; grid-template-columns: minmax(84px, 110px) 1fr 52px; gap: 10px; align-items: center; font-size: 13px; }
+  .qb-accrow .nm { color: var(--muted); min-width: 0; }
+  .qb-accrow .nm.on { color: var(--ink); font-weight: 600; }
+  .qb-track { height: 7px; border-radius: 4px; background: var(--line); overflow: hidden; }
+  .qb-track i { display: block; height: 100%; background: var(--accent); }
+  .qb-track i.low { background: var(--again); }
+  .qb-accrow .pc { text-align: right; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .qb-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tag { font-size: 11px; padding: 3px 8px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); }
+  .tag.dom { color: var(--accent); border-color: var(--accent); }
+  .qq-count { margin-left: auto; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .qq-stem { font-family: var(--serif); font-size: 17px; line-height: 1.55; margin: 0 0 10px; }
+  .qq-lead { font-weight: 600; font-size: 15.5px; margin: 0 0 14px; }
+  .qq-opts { display: flex; flex-direction: column; gap: 8px; }
+  .qq-opt { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; font: inherit; font-size: 15px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .qq-opt .ltr { flex: 0 0 auto; width: 18px; font-weight: 600; color: var(--muted); }
+  .qq-opt .txt { min-width: 0; }
+  .qq-opt.ok { border-color: var(--accent); background: var(--accent-soft); }
+  .qq-opt.ok .ltr { color: var(--accent); }
+  .qq-opt.bad { border-color: var(--again); background: var(--again-soft); }
+  .qq-opt.bad .ltr { color: var(--again); }
+  .qq-fb { margin-top: 18px; padding-top: 4px; }
+  .qq-fb h3 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 16px 0 8px; }
+  .qq-why-r { display: grid; grid-template-columns: 18px 1fr; gap: 10px; font-size: 14px; padding: 8px 0; border-top: 1px dashed var(--line); }
+  .qq-why-r:first-child { border-top: 0; }
+  .qq-why-r .l { font-weight: 600; color: var(--muted); }
+  .qq-why-r.key .l, .qq-why-r.key b { color: var(--accent); }
+  .qq-why-r .x { min-width: 0; }
+  .qq-written { font-size: 10.5px; color: var(--hard); border: 1px solid var(--hard); border-radius: 5px; padding: 1px 5px; white-space: nowrap; }
+  .qq-teach { margin-top: 12px; padding: 12px 14px; border-left: 3px solid var(--accent); background: var(--surface); border-radius: 0 10px 10px 0; font-size: 14px; }
+  .qq-prov button { display: block; width: 100%; text-align: left; font: inherit; font-size: 13.5px; color: var(--ink); background: none; border: 0; border-top: 1px solid var(--line); padding: 9px 0; }
+  .qq-prov button b { color: var(--accent); }
+  .qd-row { display: flex; gap: 10px; align-items: baseline; font-size: 14px; padding: 11px 0; border-top: 1px solid var(--line); }
+  .qb-busy-text { font-family: var(--serif); font-size: 18px; margin: 28px 0 12px; }
+  .qb-bar { height: 8px; border-radius: 5px; background: var(--line); overflow: hidden; margin-bottom: 14px; }
+  .qb-bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+  .postpone { width: 100%; margin-top: 12px; padding: 13px 16px; border: 0; border-radius: 12px; background: var(--again); color: #fff; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .postpone:active { filter: brightness(.92); }
+  .postpone:disabled { opacity: .5; }
   .bulkbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 16px 10px; padding: 10px 12px; background: var(--accent-soft); border-radius: 12px; }
   .bulkbar .count { font-weight: 600; font-size: 13px; }
   .bulkbar .sep { flex: 1 1 0; min-width: 0; }
@@ -255,7 +306,10 @@
       <button class="secondary" id="btn-browse">Browse cards</button>
       <button class="secondary" id="btn-quick">Quick 10</button>
     </div>
-    <div class="row"><button class="secondary" id="btn-import-home">Make cards from a chapter</button><button class="secondary" id="btn-cram">Cram mode</button></div>
+    <div class="row"><button class="secondary" id="btn-qbank">Question bank</button><button class="secondary" id="btn-cram">Cram mode</button></div>
+    <div class="row"><button class="secondary" id="btn-import-home">Make cards from a chapter</button></div>
+    <button class="postpone hidden" id="btn-postpone">Postpone today's reviews</button>
+    <p class="note hidden" id="postpone-note"></p>
     <p class="note hidden" id="queue-note"></p>
     <p class="note hidden" id="exam-note"></p>
     <div class="domains">
@@ -334,6 +388,60 @@
     <button id="bulk-delete" class="danger-lite">Delete my cards</button>
   </div>
   <div class="list" id="browse-list"></div>
+</section>
+
+<!-- ============ QUESTION BANK ============ -->
+<section id="qbank" class="screen">
+  <div class="bar">
+    <button class="iconbtn" id="btn-qb-back" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="title">Questions</div>
+    <button class="iconbtn" id="btn-qb-setup" aria-label="Question settings"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
+  </div>
+  <div class="qb-body">
+    <div id="qb-today">
+      <div class="qb-head"><span class="qb-big" id="qb-count">10</span><div><h2 class="qb-h">questions ready</h2><p class="note" id="qb-aim"></p></div></div>
+      <div class="qb-mix" id="qb-mix"></div>
+      <details class="qb-why"><summary>Why these sections</summary>
+        <p class="note" id="qb-why-note"></p>
+        <div class="qb-acc" id="qb-acc"></div>
+      </details>
+      <button class="primary" id="btn-qb-start">Start</button>
+      <div class="row"><button class="secondary" id="btn-qb-change">Change today's set</button><button class="secondary" id="btn-qb-missed">Review missed</button></div>
+      <p class="note" id="qb-foot">Questions are written by Claude from cards already in your deck, using your API key. They need a signal; studying does not.</p>
+    </div>
+
+    <div id="qb-quiz" class="hidden">
+      <div class="qb-meta"><span class="tag dom" id="qq-dom"></span><span class="tag" id="qq-style"></span><span class="qq-count" id="qq-count"></span></div>
+      <p class="qq-stem" id="qq-stem"></p>
+      <p class="qq-lead" id="qq-lead"></p>
+      <div class="qq-opts" id="qq-opts"></div>
+      <div class="qq-fb hidden" id="qq-fb">
+        <h3>Why each choice</h3>
+        <div id="qq-why"></div>
+        <div class="qq-teach" id="qq-teach"></div>
+        <h3 id="qq-prov-h">Built from these cards</h3>
+        <div class="qq-prov" id="qq-prov"></div>
+        <div class="row">
+          <button class="secondary" id="btn-qq-chat">Ask about this question</button>
+          <button class="primary" id="btn-qq-next">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="qb-done" class="hidden">
+      <h2 class="qb-h" id="qd-score"></h2>
+      <p class="note" id="qd-note"></p>
+      <div id="qd-list"></div>
+      <div class="row"><button class="primary" id="btn-qd-more">Another set</button><button class="secondary" id="btn-qd-home">Done</button></div>
+    </div>
+
+    <div id="qb-busy" class="hidden">
+      <p class="qb-busy-text" id="qb-busy-text">Writing questions…</p>
+      <div class="qb-bar"><i id="qb-bar-fill"></i></div>
+      <p class="note">Claude is writing each question from your cards. A set of ten is two requests and costs well under a cent.</p>
+      <button class="secondary" id="btn-qb-cancel">Cancel</button>
+    </div>
+  </div>
 </section>
 
 <!-- ============ STATS ============ -->
@@ -555,20 +663,44 @@
 <div class="sheet" id="chat">
   <div class="bar">
     <button class="iconbtn" id="btn-chat-close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-    <div class="title">Ask about this card</div>
+    <div class="title" id="chat-title">Ask about this card</div>
     <button class="iconbtn" id="btn-chat-clear">Clear</button>
   </div>
-  <div class="chips" id="chat-chips">
-    <button class="chip" data-p="Explain the mechanism behind this in a few sentences.">Mechanism</button>
-    <button class="chip" data-p="Why not the alternatives? Compare this with the closest wrong answers a board question would offer.">Why not X?</button>
-    <button class="chip" data-p="Give me a mnemonic or memory hook for this card.">Mnemonic</button>
-    <button class="chip" data-p="Write one OITE-style vignette question testing this card, then give the answer with a one-line explanation.">Quiz me</button>
-    <button class="chip" data-p="What related classification systems or numbers get confused with this one?">Related</button>
-  </div>
+  <div class="chips" id="chat-chips"></div>
   <div class="chat-list" id="chat-list"></div>
   <div class="chat-input">
     <textarea id="chat-text" rows="1" placeholder="Ask anything about this card…"></textarea>
     <button id="btn-chat-send" aria-label="Send">↑</button>
+  </div>
+</div>
+
+<!-- ============ QUESTION SETUP SHEET ============ -->
+<div class="sheet" id="qsetup">
+  <div class="bar">
+    <button class="iconbtn" id="btn-qs-close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    <div class="title">Daily questions</div>
+    <button class="iconbtn" id="btn-qs-done">Done</button>
+  </div>
+  <div class="body">
+    <label class="field"><span>Questions per set</span><select id="qs-per">
+      <option value="5">5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="30">30</option>
+    </select></label>
+    <label class="field"><span>Question style</span><select id="qs-style">
+      <option value="mixed">Mixed</option>
+      <option value="vignette">Clinical vignettes</option>
+      <option value="applied">Applied / calculation</option>
+      <option value="recall">Direct recall</option>
+    </select></label>
+    <label class="field"><span>Where they come from</span><select id="qs-mode">
+      <option value="auto">Auto — my weakest sections</option>
+      <option value="pick">Sections I choose</option>
+    </select></label>
+    <div id="qs-secwrap">
+      <p class="note">Tap the sections to draw from.</p>
+      <div class="chips" id="qs-secs"></div>
+    </div>
+    <label class="toggle"><span>Missing a question lapses its card <span style="color:var(--muted);font-size:13px">— the card comes back in tomorrow's review</span></span><input type="checkbox" id="qs-lapse"></label>
+    <p class="note">Questions are generated fresh each set and the last 200 are kept, so you can revisit what you missed without seeing the same stems again.</p>
   </div>
 </div>
 
